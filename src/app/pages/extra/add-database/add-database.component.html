@@ -1,0 +1,23 @@
+<mat-card class="cardWithShadow theme-card" dir="rtl">
+    <mat-card-header>
+      <mat-card-title class="m-b-0">تسجيل قاعدة البيانات</mat-card-title>
+    </mat-card-header>
+    <mat-card-content class="b-t-1">
+        <div class={{alert}}>{{msg}}</div>
+        <div class="mb-3">
+            <label for="exampleInputEmail1" class="form-label">اسم قاعدة البيانات</label>
+            <input type="text"  [(ngModel)]="DatabaseName" class="form-control" >
+          </div>
+          
+          @if (loading) {
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>}
+            @else {
+               
+          <button type="button" class="btn btn-primary" style="margin-left: 10px" (click)="submit()">حفظ</button>
+         
+        
+            }
+    </mat-card-content>
+  </mat-card>

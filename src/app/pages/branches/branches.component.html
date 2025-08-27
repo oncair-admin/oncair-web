@@ -1,0 +1,221 @@
+<!-- eslint-disable @angular-eslint/template/elements-content -->
+<!-- eslint-disable @angular-eslint/template/label-has-associated-control -->
+<div class="container-fluid">
+  <!-- Page Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <h2 class="mb-1">Branches Management</h2>
+          <p class="text-muted mb-0">
+            Manage your company branches and locations
+          </p>
+        </div>
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="openAddModal()"
+          class="d-flex align-items-center gap-2"
+        >
+          <mat-icon>add</mat-icon>
+          Add
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error Message -->
+  @if (showError) {
+  <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+    <strong>Error:</strong> {{ errorMessage }}
+    <button type="button" class="btn-close" (click)="clearError()">
+      Clear
+    </button>
+  </div>
+  }
+
+  <!-- Branches Table -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-white border-0 py-3">
+      <h5 class="mb-0">All Branches</h5>
+    </div>
+    <div class="card-body p-0">
+      @if (loading) {
+      <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-2 text-muted">Loading branches...</p>
+      </div>
+      } @else if (branches.length === 0) {
+      <div class="text-center py-5">
+        <mat-icon
+          class="text-muted"
+          style="font-size: 4rem; width: 4rem; height: 4rem"
+          >business</mat-icon
+        >
+        <h5 class="mt-3 text-muted">No branches found</h5>
+        <p class="text-muted">Get started by adding your first branch</p>
+        <button mat-raised-button color="primary" (click)="openAddModal()">
+          Add First Branch
+        </button>
+      </div>
+      } @else {
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th class="border-0">ID</th>
+              <th class="border-0">Branch Name</th>
+              <th class="border-0 text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (branch of branches; track branch.branchId) {
+            <tr>
+              <td class="align-middle">
+                <span class="badge bg-light text-dark">{{
+                  branch.branchId
+                }}</span>
+              </td>
+              <td class="align-middle">
+                <div class="d-flex align-items-center">
+                  <span class="fw-medium">{{ branch.branchName }}</span>
+                </div>
+              </td>
+              <td class="align-middle text-end">
+                <div class="btn-group" role="group">
+                  <button
+                    mat-icon-button
+                    color="primary"
+                    (click)="openEditModal(branch)"
+                    matTooltip="Edit Branch"
+                    class="me-1"
+                  >
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      }
+    </div>
+  </div>
+</div>
+
+<!-- Add Branch Modal -->
+@if (showAddModal) {
+<div
+  class="modal fade show d-block"
+  style="background-color: rgba(0, 0, 0, 0.5)"
+  tabindex="-1"
+>
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title">Add New Branch</h5>
+        <button type="button" class="btn-close" (click)="closeAddModal()">
+          Close
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Branch Name</label>
+          <input
+            type="text"
+            class="form-control"
+            [(ngModel)]="newBranchName"
+            placeholder="Enter branch name"
+            (keyup.enter)="addBranch()"
+            [disabled]="loading"
+          />
+        </div>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="closeAddModal()"
+          [disabled]="loading"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="addBranch()"
+          [disabled]="!newBranchName.trim() || loading"
+        >
+          @if (loading) {
+          <span
+            class="spinner-border spinner-border-sm me-2"
+            role="status"
+          ></span>
+          } Add
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+}
+
+<!-- Edit Branch Modal -->
+@if (showEditModal) {
+<div
+  class="modal fade show d-block"
+  style="background-color: rgba(0, 0, 0, 0.5)"
+  tabindex="-1"
+>
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title">Edit Branch</h5>
+        <button
+          type="button"
+          class="btn-close"
+          (click)="closeEditModal()"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Branch Name</label>
+          <input
+            type="text"
+            class="form-control"
+            [(ngModel)]="editBranchName"
+            placeholder="Enter branch name"
+            (keyup.enter)="updateBranch()"
+            [disabled]="loading"
+          />
+        </div>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="closeEditModal()"
+          [disabled]="loading"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="updateBranch()"
+          [disabled]="!editBranchName.trim() || loading"
+        >
+          @if (loading) {
+          <span
+            class="spinner-border spinner-border-sm me-2"
+            role="status"
+          ></span>
+          } Update Branch
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+}

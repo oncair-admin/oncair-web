@@ -1,0 +1,94 @@
+<div class="blank-layout-container justify-content-center">
+  <div class="auth-wrapper">
+    <div class="position-relative shaper-wrapper">
+      <div class="w-100 position-relative rounded bg-red auth-card">
+        <div class="auth-body">
+          <div class="row">
+            <!-- Left: image -->
+            <div class="col-lg-6">
+              <div
+                class="align-items-center justify-content-center d-none d-lg-flex"
+              >
+                <img
+                  src="/assets/images/backgrounds/login.png"
+                  alt="login"
+                  style="max-width: 500px"
+                />
+              </div>
+            </div>
+
+            <!-- Right: form -->
+            <div class="col-lg-6">
+              <div
+                class="d-flex align-items-start align-items-lg-center justify-content-center"
+              >
+                <div class="row justify-content-center w-100">
+                  <div class="col-lg-11">
+                    <h4 class="f-w-700 f-s-30 m-0 m-t-20 lh-base">
+                      Welcome to CairOn – Your trusted partner in delivery
+                      services!👋
+                    </h4>
+                    <span class="f-s-14 d-block mat-body-1 m-t-8"
+                      >Please log in to your account</span
+                    >
+
+                    <!-- Alert (kept same binding) -->
+                    <div class="{{ alert }} m-t-12">{{ msg }}</div>
+
+                    <!-- Username -->
+                    <label
+                      class="mat-subtitle-2 f-s-14 f-w-600 m-b-12 d-block form-label"
+                      >Username</label
+                    >
+                    <div class="mb-3">
+                      <input
+                        type="text"
+                        class="form-control form-control-md"
+                        [(ngModel)]="Username"
+                      />
+                    </div>
+
+                    <!-- Password -->
+                    <label
+                      class="mat-subtitle-2 f-s-14 f-w-600 m-b-12 d-block form-label"
+                      >Password</label
+                    >
+                    <div class="mb-3">
+                      <input
+                        type="password"
+                        class="form-control form-control-md"
+                        [(ngModel)]="Userpassword"
+                        (keyup.enter)="submit()"
+                      />
+                    </div>
+
+                    <!-- Spinner vs Button (Angular v17 control flow) -->
+                    @if (loading) {
+                    <div class="text-center my-3">
+                      <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                      </div>
+                    </div>
+                    } @else {
+                    <div class="d-grid my-2">
+                      <button
+                        type="button"
+                        class="btn btn-primary btn-lg w-100"
+                        (click)="submit()"
+                      >
+                        Login
+                      </button>
+                    </div>
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- /Right -->
+          </div>
+          <!-- /row -->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

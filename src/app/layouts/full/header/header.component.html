@@ -1,0 +1,23 @@
+<mat-toolbar class="topbar">
+
+  <!-- Mobile Menu -->
+  <button mat-icon-button (click)="toggleMobileNav.emit()" class="d-flex d-md-none justify-content-center">
+    <i-tabler name="menu-2" class="icon-20 d-flex"></i-tabler>
+  </button>
+  <span class="flex-1-auto">CairOn – Your trusted partner in delivery services</span>
+
+  <!-- --------------------------------------------------------------- -->
+  <!-- profile Dropdown -->
+  <!-- --------------------------------------------------------------- -->
+  
+  <button class="m-l-10" mat-icon-button [matMenuTriggerFor]="profilemenu" aria-label="Notifications">
+    <img src="/assets/images/profile/user-1.jpg" class="rounded-circle object-cover" width="35" />
+  </button>
+  <mat-menu #profilemenu="matMenu" xPosition="before" class="cardWithShadow">
+  
+
+    <div class="p-x-12 m-t-12">
+      <a [routerLink]="['/authentication/login']" mat-stroked-button color="primary" class="w-100">Logout</a>
+    </div>
+  </mat-menu>
+</mat-toolbar>

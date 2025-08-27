@@ -1,0 +1,109 @@
+// Custom styles for branches component
+.card {
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+  }
+}
+
+.table {
+  th {
+    font-weight: 600;
+    color: #6c757d;
+    border-bottom: 2px solid #dee2e6;
+  }
+  
+  td {
+    vertical-align: middle;
+    border-bottom: 1px solid #f8f9fa;
+  }
+  
+  tbody tr {
+    transition: background-color 0.2s ease;
+    
+    &:hover {
+      background-color: #f8f9fa;
+    }
+  }
+}
+
+.btn-group {
+  .mat-icon-button {
+    transition: all 0.2s ease;
+    
+    &:hover {
+      transform: scale(1.1);
+    }
+  }
+}
+
+.modal {
+  backdrop-filter: blur(5px);
+  
+  .modal-content {
+    border-radius: 1rem;
+    box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175);
+  }
+  
+  .modal-header {
+    border-radius: 1rem 1rem 0 0;
+  }
+  
+  .modal-footer {
+    border-radius: 0 0 1rem 1rem;
+  }
+}
+
+.badge {
+  font-size: 0.75rem;
+  padding: 0.5rem 0.75rem;
+}
+
+// Statistics cards styling
+.bg-opacity-10 {
+  --bs-bg-opacity: 0.1;
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .table-responsive {
+    font-size: 0.875rem;
+  }
+  
+  .btn-group {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  
+  .modal-dialog {
+    margin: 1rem;
+  }
+}
+
+// Loading animation
+.spinner-border {
+  width: 2rem;
+  height: 2rem;
+}
+
+// Empty state styling
+.text-muted {
+  color: #6c757d !important;
+}
+
+// Icon styling
+mat-icon {
+  &.text-primary {
+    color: #0d6efd !important;
+  }
+  
+  &.text-success {
+    color: #198754 !important;
+  }
+  
+  &.text-warning {
+    color: #ffc107 !important;
+  }
+}
