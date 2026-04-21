@@ -1,419 +1,994 @@
+<!-- eslint-disable @angular-eslint/template/label-has-associated-control -->
 @if (IsDtl===true) {
-    <mat-card class="cardWithShadow theme-card" >
+<mat-card class="cardWithShadow theme-card">
   <mat-card-header>
     <mat-card-title class="m-b-0">User Registration</mat-card-title>
   </mat-card-header>
 
   <mat-card-content class="b-t-1">
-    <div class="{{alert}}">{{msg}}</div>
-<form (ngSubmit)="submit()" class="row g-3" #userForm="ngForm" novalidate>
+    <div class="{{ alert }}">Please fill all required fields</div>
 
-  <!-- Arabic Name -->
-  <div class="col-sm-6">
-    <label class="form-label">Name (Arabic)</label>
-    <input type="text"
-           [(ngModel)]="User.nameAr" name="nameAr"
-           class="form-control"
-           required
-           pattern="[\u0600-\u06FF\s]+"
-           #nameAr="ngModel" />
-    <div class="text-danger" *ngIf="nameAr.invalid && (nameAr.dirty || nameAr.touched || userForm.submitted)">
-      <span *ngIf="nameAr.errors?.['required']">Name (Arabic) is required.</span>
-      <span *ngIf="nameAr.errors?.['pattern']">Arabic letters only.</span>
-    </div>
-  </div>
+    <form (ngSubmit)="submit()" class="row g-3" #userForm="ngForm" novalidate>
+      <!-- Arabic Name (required when Courier) -->
+      <div class="col-sm-6">
+        <label class="form-label">Name (Arabic) *</label>
+        <input
+          type="text"
+          [(ngModel)]="User.nameAr"
+          name="nameAr"
+          class="form-control"
+          [required]="true"
+          pattern="[\u0600-\u06FF\s]+"
+          #nameAr="ngModel"
+        />
+        <div
+          class="text-danger"
+          *ngIf="
+            nameAr.invalid &&
+            (nameAr.dirty || nameAr.touched || userForm.submitted)
+          "
+        >
+          <span *ngIf="nameAr.errors?.['required']"
+            >Name (Arabic) is required.</span
+          >
+          <span *ngIf="nameAr.errors?.['pattern']">Arabic letters only.</span>
+        </div>
+      </div>
 
-  <!-- English Name -->
-  <div class="col-sm-6">
-    <label class="form-label">Name (English)</label>
-    <input type="text"
-           [(ngModel)]="User.nameEn" name="nameEn"
-           class="form-control"
-           required
-           pattern="[A-Za-z\s]+"
-           #nameEn="ngModel" />
-    <div class="text-danger" *ngIf="nameEn.invalid && (nameEn.dirty || nameEn.touched || userForm.submitted)">
-      <span *ngIf="nameEn.errors?.['required']">Name (English) is required.</span>
-      <span *ngIf="nameEn.errors?.['pattern']">English letters only.</span>
-    </div>
-  </div>
+      <!-- English Name (NOT required) -->
+      <div class="col-sm-6">
+        <label class="form-label">Name (English)</label>
+        <input
+          type="text"
+          [(ngModel)]="User.nameEn"
+          name="nameEn"
+          class="form-control"
+          [required]="false"
+          pattern="[A-Za-z\s]+"
+          #nameEn="ngModel"
+        />
+        <div
+          class="text-danger"
+          *ngIf="
+            nameEn.invalid &&
+            (nameEn.dirty || nameEn.touched || userForm.submitted)
+          "
+        >
+          <span *ngIf="nameEn.errors?.['pattern']">English letters only.</span>
+        </div>
+      </div>
 
-  <!-- Email -->
-  <div class="col-sm-6">
-    <label class="form-label">Email</label>
-    <input type="email"
-           [(ngModel)]="User.email" name="email"
-           class="form-control"
-           required
-           pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
-           #email="ngModel" />
-    <div class="text-danger" *ngIf="email.invalid && (email.dirty || email.touched || userForm.submitted)">
-      <span *ngIf="email.errors?.['required']">Email is required.</span>
-      <span *ngIf="email.errors?.['pattern']">Enter a valid email address.</span>
-    </div>
-  </div>
+      <!-- Email (required when Courier) -->
+      <div class="col-sm-6">
+        <label class="form-label">Email *</label>
+        <input
+          type="email"
+          [(ngModel)]="User.email"
+          name="email"
+          class="form-control"
+          [required]="true"
+          pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+          #email="ngModel"
+        />
+        <div
+          class="text-danger"
+          *ngIf="
+            email.invalid &&
+            (email.dirty || email.touched || userForm.submitted)
+          "
+        >
+          <span *ngIf="email.errors?.['required']">Email is required.</span>
+          <span *ngIf="email.errors?.['pattern']"
+            >Enter a valid email address.</span
+          >
+        </div>
+      </div>
 
-  <!-- Job -->
-  <div class="col-sm-6">
-    <label class="form-label">Job</label>
-    <select [(ngModel)]="User.jobId" name="jobId"
-            class="form-select"
-            required
-            #jobId="ngModel">
-      <option value="0">-- Select Job --</option>
-      <option *ngFor="let job of jobList" [ngValue]="job.jobId">{{ job.jobTitle }}</option>
-    </select>
-    <div class="text-danger" *ngIf="(jobId.invalid || !jobId.value) && (jobId.touched || userForm.submitted)">
-      Job is required.
-    </div>
-  </div>
+      <div class="col-sm-6">
+        <label class="form-label">Job *</label>
+        <select
+          [(ngModel)]="User.jobId"
+          name="jobId"
+          class="form-select"
+          required
+          #jobId="ngModel"
+        >
+          <!-- Use null so required validator triggers until user selects -->
+          <option [ngValue]="null">-- Select Job --</option>
 
-  <!-- Department -->
-  <div class="col-sm-6">
-    <label class="form-label">Department</label>
-    <select [(ngModel)]="User.deptId" name="deptId"
-            class="form-select"
-            required
-            #deptId="ngModel">
-      <option value="0">-- Select Department --</option>
-      <option *ngFor="let dep of departmentList" [ngValue]="dep.deptId">{{ dep.deptName }}</option>
-    </select>
-    <div class="text-danger" *ngIf="(deptId.invalid || !deptId.value) && (deptId.touched || userForm.submitted)">
-      Department is required.
-    </div>
-  </div>
+          <!-- Dynamic options from jobList -->
+          <option *ngFor="let job of jobList" [ngValue]="+job.jobId">
+            {{ job.jobTitle }}
+          </option>
+        </select>
 
-  <!-- Manager -->
-  <div class="col-sm-6">
-    <label class="form-label">Manager</label>
-    <select [(ngModel)]="User.managerId" name="managerId"
-            class="form-select"
-            required
-            #managerId="ngModel">
-      <option value="0">-- Select Manager --</option>
-      <option *ngFor="let u of usersList" [ngValue]="u.id">{{ u.nameEn }}</option>
-    </select>
-    <div class="text-danger" *ngIf="(managerId.invalid || !managerId.value) && (managerId.touched || userForm.submitted)">
-      Manager is required.
-    </div>
-  </div>
+        <div
+          class="text-danger"
+          *ngIf="jobId.invalid && (jobId.touched || userForm.submitted)"
+        >
+          Job is required.
+        </div>
+      </div>
 
-  <!-- Hire Date -->
-  <div class="col-sm-6">
-    <label class="form-label">Hire Date</label>
-    <input type="date"
-           [(ngModel)]="User.hireDate" name="hireDate"
-           class="form-control"
-           required
-           #hireDate="ngModel" />
-    <div class="text-danger" *ngIf="hireDate.invalid && (hireDate.touched || userForm.submitted)">
-      Hire Date is required.
-    </div>
-  </div>
+      <!-- Department (required when Courier) -->
+      <div class="col-sm-6">
+        <label class="form-label">Department *</label>
+        <select
+          [(ngModel)]="User.deptId"
+          name="deptId"
+          class="form-select"
+          [required]="true"
+          #deptId="ngModel"
+        >
+          <option value="0">-- Select Department --</option>
+          <option *ngFor="let dep of departmentList" [ngValue]="dep.deptId">
+            {{ dep.deptName }}
+          </option>
+        </select>
+        <div
+          class="text-danger"
+          *ngIf="
+            (deptId.invalid || !deptId.value) &&
+            (deptId.touched || userForm.submitted)
+          "
+        >
+          Department is required.
+        </div>
+      </div>
 
-  <!-- Salary -->
-  <div class="col-sm-6">
-    <label class="form-label">Salary</label>
-    <input type="number"
-           [(ngModel)]="User.salary" name="salary"
-           class="form-control"
-           required min="0" step="0.01"
-           #salary="ngModel" />
-    <div class="text-danger" *ngIf="salary.invalid && (salary.touched || userForm.submitted)">
-      <span *ngIf="salary.errors?.['required']">Salary is required.</span>
-      <span *ngIf="salary.errors?.['min']">Salary must be ≥ 0.</span>
-    </div>
-  </div>
+      <!-- Branch (autocomplete; required when Courier) -->
+      <div class="col-sm-6">
+        <label class="form-label">Branch *</label>
+        <mat-form-field class="w-100" appearance="outline">
+          <input
+            matInput
+            type="text"
+            [ngModel]="User.branchName"
+            (ngModelChange)="User.branchName = $event; filterBranches($event)"
+            name="branchName"
+            [required]="true"
+            [matAutocomplete]="branchAuto"
+          />
+          <mat-autocomplete
+            #branchAuto="matAutocomplete"
+            (optionSelected)="
+              User.branchId = $event.option.value.branchId;
+              User.branchName =
+                $event.option.value.name || $event.option.value.branchName
+            "
+          >
+            <mat-option *ngFor="let b of filteredBranches" [value]="b">
+              {{ b.name || b.branchName || "Branch #" + b.id }}
+            </mat-option>
+          </mat-autocomplete>
+        </mat-form-field>
+        <div class="text-danger" *ngIf="!User.branchId && userForm.submitted">
+          Branch is required.
+        </div>
+      </div>
 
-  <!-- Gender -->
-  <div class="col-sm-6">
-    <label class="form-label">Gender</label>
-    <select [(ngModel)]="User.gender" name="gender"
-            class="form-select"
-            required
-            #gender="ngModel">
-      <option value="0">-- Select Gender --</option>
-      <option value="Male">Male</option>
-      <option value="Female">Female</option>
-    </select>
-    <div class="text-danger" *ngIf="(gender.invalid || !gender.value) && (gender.touched || userForm.submitted)">
-      Gender is required.
-    </div>
-  </div>
+      <!-- Manager (autocomplete; required when Courier; list filtered to id==2) -->
+      <div class="col-sm-6">
+        <label class="form-label">Manager *</label>
+        <mat-form-field class="w-100" appearance="outline">
+          <input
+            matInput
+            type="text"
+            [ngModel]="User.managerName"
+            (ngModelChange)="User.managerName = $event; filterManagers($event)"
+            name="managerName"
+            [required]="true"
+            [matAutocomplete]="mgrAuto"
+          />
+          <mat-autocomplete
+            #mgrAuto="matAutocomplete"
+            (optionSelected)="
+              User.managerId = $event.option.value.id;
+              User.managerName =
+                $event.option.value.nameEn || $event.option.value.nameAr
+            "
+          >
+            <mat-option *ngFor="let m of filteredManagers" [value]="m">
+              {{ m.nameEn || m.nameAr || "User #" + m.id }}
+            </mat-option>
+          </mat-autocomplete>
+        </mat-form-field>
+        <div class="text-danger" *ngIf="!User.managerId && userForm.submitted">
+          Manager is required.
+        </div>
+      </div>
 
-  <!-- Birth Date -->
-  <div class="col-sm-6">
-    <label class="form-label">Birth Date</label>
-    <input type="date"
-           [(ngModel)]="User.birthDate" name="birthDate"
-           class="form-control"
-           required
-           #birthDate="ngModel" />
-    <div class="text-danger" *ngIf="birthDate.invalid && (birthDate.touched || userForm.submitted)">
-      Birth Date is required.
-    </div>
-  </div>
+      <!-- Hire Date (required when Courier) -->
+      <div class="col-sm-6">
+        <label class="form-label">Hire Date *</label>
+        <input
+          type="date"
+          [(ngModel)]="User.hireDate"
+          name="hireDate"
+          class="form-control"
+          [required]="true"
+          #hireDate="ngModel"
+        />
+        <div
+          class="text-danger"
+          *ngIf="hireDate.invalid && (hireDate.touched || userForm.submitted)"
+        >
+          <span *ngIf="hireDate.errors?.['required']"
+            >Hire Date is required.</span
+          >
+          <span *ngIf="hireDate.errors?.['futureDate']"
+            >Date cannot be in the future.</span
+          >
+        </div>
+      </div>
 
-  <!-- Marital Status -->
-  <div class="col-sm-6">
-    <label class="form-label">Marital Status</label>
-    <select [(ngModel)]="User.matiralStatus" name="matiralStatus"
-            class="form-select"
-            required
-            #matiralStatus="ngModel">
-      <option value="0">-- Select Marital Status --</option>
-      <option value="Single">Single</option>
-      <option value="Married">Married</option>
-      <option value="Divorced">Divorced</option>
-      <option value="Widowed">Widowed</option>
-    </select>
-    <div class="text-danger" *ngIf="(matiralStatus.invalid || !matiralStatus.value) && (matiralStatus.touched || userForm.submitted)">
-      Marital Status is required.
-    </div>
-  </div>
+      <!-- Salary (required when Courier) -->
+      <div class="col-sm-6">
+        <label class="form-label">Salary *</label>
+        <input
+          type="number"
+          [(ngModel)]="User.salary"
+          name="salary"
+          class="form-control"
+          [required]="true"
+          min="0"
+          step="0.01"
+          #salary="ngModel"
+        />
+        <div
+          class="text-danger"
+          *ngIf="salary.invalid && (salary.touched || userForm.submitted)"
+        >
+          <span *ngIf="salary.errors?.['required']">Salary is required.</span>
+          <span *ngIf="salary.errors?.['min']">Salary must be ≥ 0.</span>
+          <span *ngIf="salary.errors?.['negativeNumber']"
+            >Salary cannot be negative.</span
+          >
+          <span *ngIf="salary.errors?.['invalidNumber']"
+            >Please enter a valid number.</span
+          >
+        </div>
+      </div>
 
-  <!-- Religion -->
-  <div class="col-sm-6">
-    <label class="form-label">Religion</label>
-    <input type="text"
-           [(ngModel)]="User.religion" name="religion"
-           class="form-control"
-           required
-           pattern="[\u0600-\u06FF\sA-Za-z]+"
-           #religion="ngModel" />
-    <div class="text-danger" *ngIf="religion.invalid && (religion.touched || userForm.submitted)">
-      <span *ngIf="religion.errors?.['required']">Religion is required.</span>
-      <span *ngIf="religion.errors?.['pattern']">Letters only.</span>
-    </div>
-  </div>
+      <!-- National ID (required when Courier) -->
+      <div class="col-sm-6">
+        <label class="form-label">National ID *</label>
+        <input
+          type="text"
+          [(ngModel)]="User.nationalId"
+          name="nationalId"
+          class="form-control"
+          [required]="true"
+          minlength="14"
+          maxlength="14"
+          pattern="^\d{14}$"
+          (input)="onNationalIdInput()"
+          #nationalId="ngModel"
+        />
+        <div
+          class="text-danger"
+          *ngIf="
+            nationalId.invalid && (nationalId.touched || userForm.submitted)
+          "
+        >
+          <span *ngIf="nationalId.errors?.['required']"
+            >National ID is required.</span
+          >
+          <span
+            *ngIf="nationalId.errors?.['minlength'] || nationalId.errors?.['maxlength'] || nationalId.errors?.['pattern']"
+          >
+            National ID must be exactly 14 digits.
+          </span>
+          <span *ngIf="nationalId.errors?.['invalidNationalId']">
+            {{ nationalId.errors?.['invalidNationalId']?.message }}
+          </span>
+        </div>
+      </div>
 
-  <!-- National ID -->
-  <div class="col-sm-6">
-    <label class="form-label">National ID</label>
-    <input type="text"
-           [(ngModel)]="User.nationalId" name="nationalId"
-           class="form-control"
-           required minlength="14" maxlength="14" pattern="^\d{14}$"
-           #nationalId="ngModel" />
-    <div class="text-danger" *ngIf="nationalId.invalid && (nationalId.touched || userForm.submitted)">
-      <span *ngIf="nationalId.errors?.['required']">National ID is required.</span>
-      <span *ngIf="nationalId.errors?.['minlength'] || nationalId.errors?.['maxlength'] || nationalId.errors?.['pattern']">
-        National ID must be exactly 14 digits.
-      </span>
-    </div>
-  </div>
+      <!-- Gender (auto-filled from ID; required when Courier) -->
+      <div class="col-sm-6">
+        <label class="form-label">Gender *</label>
+        <select
+          [(ngModel)]="User.gender"
+          name="gender"
+          class="form-select"
+          [required]="true"
+          #gender="ngModel"
+        >
+          <option value="0">-- Select Gender --</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+        </select>
+        <div
+          class="text-danger"
+          *ngIf="
+            (gender.invalid || !gender.value) &&
+            (gender.touched || userForm.submitted)
+          "
+        >
+          Gender is required.
+        </div>
+      </div>
 
-  <!-- Nationality -->
-  <div class="col-sm-6">
-    <label class="form-label">Nationality</label>
-    <input type="text"
-           [(ngModel)]="User.nationality" name="nationality"
-           class="form-control"
-           required pattern="[\u0600-\u06FF\sA-Za-z]+"
-           #nationality="ngModel" />
-    <div class="text-danger" *ngIf="nationality.invalid && (nationality.touched || userForm.submitted)">
-      <span *ngIf="nationality.errors?.['required']">Nationality is required.</span>
-      <span *ngIf="nationality.errors?.['pattern']">Letters only.</span>
-    </div>
-  </div>
+      <!-- Birth Date (auto-filled from ID; required when Courier) -->
+      <div class="col-sm-6">
+        <label class="form-label">Birth Date *</label>
+        <input
+          type="date"
+          [(ngModel)]="User.birthDate"
+          name="birthDate"
+          class="form-control"
+          [required]="true"
+          #birthDate="ngModel"
+        />
+        <div
+          class="text-danger"
+          *ngIf="birthDate.invalid && (birthDate.touched || userForm.submitted)"
+        >
+          <span *ngIf="birthDate.errors?.['required']"
+            >Birth Date is required.</span
+          >
+          <span *ngIf="birthDate.errors?.['futureDate']"
+            >Date cannot be in the future.</span
+          >
+        </div>
+      </div>
 
-  <!-- Mobile Number -->
-  <div class="col-sm-6">
-    <label class="form-label">Mobile Number</label>
-    <input type="text"
-           [(ngModel)]="User.mobileNo" name="mobileNo"
-           class="form-control"
-           required minlength="11" maxlength="11" pattern="^\d{11}$"
-           #mobileNo="ngModel" />
-    <div class="text-danger" *ngIf="mobileNo.invalid && (mobileNo.touched || userForm.submitted)">
-      <span *ngIf="mobileNo.errors?.['required']">Mobile number is required.</span>
-      <span *ngIf="mobileNo.errors?.['minlength'] || mobileNo.errors?.['maxlength'] || mobileNo.errors?.['pattern']">
-        Mobile number must be exactly 11 digits.
-      </span>
-    </div>
-  </div>
+      <!-- Marital Status (required when Courier) -->
+      <div class="col-sm-6">
+        <label class="form-label">Marital Status *</label>
+        <select
+          [(ngModel)]="User.matiralStatus"
+          name="matiralStatus"
+          class="form-select"
+          [required]="true"
+          #matiralStatus="ngModel"
+        >
+          <option value="0">-- Select Marital Status --</option>
+          <option value="Single">Single</option>
+          <option value="Married">Married</option>
+          <option value="Divorced">Divorced</option>
+          <option value="Widowed">Widowed</option>
+        </select>
+        <div
+          class="text-danger"
+          *ngIf="
+            (matiralStatus.invalid || !matiralStatus.value) &&
+            (matiralStatus.touched || userForm.submitted)
+          "
+        >
+          Marital Status is required.
+        </div>
+      </div>
 
-  <!-- Address -->
-  <div class="col-sm-6">
-    <label class="form-label">Address</label>
-    <input type="text"
-           [(ngModel)]="User.address" name="address"
-           class="form-control"
-           required minlength="3" maxlength="250"
-           pattern="^[\u0600-\u06FFa-zA-Z0-9\s\.\,\-\/#]+$"
-           #address="ngModel" />
-    <div class="text-danger" *ngIf="address.invalid && (address.touched || userForm.submitted)">
-      <span *ngIf="address.errors?.['required']">Address is required.</span>
-      <span *ngIf="address.errors?.['minlength']">Address must be at least 3 characters.</span>
-      <span *ngIf="address.errors?.['maxlength']">Address must be at most 250 characters.</span>
-      <span *ngIf="address.errors?.['pattern']">Only letters, numbers and , . - / # are allowed.</span>
-    </div>
-  </div>
+      <!-- Religion (required when Courier) -->
+      <div class="col-sm-6">
+        <label class="form-label">Religion *</label>
+        <input
+          type="text"
+          [(ngModel)]="User.religion"
+          name="religion"
+          class="form-control"
+          [required]="true"
+          pattern="[\u0600-\u06FF\sA-Za-z]+"
+          #religion="ngModel"
+        />
+        <div
+          class="text-danger"
+          *ngIf="religion.invalid && (religion.touched || userForm.submitted)"
+        >
+          <span *ngIf="religion.errors?.['required']"
+            >Religion is required.</span
+          >
+          <span *ngIf="religion.errors?.['pattern']">Letters only.</span>
+        </div>
+      </div>
 
-  <!-- Username -->
-  <div class="col-sm-6">
-    <label class="form-label">Username</label>
-    <input type="text"
-           [(ngModel)]="User.userName" name="userName"
-           class="form-control"
-           required minlength="4" pattern="^[A-Za-z0-9_]{4,}$"
-           #userName="ngModel" />
-    <div class="text-danger" *ngIf="userName.invalid && (userName.touched || userForm.submitted)">
-      <span *ngIf="userName.errors?.['required']">Username is required.</span>
-      <span *ngIf="userName.errors?.['minlength']">Minimum 4 characters.</span>
-      <span *ngIf="userName.errors?.['pattern']">Use letters, numbers, underscore only.</span>
-    </div>
-  </div>
+      <!-- Nationality (required when Courier) -->
+      <div class="col-sm-6">
+        <label class="form-label">Nationality *</label>
+        <input
+          type="text"
+          [(ngModel)]="User.nationality"
+          name="nationality"
+          class="form-control"
+          [required]="true"
+          pattern="[\u0600-\u06FF\sA-Za-z]+"
+          #nationality="ngModel"
+        />
+        <div
+          class="text-danger"
+          *ngIf="
+            nationality.invalid && (nationality.touched || userForm.submitted)
+          "
+        >
+          <span *ngIf="nationality.errors?.['required']"
+            >Nationality is required.</span
+          >
+          <span *ngIf="nationality.errors?.['pattern']">Letters only.</span>
+        </div>
+      </div>
 
-  <!-- Password -->
-  <div class="col-sm-6">
-    <label class="form-label">Password</label>
-    <input type="password"
-           [(ngModel)]="User.userPassword" name="userPassword"
-           class="form-control"
-           required minlength="6" pattern="^(?=.*[A-Za-z])(?=.*\d).{6,}$"
-           #userPassword="ngModel" />
-    <div class="text-danger" *ngIf="userPassword.invalid && (userPassword.touched || userForm.submitted)">
-      <span *ngIf="userPassword.errors?.['required']">Password is required.</span>
-      <span *ngIf="userPassword.errors?.['minlength']">Minimum 6 characters.</span>
-      <span *ngIf="userPassword.errors?.['pattern']">Must contain letters and numbers.</span>
-    </div>
-  </div>
+      <!-- Mobile Number (required when Courier) -->
+      <div class="col-sm-6">
+        <label class="form-label">Mobile Number *</label>
+        <input
+          type="text"
+          [(ngModel)]="User.mobileNo"
+          name="mobileNo"
+          class="form-control"
+          [required]="true"
+          minlength="11"
+          maxlength="11"
+          pattern="^\d{11}$"
+          #mobileNo="ngModel"
+        />
+        <div
+          class="text-danger"
+          *ngIf="mobileNo.invalid && (mobileNo.touched || userForm.submitted)"
+        >
+          <span *ngIf="mobileNo.errors?.['required']"
+            >Mobile number is required.</span
+          >
+          <span
+            *ngIf="mobileNo.errors?.['minlength'] || mobileNo.errors?.['maxlength'] || mobileNo.errors?.['pattern']"
+          >
+            Mobile number must be exactly 11 digits.
+          </span>
+        </div>
+      </div>
 
-  <!-- Active -->
-  <div class="col-sm-12">
-    <label class="form-label">User status</label>
-    <div class="form-check form-switch">
-      <input type="checkbox" [(ngModel)]="User.isActive" name="isActive"
-             class="form-check-input" id="activeCheck" />
-      <label class="form-check-label" for="activeCheck" style="margin-right: 10px">Active</label>
-    </div>
-  </div>
- <!-- Photos -->
-  <div class="col-sm-6">
-    <label class="form-label">Upload Photos</label>
-    <input type="file" class="form-control"  accept="image/*"  name="userPhoto" (change)="onFileChange($event, 'userPhoto')" />
-  </div>
-   <div class="col-sm-6">
-    <label class="form-label">user Photos</label>
-<div class=" flex justify-center">
-  
-    <p-image [src]="User?.userPhoto 
-           ? 'data:image/jpeg;base64,' + User.userPhoto 
-           : 'assets/images/default.jpg'"  
-         alt="Image" 
-         width="50" 
-         [preview]="true">
-</p-image></div></div>
-  
-    <div class="col-sm-6"><input type="file" class="form-control"  accept="image/*"  name="userPhoto2" (change)="onFileChange($event, 'userPhoto2')" /></div>
-     <div class="col-sm-6">
-      <div class=" flex justify-center">
-    <p-image [src]="User?.userPhoto2 
-           ? 'data:image/jpeg;base64,' + User.userPhoto2 
-           : 'assets/images/default.jpg'"  
-         alt="Image" 
-         width="50" 
-         [preview]="true">
-</p-image></div></div>
-    <div class="col-sm-6"><input type="file" class="form-control"  accept="image/*"  name="userPhoto3" (change)="onFileChange($event, 'userPhoto3')" /></div>
-    <div class="col-sm-6">
-<div class=" flex justify-center">
-    <p-image [src]="User?.userPhoto3 
-           ? 'data:image/jpeg;base64,' + User.userPhoto2 
-           : 'assets/images/default.jpg'"   
-         alt="Image" 
-         width="50" 
-         [preview]="true">
-</p-image></div></div>
-    <div class="col-sm-6"><input type="file" class="form-control"  accept="image/*"  name="userPhoto4" (change)="onFileChange($event, 'userPhoto4')" /></div>
-    <div class="col-sm-6">
-<div class=" flex justify-center">
-    <p-image [src]="User?.userPhoto4 
-           ? 'data:image/jpeg;base64,' + User.userPhoto4 
-           : 'assets/images/default.jpg'"  
-         alt="Image" 
-         width="50" 
-         [preview]="true">
-</p-image></div></div>
-     <div class="col-sm-6"><input type="file" class="form-control"  accept="image/*"  name="userPhoto5" (change)="onFileChange($event, 'userPhoto5')" /></div>
-  <div class="col-sm-6">
-<div class=" flex justify-center">
-    <p-image [src]="User?.userPhoto5 
-           ? 'data:image/jpeg;base64,' + User.userPhoto5 
-           : 'assets/images/default.jpg'"   
-         alt="Image" 
-         width="50" 
-         [preview]="true">
-</p-image></div></div>
-  
-  <!-- Permissions -->
-  <hr />
-  <div class="col-sm-3" *ngFor="let Permission of PermissionList">
-    <div class="form-check form-switch">
-      <input type="checkbox" class="form-check-input"
-             [(ngModel)]="Permission.isChecked"  (change)="getValue($event, Permission.id)" name="perm{{Permission.id}}">
-      <label class="form-check-label" style="margin-right: 10px">{{ Permission.permissionName }}</label>
-    </div>
-  </div>
+      <!-- Address (required when Courier) -->
+      <div class="col-sm-6">
+        <label class="form-label">Address *</label>
+        <input
+          type="text"
+          [(ngModel)]="User.address"
+          name="address"
+          class="form-control"
+          [required]="true"
+          minlength="3"
+          maxlength="250"
+          pattern="^[\u0600-\u06FFa-zA-Z0-9\s\.\,\-\/#]+$"
+          #address="ngModel"
+        />
+        <div
+          class="text-danger"
+          *ngIf="address.invalid && (address.touched || userForm.submitted)"
+        >
+          <span *ngIf="address.errors?.['required']">Address is required.</span>
+          <span *ngIf="address.errors?.['minlength']"
+            >Address must be at least 3 characters.</span
+          >
+          <span *ngIf="address.errors?.['maxlength']"
+            >Address must be at most 250 characters.</span
+          >
+          <span *ngIf="address.errors?.['pattern']"
+            >Only letters, numbers and , . - / # are allowed.</span
+          >
+        </div>
+      </div>
 
-  <!-- Submit -->
-  <div class="col-12">
-    <button type="submit" class="btn btn-primary" style="margin-left: 10px" [disabled]="userForm.invalid">Save</button>
-    <button type="button" class="btn btn-warning" (click)="returnToAll()">Back</button>
-  </div>
-</form>
+      <!-- Username (always required) -->
+      <div class="col-sm-6">
+        <label class="form-label">Username *</label>
+        <input
+          type="text"
+          [(ngModel)]="User.userName"
+          name="userName"
+          class="form-control"
+          [required]="true"
+          minlength="4"
+          pattern="^[A-Za-z0-9_]{4,}$"
+          #userName="ngModel"
+        />
+        <div
+          class="text-danger"
+          *ngIf="userName.invalid && (userName.touched || userForm.submitted)"
+        >
+          <span *ngIf="userName.errors?.['required']"
+            >Username is required.</span
+          >
+          <span *ngIf="userName.errors?.['minlength']"
+            >Minimum 4 characters.</span
+          >
+          <span *ngIf="userName.errors?.['pattern']"
+            >Use letters, numbers, underscore only.</span
+          >
+        </div>
+      </div>
 
-    <!-- Spinner -->
-   
+      <!-- Password (always required) -->
+      <div class="col-sm-6">
+        <label class="form-label">Password *</label>
+        <input
+          type="password"
+          [(ngModel)]="User.userPassword"
+          name="userPassword"
+          class="form-control"
+          [required]="true"
+          minlength="6"
+          pattern="^(?=.*[A-Za-z])(?=.*\d).{6,}$"
+          #userPassword="ngModel"
+        />
+        <div
+          class="text-danger"
+          *ngIf="
+            userPassword.invalid && (userPassword.touched || userForm.submitted)
+          "
+        >
+          <span *ngIf="userPassword.errors?.['required']"
+            >Password is required.</span
+          >
+          <span *ngIf="userPassword.errors?.['minlength']"
+            >Minimum 6 characters.</span
+          >
+          <span *ngIf="userPassword.errors?.['pattern']"
+            >Must contain letters and numbers.</span
+          >
+        </div>
+      </div>
+
+      <!-- Active -->
+      <div class="col-sm-12">
+        <label class="form-label">User status</label>
+        <div class="form-check form-switch">
+          <input
+            type="checkbox"
+            [(ngModel)]="User.isActive"
+            name="isActive"
+            class="form-check-input"
+            id="activeCheck"
+          />
+          <label
+            class="form-check-label"
+            for="activeCheck"
+            style="margin-right: 10px"
+            >Active</label
+          >
+        </div>
+      </div>
+
+      <!-- Courier-only fields -->
+      <div class="col-12" *ngIf="isCourier"><hr /></div>
+
+      <div class="col-sm-6" *ngIf="isCourier">
+        <label class="form-label">Vehicle License Number *</label>
+        <input
+          type="text"
+          [(ngModel)]="User.vehicleLicenseNumber"
+          name="vehicleLicenseNumber"
+          class="form-control"
+          [required]="true"
+          minlength="4"
+          (input)="onLicenseNumberInput($event)"
+          #vehicleLicenseNumber="ngModel"
+        />
+        <div
+          class="text-danger"
+          *ngIf="
+            vehicleLicenseNumber.invalid &&
+            (vehicleLicenseNumber.touched || userForm.submitted)
+          "
+        >
+          <span *ngIf="vehicleLicenseNumber.errors?.['required']"
+            >Vehicle License Number is required.</span
+          >
+          <span *ngIf="vehicleLicenseNumber.errors?.['minlength']"
+            >Minimum 4 characters.</span
+          >
+        </div>
+      </div>
+
+      <div class="col-sm-6" *ngIf="isCourier">
+        <label class="form-label">Vehicle Type *</label>
+        <select
+          [(ngModel)]="User.vehicleType"
+          name="vehicleType"
+          class="form-select"
+          [required]="true"
+          #vehicleType="ngModel"
+        >
+          <option value="">-- Select Vehicle Type --</option>
+          <option *ngFor="let v of vehicleTypes" [ngValue]="v">{{ v }}</option>
+        </select>
+        <div
+          class="text-danger"
+          *ngIf="
+            (vehicleType.invalid || !vehicleType.value) &&
+            (vehicleType.touched || userForm.submitted)
+          "
+        >
+          Vehicle Type is required.
+        </div>
+      </div>
+
+      <div class="col-sm-6" *ngIf="isCourier">
+        <label class="form-label">License Expiration (MM/YYYY) *</label>
+        <input
+          type="month"
+          [(ngModel)]="User.licenseExpirationDate"
+          name="licenseExpirationDate"
+          class="form-control"
+          [required]="true"
+          #licenseExpirationDate="ngModel"
+        />
+        <div
+          class="text-danger"
+          *ngIf="
+            licenseExpirationDate.invalid &&
+            (licenseExpirationDate.touched || userForm.submitted)
+          "
+        >
+          <span *ngIf="licenseExpirationDate.errors?.['required']"
+            >License Expiration Date is required.</span
+          >
+        </div>
+      </div>
+      <div class="col-sm-6" *ngIf="isCourier"></div>
+      <!-- Photos -->
+      <div class="col-sm-6">
+        <label class="form-label">Upload Photos</label>
+        <input
+          type="file"
+          class="form-control"
+          accept="image/*"
+          name="userPhoto"
+          (change)="onFileChange($event, 'userPhoto')"
+        />
+      </div>
+      <div class="col-sm-6">
+        <label class="form-label">User Photo</label>
+        <div class="flex justify-center">
+          <p-image
+            [src]="
+              User?.userPhoto
+                ? 'assets/images/default.jpg'
+                : 'assets/images/default.jpg'
+            "
+            alt="Image"
+            width="50"
+            [preview]="true"
+          >
+          </p-image>
+        </div>
+      </div>
+
+      <div class="col-sm-6">
+        <input
+          type="file"
+          class="form-control"
+          accept="image/*"
+          name="userPhoto2"
+          (change)="onFileChange($event, 'userPhoto2')"
+        />
+      </div>
+      <div class="col-sm-6">
+        <div class="flex justify-center">
+          <p-image
+            [src]="
+              User?.userPhoto2
+                ? 'assets/images/default.jpg'
+                : 'assets/images/default.jpg'
+            "
+            alt="Image"
+            width="50"
+            [preview]="true"
+          >
+          </p-image>
+        </div>
+      </div>
+
+      <div class="col-sm-6">
+        <input
+          type="file"
+          class="form-control"
+          accept="image/*"
+          name="userPhoto3"
+          (change)="onFileChange($event, 'userPhoto3')"
+        />
+      </div>
+      <div class="col-sm-6">
+        <div class="flex justify-center">
+          <p-image
+            [src]="
+              User?.userPhoto3
+                ? 'assets/images/default.jpg'
+                : 'assets/images/default.jpg'
+            "
+            alt="Image"
+            width="50"
+            [preview]="true"
+          >
+          </p-image>
+        </div>
+      </div>
+
+      <div class="col-sm-6">
+        <input
+          type="file"
+          class="form-control"
+          accept="image/*"
+          name="userPhoto4"
+          (change)="onFileChange($event, 'userPhoto4')"
+        />
+      </div>
+      <div class="col-sm-6">
+        <div class="flex justify-center">
+          <p-image
+            [src]="
+              User?.userPhoto4
+                ? 'assets/images/default.jpg'
+                : 'assets/images/default.jpg'
+            "
+            alt="Image"
+            width="50"
+            [preview]="true"
+          >
+          </p-image>
+        </div>
+      </div>
+
+      <div class="col-sm-6">
+        <input
+          type="file"
+          class="form-control"
+          accept="image/*"
+          name="userPhoto5"
+          (change)="onFileChange($event, 'userPhoto5')"
+        />
+      </div>
+      <div class="col-sm-6">
+        <div class="flex justify-center">
+          <p-image
+            [src]="
+              User?.userPhoto5
+                ? 'assets/images/default.jpg'
+                : 'assets/images/default.jpg'
+            "
+            alt="Image"
+            width="50"
+            [preview]="true"
+          >
+          </p-image>
+        </div>
+      </div>
+
+      <!-- Permissions -->
+      <hr />
+      <div class="col-12">
+        <h6 class="fw-semibold mb-3">Select Permission Level</h6>
+        <div class="row">
+          <div class="col-sm-4" *ngFor="let Permission of PermissionList">
+            <div class="form-check">
+              <input
+                type="radio"
+                class="form-check-input"
+                [(ngModel)]="selectedPermissionId"
+                [value]="Permission.id"
+                name="permission"
+                id="perm{{ Permission.id }}"
+              />
+              <label class="form-check-label" for="perm{{ Permission.id }}">
+                {{ Permission.permissionName }}
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <div class="col-12">
+        <button type="submit" class="btn btn-primary" [disabled]="loading">
+          @if (loading) {
+          <span
+            class="spinner-border spinner-border-sm me-2"
+            role="status"
+          ></span>
+          }
+          {{ User.id === 0 ? "Register User" : "Update User" }}
+        </button>
+      </div>
+    </form>
   </mat-card-content>
 </mat-card>
+} @else {
+<mat-card class="cardWithShadow theme-card">
+  <mat-card-header>
+    <mat-card-title class="m-b-0">Users List</mat-card-title>
+  </mat-card-header>
 
-    }@else {
-      <mat-card class="cardWithShadow theme-card">
-        <mat-card-header>
-          <mat-card-title class="m-b-0">Users data</mat-card-title>
-        </mat-card-header>
-        <mat-card-content class="b-t-1">
-            <mat-card-content class="center-box">
-            <button type="button" class="btn btn-primary" (click)="GoToAdd()">New</button> </mat-card-content>
-            <input class="form-control" type="text" placeholder="Search"  (input)="searchText($event)">
-            <hr>
-            
-            <div class="table-responsive"> 
-                    <table class="table align-middle table-bordered"
-       id="DataTables_Table_1" aria-describedby="DataTables_Table_1_info">
-  <thead>
-    <tr>
-      <th>Name (Arabic)</th>
-      <th>Name (English)</th>
-      <th>Email</th>
-      <th>Marital Status</th>
-      <th>National ID</th>
-      <th>Mobile Number</th>
-      <th>Details</th>
-    </tr>
-  </thead>
-  <tbody>
-    @for (user of fuserList; track user.id) {
-      <tr>
-        <td>{{ user.nameAr }}</td>
-        <td>{{ user.nameEn }}</td>
-        <td>{{ user.email }}</td>
-        <td>{{ user.matiralStatus }}</td>
-        <td>{{ user.nationalId }}</td>
-        <td>{{ user.mobileNo }}</td>
-        <td>
-          <button type="button" class="btn btn-primary" (click)="userByID(user.id)">
-            Details
-          </button>
-        </td>
-      </tr>
-    }
-  </tbody>
-</table>
+  <mat-card-content class="b-t-1">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div class="input-group" style="max-width: 300px">
+        <input
+          type="text"
+          class="form-control"
+          placeholder="Search users..."
+          (input)="searchText($event)"
+        />
+        <button class="btn btn-outline-secondary" type="button">
+          <i class="fas fa-search"></i>
+        </button>
+      </div>
+      <button class="btn btn-primary" (click)="GoToAdd()">
+        <i class="fas fa-plus me-2"></i>Add New User
+      </button>
+    </div>
 
-                  </div>
-                </mat-card-content>
-            </mat-card>
-        }
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead class="table-light">
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Job</th>
+            <th>Mobile</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (user of fuserList; track user.id) {
+          <tr>
+            <td>{{ user.id }}</td>
+            <td>{{ user.nameEn || user.nameAr || "N/A" }}</td>
+            <td>{{ user.email || "N/A" }}</td>
+            <td>
+              <span
+                class="badge"
+                [class]="user.jobId === 1 ? 'bg-primary' : 'bg-success'"
+              >
+                {{ user.jobId === 1 ? "Courier" : "Manager" }}
+              </span>
+            </td>
+            <td>{{ user.mobileNo || "N/A" }}</td>
+            <td>
+              <span
+                class="badge"
+                [class]="user.isActive ? 'bg-success' : 'bg-danger'"
+              >
+                {{ user.isActive ? "Active" : "Inactive" }}
+              </span>
+            </td>
+            <td>
+              <div class="btn-group" role="group">
+                <button
+                  class="btn btn-sm btn-outline-primary"
+                  (click)="userByID(user.id)"
+                  title="Edit"
+                >
+                  <i class="fa-solid fa-pen-to-square"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination Controls -->
+    <div
+      class="d-flex justify-content-between align-items-center mt-4"
+      *ngIf="totalPages > 1"
+    >
+      <!-- Pagination Info -->
+      <div class="d-flex align-items-center">
+        <span class="text-muted me-3">
+          Showing {{ (currentPage - 1) * pageSize + 1 }} to
+          {{ Math.min(currentPage * pageSize, totalRecords) }} of
+          {{ totalRecords }} entries
+        </span>
+
+        <!-- Direct Page Input -->
+        <div class="d-flex align-items-center">
+          <label class="form-label me-2 mb-0 small">Go to:</label>
+          <input
+            type="number"
+            class="form-control form-control-sm"
+            style="width: 60px"
+            [value]="currentPage"
+            min="1"
+            [max]="totalPages"
+            (blur)="onPageInput($event)"
+            (keypress)="onPageInputKeyPress($event)"
+            [disabled]="paginationLoading"
+            title="Enter page number"
+          />
+        </div>
+      </div>
+
+      <!-- Pagination Navigation -->
+      <nav aria-label="User pagination">
+        <ul class="pagination pagination-sm mb-0">
+          <!-- First Page -->
+          <li class="page-item" [class.disabled]="currentPage === 1">
+            <button
+              class="page-link"
+              (click)="goToFirstPage()"
+              [disabled]="currentPage === 1 || paginationLoading"
+              title="First Page"
+            >
+              <i class="fas fa-angle-double-left"></i>
+            </button>
+          </li>
+
+          <!-- Previous Page -->
+          <li class="page-item" [class.disabled]="currentPage === 1">
+            <button
+              class="page-link"
+              (click)="goToPreviousPage()"
+              [disabled]="currentPage === 1 || paginationLoading"
+              title="Previous Page"
+            >
+              <i class="fas fa-angle-left"></i>
+            </button>
+          </li>
+
+          <!-- Page Numbers -->
+          <li
+            class="page-item"
+            *ngFor="let page of getPageNumbers()"
+            [class.active]="page === currentPage"
+            [class.disabled]="page === '...'"
+          >
+            <button
+              *ngIf="page !== '...'"
+              class="page-link"
+              (click)="onPageNumberClick(page)"
+              [disabled]="paginationLoading"
+            >
+              {{ page }}
+            </button>
+            <span
+              *ngIf="page === '...'"
+              class="page-link text-muted"
+              style="cursor: default; pointer-events: none"
+            >
+              ...
+            </span>
+          </li>
+
+          <!-- Next Page -->
+          <li class="page-item" [class.disabled]="currentPage === totalPages">
+            <button
+              class="page-link"
+              (click)="goToNextPage()"
+              [disabled]="currentPage === totalPages || paginationLoading"
+              title="Next Page"
+            >
+              <i class="fas fa-angle-right"></i>
+            </button>
+          </li>
+
+          <!-- Last Page -->
+          <li class="page-item" [class.disabled]="currentPage === totalPages">
+            <button
+              class="page-link"
+              (click)="goToLastPage()"
+              [disabled]="currentPage === totalPages || paginationLoading"
+              title="Last Page"
+            >
+              <i class="fas fa-angle-double-right"></i>
+            </button>
+          </li>
+        </ul>
+      </nav>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="position-relative" *ngIf="paginationLoading">
+      <div
+        class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+        style="background-color: rgba(255, 255, 255, 0.8); z-index: 10"
+      >
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    </div>
+  </mat-card-content>
+</mat-card>
+}

@@ -1,0 +1,86 @@
+<div class="live-tracking-container">
+  <div class="header-section">
+    <h2 class="page-title">
+      <i class="ti ti-map-pin me-2"></i>
+      Live Courier Tracking
+    </h2>
+    <div class="controls">
+      <button class="btn btn-primary" (click)="centerOnAllCouriers()">
+        <i class="ti ti-zoom-in me-1"></i>
+        View All Couriers
+      </button>
+    </div>
+  </div>
+
+  <div class="content-wrapper">
+    <!-- Map Container -->
+    <div class="map-container">
+      <div id="map" class="map"></div>
+    </div>
+
+    <!-- Courier List Sidebar -->
+    <div class="courier-sidebar">
+      <div class="sidebar-header">
+        <h4 class="mb-3">
+          <i class="ti ti-truck me-2"></i>
+          Active Couriers
+        </h4>
+      </div>
+      
+      <div class="courier-list">
+        <div 
+          *ngFor="let courier of courierLocations" 
+          class="courier-item"
+          (click)="centerOnCourier(courier.id)"
+        >
+          <div class="courier-info">
+            <div class="courier-name">{{ courier.name }}</div>
+            <div class="courier-status">
+              <span 
+                class="status-badge" 
+                [ngClass]="'status-' + courier.status"
+              >
+                {{ getStatusText(courier.status) }}
+              </span>
+            </div>
+            <div class="courier-details">
+              <small class="text-muted">
+                <i class="ti ti-speed me-1"></i>
+                {{ courier.speed || 0 }} km/h
+              </small>
+              <small class="text-muted ms-2">
+                <i class="ti ti-clock me-1"></i>
+                {{ courier.timestamp | date:'short' }}
+              </small>
+            </div>
+          </div>
+          <div class="courier-actions">
+            <button 
+              class="btn btn-sm btn-outline-primary"
+              (click)="centerOnCourier(courier.id); $event.stopPropagation()"
+            >
+              <i class="ti ti-zoom-in"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Legend -->
+      <div class="legend mt-4">
+        <h6 class="mb-2">Status Legend</h6>
+        <div class="legend-item">
+          <span class="legend-color status-online"></span>
+          <span>Online</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-color status-delivering"></span>
+          <span>Delivering</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-color status-offline"></span>
+          <span>Offline</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

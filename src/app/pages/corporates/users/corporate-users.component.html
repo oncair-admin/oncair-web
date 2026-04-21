@@ -1,0 +1,126 @@
+<div class="container-fluid">
+  <div class="row mb-4">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+      <div>
+        <h2 class="mb-1">Corporate Contacts</h2>
+        <p class="text-muted mb-0">Manage contacts for company #{{ corporateId }}</p>
+      </div>
+      <a mat-stroked-button routerLink="/dashboard/corporates">Back to Corporates</a>
+    </div>
+  </div>
+
+  @if (showError) {
+  <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+    <strong>Error:</strong> {{ errorMessage }}
+    <button type="button" class="btn-close" (click)="showError=false"></button>
+  </div>
+  }
+
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white border-0 py-3">
+      <h5 class="mb-0">{{ isEditMode ? 'Edit Contact' : 'Add Contact' }}</h5>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-4"><input class="form-control" placeholder="Full Name *" [(ngModel)]="form.fullName" /></div>
+        <div class="col-md-4">
+          <select class="form-select" [(ngModel)]="form.jobTitle">
+            <option>Viewer</option>
+            <option>Manager</option>
+            <option>Admin</option>
+          </select>
+        </div>
+        <div class="col-md-4"><input type="email" class="form-control" placeholder="Email *" [(ngModel)]="form.emailAddress" /></div>
+        <div class="col-md-4"><input type="tel" class="form-control" placeholder="Phone Number *" [(ngModel)]="form.phoneNumber" /></div>
+        <div class="col-md-4"><input class="form-control" placeholder="Alternate Contact Number" [(ngModel)]="form.alternateContactNumber" /></div>
+        <div class="col-md-4">
+          <input type="password" class="form-control" [placeholder]="isEditMode ? 'Password (leave blank to keep)' : 'Password *'" [(ngModel)]="form.password" />
+        </div>
+        <div class="col-md-4 d-flex align-items-center gap-3">
+          <div class="form-check">
+            <input id="isPrimary" class="form-check-input" type="checkbox" [(ngModel)]="form.isPrimary" />
+            <label class="form-check-label" for="isPrimary">Primary</label>
+          </div>
+          <div class="form-check">
+            <input id="isActive" class="form-check-input" type="checkbox" [(ngModel)]="form.isActive" />
+            <label class="form-check-label" for="isActive">Active</label>
+          </div>
+        </div>
+        <div class="col-md-4">
+          @if (isEditMode) {
+            <button mat-stroked-button (click)="cancelEdit()">Cancel</button>
+          }
+          <button mat-raised-button color="primary" (click)="addContact()">
+            {{ isEditMode ? 'Update' : 'Add' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-white border-0 py-3">
+      <h5 class="mb-0">Contacts</h5>
+    </div>
+    <div class="card-body p-0">
+      @if (loading) {
+      <div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div></div>
+      } @else if (contacts.length === 0) {
+      <div class="text-center py-5">
+        <mat-icon class="text-muted" style="font-size: 4rem; width: 4rem; height: 4rem">people_outline</mat-icon>
+        <h5 class="mt-3 text-muted">No contacts found</h5>
+      </div>
+      } @else {
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th class="border-0">ID</th>
+              <th class="border-0">Full Name</th>
+              <th class="border-0">Job Title</th>
+              <th class="border-0">Email</th>
+              <th class="border-0">Phone</th>
+              <th class="border-0">Alternate</th>
+              <th class="border-0">Primary</th>
+              <th class="border-0">Active</th>
+              <th class="border-0 text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (c of contacts; track c.id) {
+            <tr>
+              <td class="align-middle"><span class="badge bg-light text-dark">{{ c.id }}</span></td>
+              <td class="align-middle">{{ c.fullName }}</td>
+              <td class="align-middle"><span class="badge bg-info">{{ c.jobTitle || '-' }}</span></td>
+              <td class="align-middle">{{ c.emailAddress || '-' }}</td>
+              <td class="align-middle">{{ c.phoneNumber || '-' }}</td>
+              <td class="align-middle">{{ c.alternateContactNumber || '-' }}</td>
+              <td class="align-middle">
+                <span class="badge" [class.bg-success]="c.isPrimary" [class.bg-secondary]="!c.isPrimary">
+                  {{ c.isPrimary ? 'Yes' : 'No' }}
+                </span>
+              </td>
+              <td class="align-middle">
+                <span class="badge" [class.bg-success]="c.isActive" [class.bg-secondary]="!c.isActive">
+                  {{ c.isActive ? 'Yes' : 'No' }}
+                </span>
+              </td>
+              <td class="align-middle text-end">
+                <div class="d-flex gap-2 justify-content-end">
+                  <button mat-icon-button color="primary" (click)="editContact(c)" title="Edit">
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <button mat-icon-button color="warn" (click)="deleteContact(c.id)" title="Delete">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      }
+    </div>
+  </div>
+</div>

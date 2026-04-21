@@ -4,7 +4,6 @@
 // </auto-generated>
 //----------------------
 
-/* tslint:disable */
 /* eslint-disable */
 // ReSharper disable InconsistentNaming
 
@@ -26,8 +25,8 @@ export const API_BASE_URL = new InjectionToken<string>('API_BASE_URL');
 @Injectable({ providedIn: 'root' })
 export class ApiController {
   private http: HttpClient;
-  private baseUrl: string = '';
-  headers: HttpHeaders;
+  public baseUrl: string = '';
+  headers: HttpHeaders | undefined;
   private Token: string = '';
   protected jsonParseReviver: ((key: string, value: any) => any) | undefined =
     undefined;
@@ -38,11 +37,8 @@ export class ApiController {
   ) {
     this.http = http;
     //this.baseUrl =  "https://acwade.com/Booking/";
-    this.baseUrl = 'https://acwade.com/CairOn/';
-    if (sessionStorage.getItem('token') != undefined) {
-      this.Token = ('Bearer ' + sessionStorage.getItem('token')) as string;
-      this.headers = new HttpHeaders({ Authorization: this.Token });
-    }
+    this.baseUrl = 'http://173.208.167.153:4443/';
+    this.rebuildHeaders();
   }
   /* getData(): Observable<any> {
     return this.http.get('assets/config.json');
@@ -68,27 +64,31 @@ export class ApiController {
    * @return OK
    */
   login(data: any | undefined): Observable<any> {
+    data.fireBaseToken = '1234567890';
     return this.http.post<any>(this.baseUrl + 'auth/Auth/Login', data);
   }
 
   getApi(Url: string | undefined): Observable<any> {
     this.checkTokenService.CheckToken();
-    return this.http.get<any>(this.baseUrl + Url, {
-      headers: this.headers,
-    });
-    //return this.http.get<any>(this.baseUrl + '/auth/Auth/GetToken?'+ data );
+    return this.http.get<any>(this.baseUrl + Url);
   }
 
   PostApi(data: any | undefined, Url: string | undefined): Observable<any> {
     this.checkTokenService.CheckToken();
-    return this.http.post<any>(this.baseUrl + Url, data, {
-      headers: this.headers,
-    });
+    return this.http.post<any>(this.baseUrl + Url, data);
   }
   PostLiteApi(Url: string | undefined): Observable<any> {
     this.checkTokenService.CheckToken();
-    return this.http.post<any>(this.baseUrl + Url, {
-      headers: this.headers,
-    });
+    return this.http.post<any>(this.baseUrl + Url, {});
+  }
+
+  private rebuildHeaders() {
+    const token = sessionStorage.getItem('token');
+    if (token) {
+      this.Token = 'Bearer ' + token;
+      this.headers = new HttpHeaders({ Authorization: this.Token });
+    } else {
+      this.headers = undefined;
+    }
   }
 }

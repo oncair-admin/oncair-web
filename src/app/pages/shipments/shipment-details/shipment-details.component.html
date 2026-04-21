@@ -1,0 +1,203 @@
+<div class="container-fluid">
+  <div class="row mb-4">
+    <div class="col-12">
+      <button class="btn btn-link p-0 mb-2" (click)="goBack()">
+        <i class="ti ti-arrow-left me-1"></i> Back to Shipments
+      </button>
+      <h2 class="mb-1">Shipment Details</h2>
+      <p class="text-muted mb-0">View shipment information and tracking history</p>
+    </div>
+  </div>
+
+  @if (loading) {
+  <div class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-2 text-muted">Loading shipment details...</p>
+  </div>
+  } @else if (shipment) {
+  <div class="row">
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">
+            <i class="ti ti-package text-primary me-2"></i>
+            {{ shipment.shipmentBarcode }}
+            <span class="badge ms-2 {{ getStatusClass(shipment.statusName) }}">
+              {{ shipment.statusName }}
+            </span>
+          </h5>
+          <button class="btn btn-sm btn-primary" (click)="openTrackingDialog()">
+            <i class="ti ti-timeline-event me-1"></i>
+            Update Tracking
+          </button>
+        </div>
+        <div class="card-body">
+          <div class="row g-4">
+            <div class="col-md-6">
+              <h6 class="text-muted mb-2">Consignee</h6>
+              <p class="mb-1"><strong>{{ shipment.consignee }}</strong></p>
+              <p class="mb-0 text-muted">{{ shipment.consigneePhone }}</p>
+              <p class="mb-0 small">{{ shipment.consigneeAddress }}</p>
+            </div>
+            <div class="col-md-6">
+              <h6 class="text-muted mb-2">Sender</h6>
+              <p class="mb-0">{{ shipment.senderAddress }}</p>
+            </div>
+            <div class="col-12">
+              <h6 class="text-muted mb-2">Route</h6>
+              <p class="mb-0">
+                {{ shipment.shipmentsFromEn }} → {{ shipment.shipmentsToEn }}
+              </p>
+            </div>
+            @if (shipment.instructions) {
+            <div class="col-12">
+              <h6 class="text-muted mb-2">Instructions</h6>
+              <p class="mb-0 p-2 bg-light rounded">{{ shipment.instructions }}</p>
+            </div>
+            }
+            <div class="col-md-6">
+              <h6 class="text-muted mb-2">Branch</h6>
+              <p class="mb-0">{{ shipment.brancheNameEn }}</p>
+            </div>
+            <div class="col-md-6">
+              <h6 class="text-muted mb-2">Total</h6>
+              <p class="mb-0 fw-bold text-primary">{{ getShipmentTotal(shipment) | number:'1.2-2' }} EGP</p>
+            </div>
+            <div class="col-12">
+              <h6 class="text-muted mb-2">Options</h6>
+              <div class="d-flex flex-wrap gap-2">
+                <span class="badge {{ shipment.openPackageAllowed ? 'bg-success' : 'bg-secondary' }}">
+                  Open package allowed: {{ shipment.openPackageAllowed ? 'Yes' : 'No' }}
+                </span>
+                <span class="badge {{ shipment.isFragile ? 'bg-warning text-dark' : 'bg-secondary' }}">
+                  Fragile: {{ shipment.isFragile ? 'Yes' : 'No' }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-0 py-3">
+          <h5 class="mb-0">
+            <i class="ti ti-timeline text-primary me-2"></i>
+            Tracking History
+          </h5>
+        </div>
+        <div class="card-body">
+          @if (trackingLoading) {
+          <div class="text-center py-4">
+            <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+          </div>
+          } @else if (trackingEvents.length === 0) {
+          <p class="text-muted mb-0">No tracking events yet</p>
+          } @else {
+          <div class="timeline">
+            @for (event of trackingEvents; track event.trackingDate) {
+            <div class="d-flex mb-3">
+              <div class="flex-shrink-0 me-3">
+                <span class="badge {{ getStatusClass(event.statusName) }}">{{ event.statusName }}</span>
+              </div>
+              <div>
+                <small class="text-muted">{{ event.trackingDate }}</small>
+              </div>
+            </div>
+            }
+          </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+  } @else {
+  <div class="text-center py-5">
+    <i class="ti ti-package-off" style="font-size: 4rem; color: #ccc;"></i>
+    <h5 class="mt-3 text-muted">Shipment not found</h5>
+    <button class="btn btn-primary mt-3" (click)="goBack()">Back to Shipments</button>
+  </div>
+  }
+
+  @if (showTrackingDialog) {
+  <div class="modal d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <i class="ti ti-timeline-event me-2"></i>
+            Update Tracking
+          </h5>
+          <button type="button" class="btn-close" (click)="closeTrackingDialog()" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="newStatusSelect" class="form-label">New Status</label>
+            <select id="newStatusSelect" class="form-select" [ngModel]="newStatusId" (ngModelChange)="onStatusChange($event)">
+              <option [value]="0" disabled>Select a status</option>
+              @for (status of statuses; track status.id) {
+              <option [value]="status.id">{{ status.statusNameEn }}</option>
+              }
+            </select>
+          </div>
+          @if (requiresCourier()) {
+          <div class="mb-3">
+            <label class="form-label">Courier</label>
+            <mat-form-field class="w-100" appearance="outline">
+              <input
+                matInput
+                type="text"
+                [ngModel]="courierDisplayName"
+                (ngModelChange)="courierDisplayName = $event; filterCouriers($event)"
+                name="courierDisplayName"
+                [matAutocomplete]="courierAuto"
+                placeholder="Search courier..."
+              />
+              <mat-autocomplete
+                #courierAuto="matAutocomplete"
+                (optionSelected)="onCourierSelected($event.option.value)"
+              >
+                @if (couriersLoading) {
+                <mat-option disabled>Loading couriers...</mat-option>
+                } @else {
+                @for (c of filteredCouriers; track c.id) {
+                <mat-option [value]="c">{{ c.nameEn || c.nameAr || 'Courier #' + c.id }}</mat-option>
+                }
+                }
+              </mat-autocomplete>
+            </mat-form-field>
+          </div>
+          }
+          <div class="mb-3">
+            <label for="trackingNoteInput" class="form-label">Note (optional)</label>
+            <textarea
+              id="trackingNoteInput"
+              class="form-control"
+              rows="3"
+              [(ngModel)]="trackingNote"
+              placeholder="Add a note about this status update..."
+            ></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeTrackingDialog()">
+            Cancel
+          </button>
+          <button
+            type="button"
+            class="btn btn-primary"
+            (click)="addTrackingUpdate()"
+            [disabled]="updatingTracking || !newStatusId || (requiresCourier() && !selectedCourierId)"
+          >
+            @if (updatingTracking) {
+            <span class="spinner-border spinner-border-sm me-1"></span>
+            }
+            Update
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+</div>

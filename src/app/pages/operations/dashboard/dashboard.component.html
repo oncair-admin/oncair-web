@@ -1,0 +1,283 @@
+<div class="container-fluid">
+  <!-- Page Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <h2 class="mb-1">Operations Dashboard</h2>
+      <p class="text-muted mb-0">Real-time overview of deliveries and operations</p>
+    </div>
+  </div>
+
+  <!-- Main Statistics Cards -->
+  <div class="row g-4 mb-4">
+    <div class="col-md-6 col-lg-3">
+      <div class="card border-0 shadow-sm h-100 stat-card" (click)="navigateTo('/dashboard/orders/statuses')">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div class="icon-circle bg-success bg-opacity-10">
+              <i class="ti ti-check-circle text-success" style="font-size: 24px;"></i>
+            </div>
+            <span class="badge bg-success-subtle text-success">+12%</span>
+          </div>
+          <h3 class="mb-1">{{ stats?.deliveriesCompleted || 0 }}</h3>
+          <p class="text-muted mb-0 small">Deliveries Completed</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+      <div class="card border-0 shadow-sm h-100 stat-card" (click)="navigateTo('/dashboard/operations/delivery-queue')">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div class="icon-circle bg-primary bg-opacity-10">
+              <i class="ti ti-truck text-primary" style="font-size: 24px;"></i>
+            </div>
+            <span class="badge bg-primary-subtle text-primary">Active</span>
+          </div>
+          <h3 class="mb-1">{{ stats?.inTransitShipments || 0 }}</h3>
+          <p class="text-muted mb-0 small">In-Transit Shipments</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+      <div class="card border-0 shadow-sm h-100 stat-card" (click)="navigateTo('/dashboard/operations/pickup-requests')">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div class="icon-circle bg-warning bg-opacity-10">
+              <i class="ti ti-package text-warning" style="font-size: 24px;"></i>
+            </div>
+            <span class="badge bg-warning-subtle text-warning">Pending</span>
+          </div>
+          <h3 class="mb-1">{{ stats?.pendingPickups || 0 }}</h3>
+          <p class="text-muted mb-0 small">Pending Pickups</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+      <div class="card border-0 shadow-sm h-100 stat-card" (click)="navigateTo('/dashboard/orders/returns')">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div class="icon-circle bg-danger bg-opacity-10">
+              <i class="ti ti-alert-circle text-danger" style="font-size: 24px;"></i>
+            </div>
+            <span class="badge bg-danger-subtle text-danger">-5%</span>
+          </div>
+          <h3 class="mb-1">{{ stats?.failedDeliveries || 0 }}</h3>
+          <p class="text-muted mb-0 small">Failed Deliveries</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Additional Stats -->
+  <div class="row g-4 mb-4">
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body text-center">
+          <i class="ti ti-currency-dollar text-success mb-2" style="font-size: 32px;"></i>
+          <h4 class="mb-1">{{ stats?.todayRevenue || 0 }} EGP</h4>
+          <p class="text-muted mb-0 small">Today's Revenue</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body text-center">
+          <i class="ti ti-route text-primary mb-2" style="font-size: 32px;"></i>
+          <h4 class="mb-1">{{ stats?.activeRoutes || 0 }}</h4>
+          <p class="text-muted mb-0 small">Active Routes</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body text-center">
+          <i class="ti ti-user-check text-info mb-2" style="font-size: 32px;"></i>
+          <h4 class="mb-1">{{ stats?.activeCouriers || 0 }}</h4>
+          <p class="text-muted mb-0 small">Active Couriers</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body text-center">
+          <i class="ti ti-clock text-warning mb-2" style="font-size: 32px;"></i>
+          <h4 class="mb-1">{{ stats?.averageDeliveryTime || 0 }} min</h4>
+          <p class="text-muted mb-0 small">Avg Delivery Time</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Branch Performance -->
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">
+            <i class="ti ti-building me-2"></i>
+            Branch Performance
+          </h5>
+          <button class="btn btn-sm btn-outline-primary">View Details</button>
+        </div>
+        <div class="card-body">
+          @if (loading) {
+          <div class="text-center py-5">
+            <div class="spinner-border text-primary"></div>
+          </div>
+          } @else {
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Branch</th>
+                  <th>Deliveries</th>
+                  <th>Success Rate</th>
+                  <th>Avg Time</th>
+                  <th>Revenue</th>
+                  <th>Couriers</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (branch of branchPerformance; track branch.branchId) {
+                <tr>
+                  <td><strong>{{ branch.branchName }}</strong></td>
+                  <td>{{ branch.deliveries }}</td>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <div class="progress flex-grow-1 me-2" style="height: 6px;">
+                        <div
+                          class="progress-bar"
+                          [class.bg-success]="branch.successRate >= 90"
+                          [class.bg-warning]="branch.successRate >= 80 && branch.successRate < 90"
+                          [class.bg-danger]="branch.successRate < 80"
+                          [style.width.%]="branch.successRate"
+                        ></div>
+                      </div>
+                      <small>{{ branch.successRate }}%</small>
+                    </div>
+                  </td>
+                  <td>{{ branch.avgDeliveryTime }} min</td>
+                  <td><strong>{{ branch.revenue }} EGP</strong></td>
+                  <td>
+                    <span class="badge bg-light text-dark">{{ branch.activeCouriers }} active</span>
+                  </td>
+                </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Escalation Summary -->
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">
+            <i class="ti ti-alert-triangle me-2"></i>
+            Escalations
+          </h5>
+          <span class="badge bg-danger">{{ escalations.length }}</span>
+        </div>
+        <div class="card-body">
+          @if (escalations.length === 0) {
+          <div class="text-center py-4">
+            <i class="ti ti-check-circle text-success mb-2" style="font-size: 3rem;"></i>
+            <p class="text-muted mb-0">No active escalations</p>
+          </div>
+          } @else {
+          <div class="list-group list-group-flush">
+            @for (escalation of escalations; track escalation.id) {
+            <div class="list-group-item px-0">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                  <strong class="d-block">{{ escalation.orderNumber }}</strong>
+                  <small class="text-muted">{{ escalation.type }}</small>
+                </div>
+                <span class="badge {{ getEscalationPriorityClass(escalation.priority) }}">
+                  {{ escalation.priority }}
+                </span>
+              </div>
+              <p class="small text-muted mb-2">{{ escalation.description }}</p>
+              <div class="d-flex justify-content-between align-items-center">
+                <span class="badge {{ getEscalationStatusClass(escalation.status) }}">
+                  {{ escalation.status }}
+                </span>
+                <small class="text-muted">{{ escalation.reportedDate | date: 'short' }}</small>
+              </div>
+            </div>
+            }
+          </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="row g-4 mt-2">
+    <div class="col-12">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-0">
+          <h5 class="mb-0">
+            <i class="ti ti-bolt me-2"></i>
+            Quick Actions
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-3">
+              <button class="btn btn-outline-primary w-100" (click)="navigateTo('/dashboard/operations/live-tracking')">
+                <i class="ti ti-map-pin me-2"></i>
+                Live Map Tracking
+              </button>
+            </div>
+            <div class="col-md-3">
+              <button class="btn btn-outline-primary w-100" (click)="navigateTo('/dashboard/operations/dispatch')">
+                <i class="ti ti-send me-2"></i>
+                Dispatch Center
+              </button>
+            </div>
+            <div class="col-md-3">
+              <button class="btn btn-outline-primary w-100" (click)="navigateTo('/dashboard/orders/new')">
+                <i class="ti ti-plus me-2"></i>
+                Create New Order
+              </button>
+            </div>
+            <div class="col-md-3">
+              <button class="btn btn-outline-primary w-100" (click)="navigateTo('/dashboard/operations/pickup-requests')">
+                <i class="ti ti-package me-2"></i>
+                Pickup Requests
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .icon-circle {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .stat-card {
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+  }
+</style>

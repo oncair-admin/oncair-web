@@ -1,3 +1,6 @@
+/* eslint-disable @angular-eslint/prefer-inject */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-inferrable-types */
 import { Component } from '@angular/core';
 import {
   FormGroup,
@@ -47,7 +50,7 @@ export class AppSideLoginComponent {
     return this.form.controls;
   }
 
-  submit() {
+  async submit() {
     this.loading = true;
     this.userLogin.userName = this.Username;
     this.userLogin.password = this.Userpassword;
@@ -57,9 +60,9 @@ export class AppSideLoginComponent {
       this.loading = false;
     }
 
-    this.router.navigate(['/dashboard']);
+    const payload = { ...this.userLogin };
 
-    this.apiController.login(this.userLogin).subscribe({
+    this.apiController.login(payload).subscribe({
       next: (res: any) => {
         if (res.succeeded) {
           this.loginResp = res.data; // Set the response data
@@ -80,6 +83,10 @@ export class AppSideLoginComponent {
             'respPermissionList',
             JSON.stringify(this.loginResp.respPermissionList)
           );
+          // Store userId for SignalR notifications
+          if (this.loginResp.id) {
+            localStorage.setItem('userId', this.loginResp.id.toString());
+          }
           this.router.navigate(['/dashboard']);
         } else {
           this.alert = 'alert alert-danger';
@@ -88,6 +95,7 @@ export class AppSideLoginComponent {
       },
       error: (err: any) => {
         console.error('Error fetching posts:', err);
+        this.loading = false;
       },
       complete: () => {
         this.loading = false;

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SignalR Test - Send to Angular App</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+</head>
+<body>
+    <h3>SignalR Test - Send Messages to Angular App</h3>
+
+    <div style="margin: 20px 0;">
+        <h4>Test Group Messages:</h4>
+        <input id="groupMessage" placeholder="Message for Test group" value="Hello from HTML to Test group" />
+        <button onclick="sendToTestGroup()">Send to Test Group</button>
+    </div>
+
+    <div style="margin: 20px 0;">
+        <h4>Test User Messages:</h4>
+        <input id="userMessage" placeholder="Message for user" value="Hello from HTML to user" />
+        <button onclick="sendToUser3C()">Send to User 3C</button>
+        <button onclick="sendToUser5C()">Send to User 5C</button>
+    </div>
+
+    <div style="margin: 20px 0;">
+        <h4>Connection Status:</h4>
+        <div id="status">Connecting...</div>
+    </div>
+
+    <div style="margin: 20px 0;">
+        <h4>Received Messages:</h4>
+        <ul id="messages"></ul>
+    </div>
+
+    <script>
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("https://mob.acwade.com/chatHub")
+            .build();
+
+        // Connection status
+        connection.start().then(() => {
+            document.getElementById('status').innerHTML = '✅ Connected to SignalR Hub';
+            document.getElementById('status').style.color = 'green';
+        }).catch(err => {
+            document.getElementById('status').innerHTML = '❌ Connection failed: ' + err;
+            document.getElementById('status').style.color = 'red';
+        });
+
+        // Listen for messages (in case the hub sends back responses)
+        connection.on("ReceiveMessage", (user, message) => {
+            const li = document.createElement("li");
+            li.textContent = `${user}: ${message}`;
+            document.getElementById("messages").appendChild(li);
+        });
+
+        function sendToTestGroup() {
+            const message = document.getElementById('groupMessage').value;
+            console.log('Sending to Test group:', message);
+            connection.invoke('SendToGroup', 'Test', message)
+                .then(() => console.log('✅ Message sent to Test group'))
+                .catch(err => console.error('❌ Error sending to Test group:', err));
+        }
+
+        function sendToUser3C() {
+            const message = document.getElementById('userMessage').value;
+            console.log('Sending to user 3C:', message);
+            connection.invoke('SendToUser', '3C', message)
+                .then(() => console.log('✅ Message sent to user 3C'))
+                .catch(err => console.error('❌ Error sending to user 3C:', err));
+        }
+
+        function sendToUser5C() {
+            const message = document.getElementById('userMessage').value;
+            console.log('Sending to user 5C:', message);
+            connection.invoke('SendToUser', '5C', message)
+                .then(() => console.log('✅ Message sent to user 5C'))
+                .catch(err => console.error('❌ Error sending to user 5C:', err));
+        }
+
+        // Auto-send test messages every 10 seconds for continuous testing
+        setInterval(() => {
+            console.log('🔄 Auto-sending test message...');
+            sendToTestGroup();
+        }, 10000);
+    </script>
+</body>
+</html>

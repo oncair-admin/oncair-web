@@ -1,0 +1,161 @@
+<div class="container-fluid">
+  <div class="row mb-4">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+      <div>
+        <h2 class="mb-1">Corporates</h2>
+        <p class="text-muted mb-0">Manage corporates and their users</p>
+      </div>
+      <button mat-raised-button color="primary" (click)="toggleCreate()">
+        {{ showCreate ? 'Close' : (isEditMode ? 'Edit Corporate' : 'Create Corporate') }}
+      </button>
+    </div>
+  </div>
+
+  @if (showError) {
+  <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+    <strong>Error:</strong> {{ errorMessage }}
+    <button type="button" class="btn-close" (click)="showError=false"></button>
+  </div>
+  }
+
+  @if (showCreate) {
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white border-0 py-3">
+      <h5 class="mb-0">{{ isEditMode ? 'Edit Corporate' : 'Create Corporate' }}</h5>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+        @if (isEditMode) {
+        <div class="col-12"><h6>Company Information</h6></div>
+        <div class="col-md-4"><input class="form-control" placeholder="Company Name *" [(ngModel)]="editForm.companyName" /></div>
+        <div class="col-md-4">
+          <select class="form-select" [(ngModel)]="editForm.businessType">
+            <option>Retail</option>
+            <option>E-commerce</option>
+            <option>Manufacturing</option>
+          </select>
+        </div>
+        <div class="col-md-4"><input class="form-control" placeholder="Commercial Registration Number" [(ngModel)]="editForm.commercialRegistrationNumber" /></div>
+        <div class="col-md-4"><input class="form-control" placeholder="Tax ID / VAT Number" [(ngModel)]="editForm.taxVatNumber" /></div>
+        <div class="col-md-4"><input class="form-control" placeholder="Website URL" [(ngModel)]="editForm.websiteUrl" /></div>
+        <div class="col-md-4">
+          <input type="email" class="form-control" [class.is-invalid]="editForm.companyEmail && !isValidEmail(editForm.companyEmail)" placeholder="Company Email" [(ngModel)]="editForm.companyEmail" />
+          @if (editForm.companyEmail && !isValidEmail(editForm.companyEmail)) {
+          <div class="invalid-feedback d-block">{{ getEmailError(editForm.companyEmail, 'company') }}</div>
+          }
+        </div>
+        <div class="col-md-4"><input class="form-control" placeholder="Company Phone *" [(ngModel)]="editForm.companyPhoneNumber" /></div>
+        <div class="col-md-8"><input class="form-control" placeholder="Company Address *" [(ngModel)]="editForm.companyAddress" /></div>
+        <div class="col-md-4 d-flex align-items-center">
+          <div class="form-check">
+            <input id="editActive" class="form-check-input" type="checkbox" [(ngModel)]="editForm.isActive" />
+            <label class="form-check-label" for="editActive">Active</label>
+          </div>
+        </div>
+        } @else {
+        <div class="col-12"><h6>Company Information</h6></div>
+        <div class="col-md-4"><input class="form-control" placeholder="Company Name *" [(ngModel)]="createForm.companyName" /></div>
+        <div class="col-md-4"><input class="form-control" placeholder="Company Phone *" [(ngModel)]="createForm.phoneNumber" /></div>
+        <div class="col-md-4"><input type="password" class="form-control" placeholder="Password *" [(ngModel)]="createForm.password" /></div>
+
+        <div class="col-12 pt-3"><h6>Primary Contact (Optional)</h6></div>
+        <div class="col-md-4"><input class="form-control" placeholder="Full Name" [(ngModel)]="createForm.contactFullName" /></div>
+        <div class="col-md-4"><input class="form-control" placeholder="Job Title" [(ngModel)]="createForm.contactJobTitle" /></div>
+        <div class="col-md-4">
+          <input type="email" class="form-control" [class.is-invalid]="createForm.contactEmail && !isValidEmail(createForm.contactEmail)" placeholder="Email Address" [(ngModel)]="createForm.contactEmail" />
+          @if (createForm.contactEmail && !isValidEmail(createForm.contactEmail)) {
+          <div class="invalid-feedback d-block">{{ getEmailError(createForm.contactEmail, 'contact person') }}</div>
+          }
+        </div>
+        <div class="col-md-4">
+          <input type="tel" class="form-control" [class.is-invalid]="createForm.contactPhone && !isValidEgyptianPhone(createForm.contactPhone)" placeholder="Phone Number" [(ngModel)]="createForm.contactPhone" />
+          @if (createForm.contactPhone && !isValidEgyptianPhone(createForm.contactPhone)) {
+          <div class="invalid-feedback d-block">{{ getPhoneError(createForm.contactPhone) }}</div>
+          }
+        </div>
+        <div class="col-md-4"><input class="form-control" placeholder="Alternate Contact Number" [(ngModel)]="createForm.contactAltPhone" /></div>
+        }
+
+        <div class="col-12 d-flex justify-content-end gap-2">
+          @if (isEditMode) {
+            <button mat-stroked-button (click)="cancelEdit()">Cancel</button>
+          }
+          <button mat-raised-button color="primary" (click)="create()">
+            {{ isEditMode ? 'Update' : 'Create' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
+  <div class="row mb-3">
+    <div class="col-md-6">
+      <div class="input-group">
+        <input class="form-control" placeholder="Search corporates..." [(ngModel)]="searchTerm" (input)="search()" />
+        <button class="btn btn-outline-secondary" type="button"><mat-icon>search</mat-icon></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-white border-0 py-3">
+      <h5 class="mb-0">All Corporates</h5>
+    </div>
+    <div class="card-body p-0">
+      @if (loading) {
+      <div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div></div>
+      } @else if (filtered.length === 0) {
+      <div class="text-center py-5">
+        <mat-icon class="text-muted" style="font-size: 4rem; width: 4rem; height: 4rem">business</mat-icon>
+        <h5 class="mt-3 text-muted">No corporates found</h5>
+      </div>
+      } @else {
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th class="border-0">ID</th>
+              <th class="border-0">Company</th>
+              <th class="border-0">Business Type</th>
+              <th class="border-0">Phone</th>
+              <th class="border-0">Email</th>
+              <th class="border-0">Address</th>
+              <th class="border-0">Active</th>
+              <th class="border-0 text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (c of filtered; track c.id) {
+            <tr>
+              <td class="align-middle"><span class="badge bg-light text-dark">{{ c.id }}</span></td>
+              <td class="align-middle">{{ c.companyName }}</td>
+              <td class="align-middle"><span class="badge bg-info">{{ c.businessType || '-' }}</span></td>
+              <td class="align-middle">{{ c.companyPhoneNumber }}</td>
+              <td class="align-middle">{{ c.companyEmail || '-' }}</td>
+              <td class="align-middle">{{ c.companyAddress || '-' }}</td>
+              <td class="align-middle">
+                <span class="badge" [class.bg-success]="c.isActive" [class.bg-secondary]="!c.isActive">
+                  {{ c.isActive ? 'Yes' : 'No' }}
+                </span>
+              </td>
+              <td class="align-middle text-end">
+                <div class="d-flex gap-2 justify-content-end">
+                  <button mat-stroked-button color="primary" (click)="openUsers(c)">Users</button>
+                  <button mat-icon-button color="primary" (click)="editCorporate(c)" title="Edit">
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <button mat-icon-button color="warn" (click)="deleteCorporate(c.id)" title="Delete">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      }
+    </div>
+  </div>
+</div>

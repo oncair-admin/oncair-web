@@ -1,0 +1,135 @@
+.status-pending {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.status-confirmed {
+  background-color: #cce5ff;
+  color: #004085;
+}
+
+.status-picked {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.status-transit {
+  background-color: #bee5eb;
+  color: #0c5460;
+}
+
+.status-out {
+  background-color: #d1ecf1;
+  color: #0c5460;
+}
+
+.status-delivered {
+  background-color: #28a745;
+  color: #fff;
+}
+
+.status-failed {
+  background-color: #dc3545;
+  color: #fff;
+}
+
+.status-returned {
+  background-color: #6c757d;
+  color: #fff;
+}
+
+.status-cancelled {
+  background-color: #343a40;
+  color: #fff;
+}
+
+.status-default {
+  background-color: #e9ecef;
+  color: #495057;
+}
+
+// Tracking Timeline
+.tracking-timeline {
+  position: relative;
+  padding-left: 24px;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 8px;
+    top: 8px;
+    bottom: 8px;
+    width: 2px;
+    background-color: #e9ecef;
+  }
+}
+
+.tracking-event {
+  position: relative;
+  padding-bottom: 20px;
+
+  &:last-child {
+    padding-bottom: 0;
+  }
+
+  .tracking-dot {
+    position: absolute;
+    left: -20px;
+    top: 4px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: #e9ecef;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 2px #e9ecef;
+  }
+
+  &.active .tracking-dot {
+    background-color: #5d87ff;
+    box-shadow: 0 0 0 2px #5d87ff;
+  }
+
+  .tracking-content {
+    padding-left: 8px;
+  }
+
+  .tracking-status {
+    color: #333;
+  }
+
+  .tracking-date {
+    font-size: 0.8rem;
+  }
+}
+
+// Modal backdrop
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1050;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal {
+  z-index: 1055;
+}
+
+// Card improvements
+.card {
+  .card-header {
+    padding: 1rem 1.25rem;
+  }
+}
+
+// Table improvements
+.table-borderless {
+  td {
+    padding: 0.5rem 0;
+  }
+}
+
+
+

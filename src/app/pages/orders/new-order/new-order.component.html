@@ -1,0 +1,299 @@
+<div class="container-fluid">
+  <!-- Page Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <h2 class="mb-1">Create New Order</h2>
+          <p class="text-muted mb-0">Manual order entry for hubs or phone orders</p>
+        </div>
+        <button class="btn btn-outline-secondary" (click)="cancel()">
+          <i class="ti ti-arrow-left me-1"></i>
+          Back to Orders
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alert Message -->
+  <div class="{{ alert }} mb-4" *ngIf="alert !== 'd-none'">
+    {{ alertMessage }}
+  </div>
+
+  <!-- Order Form -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-body">
+      <form #orderForm="ngForm" (ngSubmit)="submit()">
+        <!-- Customer Information -->
+        <h5 class="mb-3">Customer Information</h5>
+        <div class="row g-3 mb-4">
+          <div class="col-md-4">
+            <label class="form-label">Customer Name *</label>
+            <input
+              type="text"
+              class="form-control"
+              [(ngModel)]="order.customerName"
+              name="customerName"
+              required
+            />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Customer Phone *</label>
+            <input
+              type="text"
+              class="form-control"
+              [(ngModel)]="order.customerPhone"
+              name="customerPhone"
+              required
+              pattern="^\d{11}$"
+              placeholder="01xxxxxxxxx"
+            />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Customer Email</label>
+            <input
+              type="email"
+              class="form-control"
+              [(ngModel)]="order.customerEmail"
+              name="customerEmail"
+            />
+          </div>
+        </div>
+
+        <hr class="my-4" />
+
+        <!-- Sender Information -->
+        <h5 class="mb-3">Sender Information</h5>
+        <div class="row g-3 mb-4">
+          <div class="col-md-4">
+            <label class="form-label">Sender Name *</label>
+            <input
+              type="text"
+              class="form-control"
+              [(ngModel)]="order.senderName"
+              name="senderName"
+              required
+            />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Sender Phone *</label>
+            <input
+              type="text"
+              class="form-control"
+              [(ngModel)]="order.senderPhone"
+              name="senderPhone"
+              required
+            />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Sender Address *</label>
+            <input
+              type="text"
+              class="form-control"
+              [(ngModel)]="order.senderAddress"
+              name="senderAddress"
+              required
+            />
+          </div>
+        </div>
+
+        <hr class="my-4" />
+
+        <!-- Recipient Information -->
+        <h5 class="mb-3">Recipient Information</h5>
+        <div class="row g-3 mb-4">
+          <div class="col-md-4">
+            <label class="form-label">Recipient Name *</label>
+            <input
+              type="text"
+              class="form-control"
+              [(ngModel)]="order.recipientName"
+              name="recipientName"
+              required
+            />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Recipient Phone *</label>
+            <input
+              type="text"
+              class="form-control"
+              [(ngModel)]="order.recipientPhone"
+              name="recipientPhone"
+              required
+            />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">City *</label>
+            <input
+              type="text"
+              class="form-control"
+              [(ngModel)]="order.recipientCity"
+              name="recipientCity"
+              required
+            />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">District</label>
+            <input
+              type="text"
+              class="form-control"
+              [(ngModel)]="order.recipientDistrict"
+              name="recipientDistrict"
+            />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Recipient Address *</label>
+            <input
+              type="text"
+              class="form-control"
+              [(ngModel)]="order.recipientAddress"
+              name="recipientAddress"
+              required
+            />
+          </div>
+        </div>
+
+        <hr class="my-4" />
+
+        <!-- Package Details -->
+        <h5 class="mb-3">Package Details</h5>
+        <div class="row g-3 mb-4">
+          <div class="col-md-6">
+            <label class="form-label">Package Description *</label>
+            <textarea
+              class="form-control"
+              [(ngModel)]="order.packageDescription"
+              name="packageDescription"
+              required
+              rows="2"
+            ></textarea>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Weight (kg) *</label>
+            <input
+              type="number"
+              class="form-control"
+              [(ngModel)]="order.packageWeight"
+              name="packageWeight"
+              required
+              min="0"
+              step="0.1"
+            />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Dimensions (LxWxH cm)</label>
+            <input
+              type="text"
+              class="form-control"
+              [(ngModel)]="order.packageDimensions"
+              name="packageDimensions"
+              placeholder="20x15x5"
+            />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Package Value (EGP) *</label>
+            <input
+              type="number"
+              class="form-control"
+              [(ngModel)]="order.packageValue"
+              name="packageValue"
+              required
+              min="0"
+            />
+          </div>
+        </div>
+
+        <hr class="my-4" />
+
+        <!-- Delivery & Payment -->
+        <h5 class="mb-3">Delivery & Payment</h5>
+        <div class="row g-3 mb-4">
+          <div class="col-md-3">
+            <label class="form-label">Delivery Type *</label>
+            <select
+              class="form-select"
+              [(ngModel)]="order.deliveryType"
+              name="deliveryType"
+              required
+              (change)="onDeliveryTypeChange()"
+            >
+              <option *ngFor="let type of deliveryTypes" [value]="type">
+                {{ type }}
+              </option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Payment Method *</label>
+            <select
+              class="form-select"
+              [(ngModel)]="order.paymentMethod"
+              name="paymentMethod"
+              required
+            >
+              <option *ngFor="let method of paymentMethods" [value]="method">
+                {{ method }}
+              </option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Shipping Cost (EGP)</label>
+            <input
+              type="number"
+              class="form-control"
+              [(ngModel)]="order.shippingCost"
+              name="shippingCost"
+              readonly
+            />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Branch *</label>
+            <select
+              class="form-select"
+              [(ngModel)]="order.branchId"
+              name="branchId"
+              required
+            >
+              <option *ngFor="let branch of branches" [value]="branch.id">
+                {{ branch.name }}
+              </option>
+            </select>
+          </div>
+          <div class="col-md-12">
+            <label class="form-label">Notes</label>
+            <textarea
+              class="form-control"
+              [(ngModel)]="order.notes"
+              name="notes"
+              rows="2"
+            ></textarea>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="d-flex justify-content-end gap-2">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            (click)="cancel()"
+            [disabled]="loading"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            class="btn btn-primary"
+            [disabled]="loading || !orderForm.valid"
+          >
+            @if (loading) {
+            <span
+              class="spinner-border spinner-border-sm me-2"
+              role="status"
+            ></span>
+            }
+            Create Order
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

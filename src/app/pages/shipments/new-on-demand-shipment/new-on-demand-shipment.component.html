@@ -1,0 +1,142 @@
+<div class="container-fluid">
+  <div class="row mb-4">
+    <div class="col-12">
+      <button class="btn btn-link p-0 mb-2" (click)="goBack()">
+        <i class="ti ti-arrow-left me-1"></i> Back to Shipments
+      </button>
+      <h2 class="mb-1">Create On-Demand Shipment</h2>
+      <p class="text-muted mb-0">
+        Quick shipment with package size and transport selection
+      </p>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white border-0 py-3">
+          <h5 class="mb-0">
+            <i class="ti ti-package text-primary me-2"></i>
+            Shipment Details
+          </h5>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="shipmentForm">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">Consignee Name</label>
+                <input type="text" class="form-control" formControlName="consignee" placeholder="Enter name">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Consignee Phone</label>
+                <input type="text" class="form-control" formControlName="consigneePhone" placeholder="01xxxxxxxxx">
+              </div>
+              <div class="col-12">
+                <label class="form-label">Pickup Address</label>
+                <input type="text" class="form-control" formControlName="fromAddress" placeholder="From address">
+              </div>
+              <div class="col-12">
+                <label class="form-label">Delivery Address</label>
+                <input type="text" class="form-control" formControlName="toAddress" placeholder="To address">
+              </div>
+
+              <div class="col-12">
+                <label id="packageSizeLabel" class="form-label mb-3">Package Size</label>
+                <div class="row g-3" role="group" aria-labelledby="packageSizeLabel">
+                  @for (size of packageSizes; track size.id) {
+                  <div class="col-md-3 col-6">
+                    <div
+                      class="size-card p-3 rounded-3 border cursor-pointer"
+                      [class.selected]="shipmentForm.value.sizeId === size.id"
+                      (click)="shipmentForm.patchValue({sizeId: size.id})"
+                      (keydown.enter)="shipmentForm.patchValue({sizeId: size.id})"
+                      tabindex="0"
+                      role="button"
+                    >
+                      <div class="text-center">
+                        <i class="ti ti-box fs-2 mb-2"></i>
+                        <h6 class="mb-1">{{ size.name }}</h6>
+                        <small class="text-muted">{{ size.description }}</small>
+                      </div>
+                    </div>
+                  </div>
+                  }
+                </div>
+              </div>
+
+              <div class="col-12 mt-4">
+                <label id="transportTypeLabel" class="form-label mb-3">Transport Type</label>
+                <div class="row g-3" role="group" aria-labelledby="transportTypeLabel">
+                  @for (type of transportTypes; track type.id) {
+                  <div class="col-md-4">
+                    <div
+                      class="transport-card p-3 rounded-3 border cursor-pointer"
+                      [class.selected]="shipmentForm.value.transportType === type.id"
+                      (click)="shipmentForm.patchValue({transportType: type.id})"
+                      (keydown.enter)="shipmentForm.patchValue({transportType: type.id})"
+                      tabindex="0"
+                      role="button"
+                    >
+                      <div class="d-flex align-items-center">
+                        <i class="ti {{ type.icon }} fs-2 me-3"></i>
+                        <h6 class="mb-0">{{ type.name }}</h6>
+                      </div>
+                    </div>
+                  </div>
+                  }
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">Distance (km)</label>
+                <input type="number" class="form-control" formControlName="kilometres" min="0" step="0.1">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Quantity</label>
+                <input type="number" class="form-control" formControlName="quantity" min="1">
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm sticky-top">
+        <div class="card-header bg-warning bg-opacity-10 border-0 py-3">
+          <h5 class="mb-0">
+            <i class="ti ti-receipt text-primary me-2"></i>
+            Fee Summary
+          </h5>
+        </div>
+        <div class="card-body">
+          @if (calculatingFees) {
+          <div class="text-center py-4">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-2 mb-0 text-muted">Calculating...</p>
+          </div>
+          } @else if (calculatedFees) {
+          <div class="fee-breakdown">
+            <p class="mb-2"><strong>Total: {{ calculatedFees.total | number:'1.2-2' }} EGP</strong></p>
+            <small class="text-muted">Includes tax: {{ calculatedFees.tax | number:'1.2-2' }} EGP</small>
+          </div>
+          <button class="btn btn-primary w-100 mt-3" (click)="submitShipment()" [disabled]="submitting || !shipmentForm.valid">
+            @if (submitting) {
+            <span class="spinner-border spinner-border-sm me-1"></span>
+            Creating...
+            } @else {
+            <i class="ti ti-check me-1"></i>
+            Create Shipment
+            }
+          </button>
+          } @else {
+          <button class="btn btn-outline-primary w-100" (click)="calculateFees()" [disabled]="!shipmentForm.valid">
+            <i class="ti ti-calculator me-1"></i>
+            Calculate Fees
+          </button>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

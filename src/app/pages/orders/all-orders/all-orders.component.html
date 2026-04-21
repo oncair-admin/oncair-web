@@ -1,0 +1,320 @@
+<div class="container-fluid">
+  <!-- Page Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <h2 class="mb-1">All Orders</h2>
+          <p class="text-muted mb-0">
+            Manage and track all shipment orders
+          </p>
+        </div>
+        <button
+          class="btn btn-primary d-flex align-items-center gap-2"
+          routerLink="/dashboard/orders/new"
+        >
+          <i class="ti ti-plus"></i>
+          Create New Order
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+      <div class="row g-3">
+        <!-- Search -->
+        <div class="col-md-4">
+          <label class="form-label">Search</label>
+          <div class="input-group">
+            <input
+              type="text"
+              class="form-control"
+              placeholder="Search by order #, customer, phone..."
+              [(ngModel)]="filters.searchTerm"
+              (input)="onSearchChange($event)"
+            />
+            <button class="btn btn-outline-secondary" type="button">
+              <i class="ti ti-search"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Status Filter -->
+        <div class="col-md-2">
+          <label class="form-label">Status</label>
+          <select
+            class="form-select"
+            [(ngModel)]="selectedStatus"
+            (change)="onFilterChange()"
+          >
+            <option *ngFor="let status of statusOptions" [value]="status">
+              {{ status }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Delivery Type Filter -->
+        <div class="col-md-2">
+          <label class="form-label">Delivery Type</label>
+          <select
+            class="form-select"
+            [(ngModel)]="selectedDeliveryType"
+            (change)="onFilterChange()"
+          >
+            <option *ngFor="let type of deliveryTypes" [value]="type">
+              {{ type }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Payment Method Filter -->
+        <div class="col-md-2">
+          <label class="form-label">Payment</label>
+          <select
+            class="form-select"
+            [(ngModel)]="selectedPaymentMethod"
+            (change)="onFilterChange()"
+          >
+            <option *ngFor="let method of paymentMethods" [value]="method">
+              {{ method }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Date From -->
+        <div class="col-md-2">
+          <label class="form-label">Date From</label>
+          <input
+            type="date"
+            class="form-control"
+            [(ngModel)]="dateFrom"
+            (change)="onFilterChange()"
+          />
+        </div>
+
+        <!-- Date To -->
+        <div class="col-md-2">
+          <label class="form-label">Date To</label>
+          <input
+            type="date"
+            class="form-control"
+            [(ngModel)]="dateTo"
+            (change)="onFilterChange()"
+          />
+        </div>
+
+        <!-- Clear Filters -->
+        <div class="col-md-2 d-flex align-items-end">
+          <button
+            class="btn btn-outline-secondary w-100"
+            (click)="clearFilters()"
+          >
+            <i class="ti ti-filter-off me-1"></i>
+            Clear Filters
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bulk Actions -->
+  <div class="card border-0 shadow-sm mb-4" *ngIf="selectedOrders.size > 0">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-center">
+        <span class="text-muted">
+          <strong>{{ selectedOrders.size }}</strong> order(s) selected
+        </span>
+        <div class="btn-group" role="group">
+          <button class="btn btn-sm btn-outline-primary" (click)="bulkUpdateStatus()">
+            <i class="ti ti-refresh me-1"></i>
+            Update Status
+          </button>
+          <button class="btn btn-sm btn-outline-primary" (click)="assignCourier()">
+            <i class="ti ti-user me-1"></i>
+            Assign Courier
+          </button>
+          <button class="btn btn-sm btn-outline-primary" (click)="printOrders()">
+            <i class="ti ti-printer me-1"></i>
+            Print
+          </button>
+          <button class="btn btn-sm btn-outline-primary" (click)="exportOrders()">
+            <i class="ti ti-download me-1"></i>
+            Export
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Orders Table -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-white border-0 py-3">
+      <div class="d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+          Orders List ({{ filteredOrders.length }} total)
+        </h5>
+        <button class="btn btn-sm btn-outline-primary" (click)="exportOrders()">
+          <i class="ti ti-download me-1"></i>
+          Export All
+        </button>
+      </div>
+    </div>
+
+    <div class="card-body p-0">
+      @if (loading) {
+      <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-2 text-muted">Loading orders...</p>
+      </div>
+      } @else if (filteredOrders.length === 0) {
+      <div class="text-center py-5">
+        <i class="ti ti-package" style="font-size: 4rem; color: #ccc;"></i>
+        <h5 class="mt-3 text-muted">No orders found</h5>
+        <p class="text-muted">Try adjusting your filters or create a new order</p>
+        <button class="btn btn-primary" routerLink="/dashboard/orders/new">
+          Create First Order
+        </button>
+      </div>
+      } @else {
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th class="border-0">
+                <input
+                  type="checkbox"
+                  class="form-check-input"
+                  [checked]="isAllSelected"
+                  (change)="toggleSelectAll()"
+                />
+              </th>
+              <th class="border-0">Order #</th>
+              <th class="border-0">Customer</th>
+              <th class="border-0">Recipient</th>
+              <th class="border-0">Status</th>
+              <th class="border-0">Delivery Type</th>
+              <th class="border-0">Payment</th>
+              <th class="border-0">Amount</th>
+              <th class="border-0">Courier</th>
+              <th class="border-0">Created</th>
+              <th class="border-0 text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (order of paginatedOrders; track order.id) {
+            <tr>
+              <td class="align-middle">
+                <input
+                  type="checkbox"
+                  class="form-check-input"
+                  [checked]="selectedOrders.has(order.id)"
+                  (change)="toggleOrderSelection(order.id)"
+                />
+              </td>
+              <td class="align-middle">
+                <span class="fw-medium text-primary">{{ order.orderNumber }}</span>
+                <br />
+                @if (order.isCorporate) {
+                <span class="badge bg-info text-white" style="font-size: 0.7rem;">Corporate</span>
+                }
+              </td>
+              <td class="align-middle">
+                <div>{{ order.customerName }}</div>
+                <small class="text-muted">{{ order.customerPhone }}</small>
+              </td>
+              <td class="align-middle">
+                <div>{{ order.recipientName }}</div>
+                <small class="text-muted">{{ order.recipientCity }}</small>
+              </td>
+              <td class="align-middle">
+                <span class="badge {{ getStatusClass(order.status) }}">
+                  {{ order.status }}
+                </span>
+              </td>
+              <td class="align-middle">
+                <span class="badge bg-light text-dark">{{ order.deliveryType }}</span>
+              </td>
+              <td class="align-middle">
+                <small>{{ order.paymentMethod }}</small>
+              </td>
+              <td class="align-middle">
+                <strong>{{ order.codAmount || order.packageValue }} EGP</strong>
+              </td>
+              <td class="align-middle">
+                @if (order.courierName) {
+                <small>{{ order.courierName }}</small>
+                } @else {
+                <span class="text-muted">-</span>
+                }
+              </td>
+              <td class="align-middle">
+                <small>{{ order.createdDate | date: 'short' }}</small>
+              </td>
+              <td class="align-middle text-end">
+                <div class="btn-group" role="group">
+                  <button
+                    class="btn btn-sm btn-outline-primary"
+                    (click)="viewOrder(order.id)"
+                    title="View Details"
+                  >
+                    <i class="ti ti-eye"></i>
+                  </button>
+                  <button
+                    class="btn btn-sm btn-outline-warning"
+                    (click)="editOrder(order.id)"
+                    title="Edit"
+                  >
+                    <i class="ti ti-edit"></i>
+                  </button>
+                  <button
+                    class="btn btn-sm btn-outline-danger"
+                    (click)="deleteOrder(order.id)"
+                    title="Delete"
+                  >
+                    <i class="ti ti-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="d-flex justify-content-between align-items-center p-3 border-top">
+        <div class="text-muted">
+          Showing {{ (currentPage - 1) * pageSize + 1 }} to 
+          {{ Math.min(currentPage * pageSize, filteredOrders.length) }} of 
+          {{ filteredOrders.length }} orders
+        </div>
+        <nav aria-label="Orders pagination">
+          <ul class="pagination pagination-sm mb-0">
+            <li class="page-item" [class.disabled]="currentPage === 1">
+              <button class="page-link" (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1">
+                <i class="ti ti-chevron-left"></i>
+              </button>
+            </li>
+            @for (page of [].constructor(totalPages); track $index; let i = $index) {
+            <li class="page-item" [class.active]="currentPage === i + 1">
+              <button class="page-link" (click)="goToPage(i + 1)">
+                {{ i + 1 }}
+              </button>
+            </li>
+            }
+            <li class="page-item" [class.disabled]="currentPage === totalPages">
+              <button class="page-link" (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages">
+                <i class="ti ti-chevron-right"></i>
+              </button>
+            </li>
+          </ul>
+        </nav>
+      </div>
+      }
+    </div>
+  </div>
+</div>

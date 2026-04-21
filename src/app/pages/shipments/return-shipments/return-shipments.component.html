@@ -1,0 +1,143 @@
+<div class="container-fluid">
+  <!-- Page Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <h2 class="mb-1">Return Shipments</h2>
+          <p class="text-muted mb-0">
+            View and manage returned and failed shipments
+          </p>
+        </div>
+        <button
+          class="btn btn-outline-primary d-flex align-items-center gap-2"
+          routerLink="/dashboard/shipments/all"
+        >
+          <i class="ti ti-arrow-left"></i>
+          Back to All Shipments
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shipments Table -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-white border-0 py-3">
+      <div class="d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+          <i class="ti ti-arrow-back-up text-warning me-2"></i>
+          Return Shipments ({{ totalCount }} total)
+        </h5>
+      </div>
+    </div>
+
+    <div class="card-body p-0">
+      @if (loading) {
+      <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-2 text-muted">Loading return shipments...</p>
+      </div>
+      } @else if (shipments.length === 0) {
+      <div class="text-center py-5">
+        <i class="ti ti-package-off" style="font-size: 4rem; color: #ccc;"></i>
+        <h5 class="mt-3 text-muted">No return shipments found</h5>
+        <p class="text-muted">There are no returned or failed shipments at the moment</p>
+        <button class="btn btn-primary" routerLink="/dashboard/shipments/all">
+          View All Shipments
+        </button>
+      </div>
+      } @else {
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th class="border-0">Barcode</th>
+              <th class="border-0">From</th>
+              <th class="border-0">To</th>
+              <th class="border-0">Status</th>
+              <th class="border-0">Amount</th>
+              <th class="border-0 text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (shipment of shipments; track shipment.shipmentId) {
+            <tr>
+              <td class="align-middle">
+                <span class="fw-medium text-primary">{{ shipment.shipmentBarcode }}</span>
+                <br />
+                <small class="text-muted">ID: {{ shipment.shipmentId }}</small>
+              </td>
+              <td class="align-middle">
+                <div>{{ shipment.shipmentsFromEn }}</div>
+                <small class="text-muted">{{ shipment.shipmentsFromAr }}</small>
+              </td>
+              <td class="align-middle">
+                <div>{{ shipment.shipmentsToEn }}</div>
+                <small class="text-muted">{{ shipment.shipmentsToAr }}</small>
+              </td>
+              <td class="align-middle">
+                <span class="badge {{ getStatusClass(shipment.statusName) }}">
+                  {{ shipment.statusName }}
+                </span>
+                <br />
+                <small class="text-muted">{{ shipment.statusNameAr }}</small>
+              </td>
+              <td class="align-middle">
+                <strong>{{ shipment.totalEgp | number:'1.2-2' }} EGP</strong>
+              </td>
+              <td class="align-middle text-end">
+                <button
+                  class="btn btn-sm btn-outline-primary"
+                  (click)="viewShipment(shipment.shipmentId)"
+                  title="View Details"
+                >
+                  <i class="ti ti-eye me-1"></i>
+                  View Details
+                </button>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      @if (totalPages > 1) {
+      <div class="d-flex justify-content-between align-items-center p-3 border-top">
+        <div class="text-muted">
+          Showing {{ (currentPage - 1) * pageSize + 1 }} to 
+          {{ currentPage * pageSize > totalCount ? totalCount : currentPage * pageSize }} of 
+          {{ totalCount }} shipments
+        </div>
+        <nav aria-label="Return shipments pagination">
+          <ul class="pagination pagination-sm mb-0">
+            <li class="page-item" [class.disabled]="currentPage === 1">
+              <button class="page-link" (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1">
+                <i class="ti ti-chevron-left"></i>
+              </button>
+            </li>
+            @for (page of paginationRange; track page) {
+            <li class="page-item" [class.active]="currentPage === page">
+              <button class="page-link" (click)="goToPage(page)">
+                {{ page }}
+              </button>
+            </li>
+            }
+            <li class="page-item" [class.disabled]="currentPage === totalPages">
+              <button class="page-link" (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages">
+                <i class="ti ti-chevron-right"></i>
+              </button>
+            </li>
+          </ul>
+        </nav>
+      </div>
+      }
+      }
+    </div>
+  </div>
+</div>
+
+
+

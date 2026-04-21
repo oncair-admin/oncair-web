@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
 @Component({
@@ -7,6 +7,8 @@ import { RouterOutlet } from '@angular/router';
   imports: [RouterOutlet],
   templateUrl: './app.component.html',
 })
-export class AppComponent {
-  title = 'Spike Angular Admin Template';
+export class AppComponent implements OnInit {
+  async ngOnInit() {
+    // Initialize app-level services if needed
+  }
 }

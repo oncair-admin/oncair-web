@@ -1,0 +1,521 @@
+<div class="container-fluid">
+  <!-- Page Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <button class="btn btn-link p-0 mb-2" (click)="goBack()">
+            <i class="ti ti-arrow-left me-1"></i> Back to Shipments
+          </button>
+          <h2 class="mb-1">Create New Shipment</h2>
+          <p class="text-muted mb-0">
+            Fill in the details to create a new shipment
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stepper Form -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-4">
+      <mat-stepper linear #stepper>
+        
+        <!-- Step 1: Sender/Receiver Info -->
+        <mat-step [stepControl]="senderReceiverForm" label="Sender & Receiver">
+          <form [formGroup]="senderReceiverForm">
+            <div class="row g-4 mt-2">
+              <!-- Consignee Info -->
+              <div class="col-12">
+                <h5 class="text-primary mb-3">
+                  <i class="ti ti-user me-2"></i>
+                  Consignee Information
+                </h5>
+              </div>
+              <div class="col-md-6">
+                <mat-form-field class="w-100" appearance="outline">
+                  <mat-label>Consignee Name</mat-label>
+                  <input matInput formControlName="consignee" placeholder="Enter consignee name">
+                  <mat-error *ngIf="senderReceiverForm.get('consignee')?.hasError('required')">
+                    Consignee name is required
+                  </mat-error>
+                </mat-form-field>
+              </div>
+              <div class="col-md-6">
+                <mat-form-field class="w-100" appearance="outline">
+                  <mat-label>Consignee Phone</mat-label>
+                  <input matInput formControlName="consigneePhone" placeholder="01xxxxxxxxx">
+                  <mat-error *ngIf="senderReceiverForm.get('consigneePhone')?.hasError('required')">
+                    Phone is required
+                  </mat-error>
+                  <mat-error *ngIf="senderReceiverForm.get('consigneePhone')?.hasError('pattern')">
+                    Invalid Egyptian phone number
+                  </mat-error>
+                </mat-form-field>
+              </div>
+
+              <!-- From Address -->
+              <div class="col-12 mt-4">
+                <h5 class="text-primary mb-3">
+                  <i class="ti ti-map-pin me-2"></i>
+                  Pickup Location (From)
+                </h5>
+              </div>
+              <div class="col-md-4">
+                <mat-form-field class="w-100" appearance="outline">
+                  <mat-label>City</mat-label>
+                  <mat-select formControlName="fromCityId">
+                    <mat-option *ngFor="let city of cities" [value]="city.id">
+                      {{ city.name }}
+                    </mat-option>
+                  </mat-select>
+                  <mat-error>City is required</mat-error>
+                </mat-form-field>
+              </div>
+              <div class="col-md-4">
+                <mat-form-field class="w-100" appearance="outline">
+                  <mat-label>From Address</mat-label>
+                  <input matInput formControlName="fromAddress" placeholder="Street, Building, etc.">
+                  <mat-error>Address is required</mat-error>
+                </mat-form-field>
+              </div>
+              <div class="col-md-4">
+                <mat-form-field class="w-100" appearance="outline">
+                  <mat-label>Sender Address</mat-label>
+                  <input matInput formControlName="senderAddress" placeholder="Full sender address">
+                  <mat-error>Sender address is required</mat-error>
+                </mat-form-field>
+              </div>
+
+              <!-- To Address -->
+              <div class="col-12 mt-4">
+                <h5 class="text-primary mb-3">
+                  <i class="ti ti-map-pin-filled me-2"></i>
+                  Delivery Location (To)
+                </h5>
+              </div>
+              <div class="col-md-4">
+                <mat-form-field class="w-100" appearance="outline">
+                  <mat-label>City</mat-label>
+                  <mat-select formControlName="toCityId">
+                    <mat-option *ngFor="let city of cities" [value]="city.id">
+                      {{ city.name }}
+                    </mat-option>
+                  </mat-select>
+                  <mat-error>City is required</mat-error>
+                </mat-form-field>
+              </div>
+              <div class="col-md-4">
+                <mat-form-field class="w-100" appearance="outline">
+                  <mat-label>To Address</mat-label>
+                  <input matInput formControlName="toAddress" placeholder="Street, Building, etc.">
+                  <mat-error>Address is required</mat-error>
+                </mat-form-field>
+              </div>
+              <div class="col-md-4">
+                <mat-form-field class="w-100" appearance="outline">
+                  <mat-label>Consignee Address</mat-label>
+                  <input matInput formControlName="consigneeAddress" placeholder="Full delivery address">
+                  <mat-error>Consignee address is required</mat-error>
+                </mat-form-field>
+              </div>
+
+              <!-- Instructions -->
+              <div class="col-12">
+                <mat-form-field class="w-100" appearance="outline">
+                  <mat-label>Special Instructions (Optional)</mat-label>
+                  <textarea matInput formControlName="instructions" rows="3" 
+                    placeholder="Any special delivery instructions..."></textarea>
+                </mat-form-field>
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-end mt-4">
+              <button mat-raised-button color="primary" matStepperNext [disabled]="!senderReceiverForm.valid">
+                Next <i class="ti ti-arrow-right ms-1"></i>
+              </button>
+            </div>
+          </form>
+        </mat-step>
+
+        <!-- Step 2: Package Details -->
+        <mat-step [stepControl]="packageForm" label="Package Details">
+          <form [formGroup]="packageForm">
+            <div class="row g-4 mt-2">
+              <!-- Package Dimensions -->
+              <div class="col-12">
+                <h5 class="text-primary mb-3">
+                  <i class="ti ti-box me-2"></i>
+                  Package Dimensions
+                </h5>
+              </div>
+              <div class="col-md-3">
+                <mat-form-field class="w-100" appearance="outline">
+                  <mat-label>Quantity</mat-label>
+                  <input matInput type="number" formControlName="quantity" min="1">
+                  <mat-error>Min 1</mat-error>
+                </mat-form-field>
+              </div>
+              <div class="col-md-3">
+                <mat-form-field class="w-100" appearance="outline">
+                  <mat-label>Weight (kg)</mat-label>
+                  <input matInput type="number" formControlName="weight" step="0.1" min="0.1">
+                  <mat-error>Min 0.1 kg</mat-error>
+                </mat-form-field>
+              </div>
+              <div class="col-md-2">
+                <mat-form-field class="w-100" appearance="outline">
+                  <mat-label>Length (cm)</mat-label>
+                  <input matInput type="number" formControlName="length" min="1">
+                  <mat-error>Required</mat-error>
+                </mat-form-field>
+              </div>
+              <div class="col-md-2">
+                <mat-form-field class="w-100" appearance="outline">
+                  <mat-label>Width (cm)</mat-label>
+                  <input matInput type="number" formControlName="width" min="1">
+                  <mat-error>Required</mat-error>
+                </mat-form-field>
+              </div>
+              <div class="col-md-2">
+                <mat-form-field class="w-100" appearance="outline">
+                  <mat-label>Height (cm)</mat-label>
+                  <input matInput type="number" formControlName="height" min="1">
+                  <mat-error>Required</mat-error>
+                </mat-form-field>
+              </div>
+
+              <!-- Content Category -->
+              <div class="col-12 mt-4">
+                <h5 class="text-primary mb-3">
+                  <i class="ti ti-category me-2"></i>
+                  Content Information
+                </h5>
+              </div>
+              <div class="col-md-6">
+                <mat-form-field class="w-100" appearance="outline">
+                  <mat-label>Content Category</mat-label>
+                  <mat-select formControlName="contentCategoryId">
+                    <mat-option *ngFor="let category of contentCategories" [value]="category.id">
+                      {{ category.name }}
+                    </mat-option>
+                  </mat-select>
+                  <mat-error>Content category is required</mat-error>
+                </mat-form-field>
+              </div>
+              <div class="col-md-6">
+                <mat-form-field class="w-100" appearance="outline">
+                  <mat-label>Content Description (Optional)</mat-label>
+                  <input matInput formControlName="contentCategoryText" placeholder="Describe the contents">
+                </mat-form-field>
+              </div>
+
+              <!-- COD & Insurance -->
+              <div class="col-12 mt-4">
+                <h5 class="text-primary mb-3">
+                  <i class="ti ti-cash me-2"></i>
+                  COD & Insurance
+                </h5>
+              </div>
+              <div class="col-md-6">
+                <mat-form-field class="w-100" appearance="outline">
+                  <mat-label>COD Amount (EGP)</mat-label>
+                  <input matInput type="number" formControlName="codAmount" min="0">
+                  <mat-hint>Cash on Delivery amount to collect</mat-hint>
+                </mat-form-field>
+              </div>
+              <div class="col-md-6">
+                <mat-form-field class="w-100" appearance="outline">
+                  <mat-label>Insurance Value (EGP)</mat-label>
+                  <input matInput type="number" formControlName="insurance" min="0">
+                  <mat-hint>Declared value for insurance</mat-hint>
+                </mat-form-field>
+              </div>
+
+              <!-- Package Options -->
+              <div class="col-12 mt-4">
+                <h5 class="text-primary mb-3">
+                  <i class="ti ti-settings me-2"></i>
+                  Package Options
+                </h5>
+              </div>
+              <div class="col-md-6">
+                <mat-checkbox formControlName="isFragile" color="primary">
+                  <i class="ti ti-alert-triangle text-warning me-1"></i>
+                  Fragile Package
+                </mat-checkbox>
+              </div>
+              <div class="col-md-6">
+                <mat-checkbox formControlName="openPackageAllowed" color="primary">
+                  <i class="ti ti-box text-info me-1"></i>
+                  Allow Open Package Inspection
+                </mat-checkbox>
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">
+              <button mat-button matStepperPrevious>
+                <i class="ti ti-arrow-left me-1"></i> Back
+              </button>
+              <button mat-raised-button color="primary" matStepperNext [disabled]="!packageForm.valid">
+                Next <i class="ti ti-arrow-right ms-1"></i>
+              </button>
+            </div>
+          </form>
+        </mat-step>
+
+        <!-- Step 3: Service Options -->
+        <mat-step [stepControl]="serviceForm" label="Service Options">
+          <form [formGroup]="serviceForm">
+            <div class="row g-4 mt-2">
+              <!-- Shipment Type & Service -->
+              <div class="col-12">
+                <h5 class="text-primary mb-3">
+                  <i class="ti ti-truck me-2"></i>
+                  Service Selection
+                </h5>
+              </div>
+              <div class="col-md-6">
+                <mat-form-field class="w-100" appearance="outline">
+                  <mat-label>Shipment Type</mat-label>
+                  <mat-select formControlName="shipmentType">
+                    <mat-option *ngFor="let type of shipmentTypes" [value]="type.id">
+                      {{ type.name }}
+                    </mat-option>
+                  </mat-select>
+                  <mat-error>Required</mat-error>
+                </mat-form-field>
+              </div>
+              <div class="col-md-6">
+                <mat-form-field class="w-100" appearance="outline">
+                  <mat-label>Delivery Method</mat-label>
+                  <mat-select formControlName="deliveryMethod">
+                    <mat-option *ngFor="let method of deliveryMethods" [value]="method.id">
+                      {{ method.name }}
+                    </mat-option>
+                  </mat-select>
+                  <mat-error>Required</mat-error>
+                </mat-form-field>
+              </div>
+              <div class="col-md-6">
+                <mat-form-field class="w-100" appearance="outline">
+                  <mat-label>Service Type</mat-label>
+                  <mat-select formControlName="serviceType">
+                    <mat-option *ngFor="let type of serviceTypes" [value]="type.id">
+                      {{ type.name }}
+                    </mat-option>
+                  </mat-select>
+                  <mat-error>Required</mat-error>
+                </mat-form-field>
+              </div>
+              <div class="col-md-6">
+                <mat-form-field class="w-100" appearance="outline">
+                  <mat-label>Payment Method</mat-label>
+                  <mat-select formControlName="paymentMethod">
+                    <mat-option *ngFor="let method of paymentMethods" [value]="method.id">
+                      {{ method.name }}
+                    </mat-option>
+                  </mat-select>
+                  <mat-error>Required</mat-error>
+                </mat-form-field>
+              </div>
+
+              <!-- Service Options -->
+              <div class="col-12 mt-4">
+                <h5 class="text-primary mb-3">
+                  <i class="ti ti-settings me-2"></i>
+                  Additional Options
+                </h5>
+              </div>
+              <div class="col-md-4">
+                <mat-checkbox formControlName="isPickup" color="primary">
+                  <i class="ti ti-package text-primary me-1"></i>
+                  Pickup Required
+                </mat-checkbox>
+              </div>
+              <div class="col-md-4">
+                <mat-checkbox formControlName="isReturn" color="primary">
+                  <i class="ti ti-arrow-back-up text-warning me-1"></i>
+                  Return Service
+                </mat-checkbox>
+              </div>
+              <div class="col-md-4">
+                <mat-checkbox formControlName="isReplacement" color="primary">
+                  <i class="ti ti-replace text-info me-1"></i>
+                  Replacement Service
+                </mat-checkbox>
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">
+              <button mat-button matStepperPrevious>
+                <i class="ti ti-arrow-left me-1"></i> Back
+              </button>
+              <button mat-raised-button color="primary" matStepperNext [disabled]="!serviceForm.valid">
+                Next <i class="ti ti-arrow-right ms-1"></i>
+              </button>
+            </div>
+          </form>
+        </mat-step>
+
+        <!-- Step 4: Confirmation -->
+        <mat-step label="Confirmation">
+          <div class="row mt-4">
+            <!-- Summary -->
+            <div class="col-lg-8">
+              <h5 class="text-primary mb-4">
+                <i class="ti ti-clipboard-check me-2"></i>
+                Shipment Summary
+              </h5>
+              
+              <div class="summary-section mb-4">
+                <h6 class="text-muted mb-2">Consignee</h6>
+                <p class="mb-1"><strong>{{ senderReceiverForm.value.consignee }}</strong></p>
+                <p class="mb-0 text-muted">{{ senderReceiverForm.value.consigneePhone }}</p>
+              </div>
+              
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="summary-section mb-4">
+                    <h6 class="text-muted mb-2">From</h6>
+                    <p class="mb-1">{{ getCityName(senderReceiverForm.value.fromCityId) }}</p>
+                    <p class="mb-0 text-muted small">{{ senderReceiverForm.value.fromAddress }}</p>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="summary-section mb-4">
+                    <h6 class="text-muted mb-2">To</h6>
+                    <p class="mb-1">{{ getCityName(senderReceiverForm.value.toCityId) }}</p>
+                    <p class="mb-0 text-muted small">{{ senderReceiverForm.value.consigneeAddress }}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="summary-section mb-4">
+                <h6 class="text-muted mb-2">Package</h6>
+                <p class="mb-1">
+                  {{ packageForm.value.quantity }} x {{ getContentCategoryName(packageForm.value.contentCategoryId) }}
+                </p>
+                <p class="mb-0 text-muted small">
+                  {{ packageForm.value.weight }} kg | 
+                  {{ packageForm.value.length }}x{{ packageForm.value.width }}x{{ packageForm.value.height }} cm
+                </p>
+                <div class="mt-2">
+                  @if (packageForm.value.isFragile) {
+                    <span class="badge bg-warning text-dark me-2">Fragile</span>
+                  }
+                  @if (packageForm.value.openPackageAllowed) {
+                    <span class="badge bg-info text-white">Open Package Allowed</span>
+                  }
+                </div>
+              </div>
+
+              @if (senderReceiverForm.value.instructions) {
+              <div class="summary-section mb-4">
+                <h6 class="text-muted mb-2">Instructions</h6>
+                <p class="mb-0 p-2 bg-light rounded">{{ senderReceiverForm.value.instructions }}</p>
+              </div>
+              }
+            </div>
+
+            <!-- Fee Breakdown -->
+            <div class="col-lg-4">
+              <div class="card bg-light border-0">
+                <div class="card-body">
+                  <h5 class="mb-4">
+                    <i class="ti ti-receipt text-primary me-2"></i>
+                    Fee Breakdown
+                  </h5>
+                  
+                  @if (calculatingFees) {
+                  <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                      <span class="visually-hidden">Calculating...</span>
+                    </div>
+                    <p class="mt-2 mb-0 text-muted">Calculating fees...</p>
+                  </div>
+                  } @else if (calculatedFees) {
+                  <table class="table table-sm table-borderless mb-0">
+                    <tbody>
+                      <tr>
+                        <td class="text-muted">Pickup Fees</td>
+                        <td class="text-end">{{ calculatedFees.pickupFees | number:'1.2-2' }} EGP</td>
+                      </tr>
+                      <tr>
+                        <td class="text-muted">Zonal Rate</td>
+                        <td class="text-end">{{ calculatedFees.zonalRate | number:'1.2-2' }} EGP</td>
+                      </tr>
+                      <tr>
+                        <td class="text-muted">COD Collection</td>
+                        <td class="text-end">{{ calculatedFees.codCollectionFees | number:'1.2-2' }} EGP</td>
+                      </tr>
+                      <tr>
+                        <td class="text-muted">Insurance</td>
+                        <td class="text-end">{{ calculatedFees.insurance | number:'1.2-2' }} EGP</td>
+                      </tr>
+                      @if (calculatedFees.fragile > 0) {
+                      <tr>
+                        <td class="text-muted">Fragile Fee</td>
+                        <td class="text-end">{{ calculatedFees.fragile | number:'1.2-2' }} EGP</td>
+                      </tr>
+                      }
+                      @if (calculatedFees.openPackageAllowed > 0) {
+                      <tr>
+                        <td class="text-muted">Open Package</td>
+                        <td class="text-end">{{ calculatedFees.openPackageAllowed | number:'1.2-2' }} EGP</td>
+                      </tr>
+                      }
+                      <tr>
+                        <td class="text-muted">Tax ({{ calculatedFees.taxPercentage }}%)</td>
+                        <td class="text-end">
+                          {{ (calculatedFees.total * calculatedFees.taxPercentage / 100) | number:'1.2-2' }} EGP
+                        </td>
+                      </tr>
+                      <tr class="border-top">
+                        <td class="fw-bold">Total</td>
+                        <td class="text-end fw-bold text-primary fs-5">
+                          {{ calculatedFees.total | number:'1.2-2' }} EGP
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  } @else {
+                  <div class="text-center py-4">
+                    <button class="btn btn-outline-primary" (click)="calculateFees()">
+                      <i class="ti ti-calculator me-1"></i>
+                      Calculate Fees
+                    </button>
+                  </div>
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-between mt-4">
+            <button mat-button matStepperPrevious>
+              <i class="ti ti-arrow-left me-1"></i> Back
+            </button>
+            <button 
+              mat-raised-button 
+              color="primary" 
+              (click)="submitShipment()"
+              [disabled]="submitting || !calculatedFees"
+            >
+              @if (submitting) {
+              <span class="spinner-border spinner-border-sm me-1"></span>
+              Creating...
+              } @else {
+              <i class="ti ti-check me-1"></i>
+              Create Shipment
+              }
+            </button>
+          </div>
+        </mat-step>
+      </mat-stepper>
+    </div>
+  </div>
+</div>
+
+
+

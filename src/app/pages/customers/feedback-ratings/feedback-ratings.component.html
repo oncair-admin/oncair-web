@@ -1,0 +1,249 @@
+<div class="container-fluid">
+  <div class="row mb-4">
+    <div class="col-12">
+      <h2 class="mb-1">Feedback & Ratings</h2>
+      <p class="text-muted mb-0">Customer reviews and delivery experience ratings</p>
+    </div>
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class="row g-4 mb-4">
+    <div class="col-md-6 col-lg-3">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body text-center">
+          <i class="ti ti-star text-warning mb-2" style="font-size: 32px;"></i>
+          <h3 class="mb-1">{{ statistics?.averageOverallRating || 0 }}</h3>
+          <p class="text-muted mb-0 small">Average Rating</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body text-center">
+          <i class="ti ti-message-circle text-primary mb-2" style="font-size: 32px;"></i>
+          <h3 class="mb-1">{{ statistics?.totalFeedbacks || 0 }}</h3>
+          <p class="text-muted mb-0 small">Total Feedbacks</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body text-center">
+          <i class="ti ti-thumb-up text-success mb-2" style="font-size: 32px;"></i>
+          <h3 class="mb-1">{{ statistics?.recommendationRate || 0 }}%</h3>
+          <p class="text-muted mb-0 small">Recommendation Rate</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6 col-lg-3">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body text-center">
+          <i class="ti ti-clock text-warning mb-2" style="font-size: 32px;"></i>
+          <h3 class="mb-1">{{ statistics?.pendingFeedbacks || 0 }}</h3>
+          <p class="text-muted mb-0 small">Pending Reviews</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detailed Statistics -->
+  <div class="row g-4 mb-4">
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-0">
+          <h5 class="mb-0">Rating Breakdown</h5>
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span>Courier Rating</span>
+              <strong>{{ statistics?.averageCourierRating || 0 }}</strong>
+            </div>
+            <div class="progress" style="height: 8px;">
+              <div
+                class="progress-bar bg-warning"
+                [style.width.%]="(statistics?.averageCourierRating || 0) * 20"
+              ></div>
+            </div>
+          </div>
+          <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span>Delivery Speed</span>
+              <strong>{{ statistics?.averageDeliverySpeedRating || 0 }}</strong>
+            </div>
+            <div class="progress" style="height: 8px;">
+              <div
+                class="progress-bar bg-primary"
+                [style.width.%]="(statistics?.averageDeliverySpeedRating || 0) * 20"
+              ></div>
+            </div>
+          </div>
+          <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span>Package Condition</span>
+              <strong>{{ statistics?.averagePackageConditionRating || 0 }}</strong>
+            </div>
+            <div class="progress" style="height: 8px;">
+              <div
+                class="progress-bar bg-success"
+                [style.width.%]="(statistics?.averagePackageConditionRating || 0) * 20"
+              ></div>
+            </div>
+          </div>
+          <div>
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span>Communication</span>
+              <strong>{{ statistics?.averageCommunicationRating || 0 }}</strong>
+            </div>
+            <div class="progress" style="height: 8px;">
+              <div
+                class="progress-bar bg-info"
+                [style.width.%]="(statistics?.averageCommunicationRating || 0) * 20"
+              ></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-0">
+          <h5 class="mb-0">Top Couriers</h5>
+        </div>
+        <div class="card-body">
+          <div class="list-group list-group-flush">
+            @for (courier of statistics?.topCouriers || []; track courier.courierId) {
+            <div class="list-group-item px-0">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <strong class="d-block">{{ courier.courierName }}</strong>
+                  <small class="text-muted">{{ courier.totalFeedbacks }} reviews</small>
+                </div>
+                <div class="text-end">
+                  <div class="text-warning">
+                    <i class="ti ti-star-filled"></i>
+                    <strong>{{ courier.averageRating }}</strong>
+                  </div>
+                  <small class="text-muted">{{ courier.recommendationRate }}%</small>
+                </div>
+              </div>
+            </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Search by order #, customer, courier..."
+            [(ngModel)]="searchTerm"
+            (input)="applyFilters()"
+          />
+        </div>
+        <div class="col-md-2">
+          <select class="form-select" [(ngModel)]="selectedStatus" (change)="applyFilters()">
+            <option *ngFor="let status of statusOptions" [value]="status">{{ status }}</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <select class="form-select" [(ngModel)]="selectedRating" (change)="applyFilters()">
+            <option *ngFor="let rating of ratingOptions" [value]="rating">{{ rating }}</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Feedbacks Table -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-white">
+      <h5 class="mb-0">Customer Feedbacks ({{ filteredFeedbacks.length }} total)</h5>
+    </div>
+    <div class="card-body p-0">
+      @if (loading) {
+      <div class="text-center py-5">
+        <div class="spinner-border text-primary"></div>
+      </div>
+      } @else {
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Order #</th>
+              <th>Customer</th>
+              <th>Courier</th>
+              <th>Rating</th>
+              <th>Experience</th>
+              <th>Date</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (feedback of filteredFeedbacks; track feedback.id) {
+            <tr>
+              <td><strong>{{ feedback.orderNumber }}</strong></td>
+              <td>
+                <div>{{ feedback.customerName }}</div>
+                <small class="text-muted">{{ feedback.customerPhone }}</small>
+              </td>
+              <td>{{ feedback.courierName }}</td>
+              <td>
+                <div class="d-flex align-items-center">
+                  <span class="text-warning me-2">
+                    @for (star of getStarArray(feedback.overallRating); track $index) {
+                    <i class="ti" [class.ti-star-filled]="star === 1" [class.ti-star]="star === 0"></i>
+                    }
+                  </span>
+                  <strong>{{ feedback.overallRating }}</strong>
+                </div>
+              </td>
+              <td>
+                <span class="badge {{ getExperienceClass(feedback.deliveryExperience) }}">
+                  {{ feedback.deliveryExperience }}
+                </span>
+              </td>
+              <td>{{ feedback.feedbackDate | date }}</td>
+              <td>
+                <span class="badge {{ getStatusClass(feedback.status) }}">
+                  {{ feedback.status }}
+                </span>
+              </td>
+              <td>
+                <div class="btn-group" role="group">
+                  <button
+                    class="btn btn-sm btn-outline-primary"
+                    (click)="viewFeedbackDetail(feedback)"
+                    title="View Details"
+                  >
+                    <i class="ti ti-eye"></i>
+                  </button>
+                  @if (feedback.status === 'Pending') {
+                  <button
+                    class="btn btn-sm btn-outline-success"
+                    (click)="respondToFeedback(feedback.id)"
+                    title="Respond"
+                  >
+                    <i class="ti ti-message"></i>
+                  </button>
+                  }
+                </div>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      }
+    </div>
+  </div>
+</div>

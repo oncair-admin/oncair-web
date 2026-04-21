@@ -76,11 +76,25 @@ export const navItems: NavItem[] = [
     route: '/dashboard/branches',
   },
   {
-    displayName: 'Users',
-    ItemId:2,
-    iconName: 'user-plus',
+    displayName: 'Chats',
+    ItemId:0,
+    iconName: 'message-circle',
+    bgcolor: 'success',
+    route: '/dashboard/chat',
+  },
+  {
+    displayName: 'Complaints',
+    ItemId: 0,
+    iconName: 'alert-triangle',
     bgcolor: 'warning',
-    route: '/extra/UsersData',
+    route: '/dashboard/complaints',
+  },
+  {
+    displayName: 'Corporates',
+    ItemId: 0,
+    iconName: 'building',
+    bgcolor: 'primary',
+    route: '/dashboard/corporates',
   },
   {
     displayName: 'اضافة قاعدة بيانات',
@@ -88,5 +102,122 @@ export const navItems: NavItem[] = [
     iconName: 'tooltip',
     bgcolor: 'primary',
     route: '/extra/AddDatabase',
+  },
+  {
+    displayName: 'Customers',
+    ItemId:0,
+    iconName: 'users',
+    bgcolor: 'warning',
+    children: [
+      {
+        displayName: 'Customer Directory',
+        iconName: 'address-book',
+        route: '/dashboard/customers/directory',
+      },
+      {
+        displayName: 'Support Tickets',
+        iconName: 'message-circle',
+        route: '/dashboard/customers/tickets',
+      },
+      {
+        displayName: 'Feedback & Ratings',
+        iconName: 'star',
+        route: '/dashboard/customers/feedback',
+      },
+    ],
+  },
+  {
+    displayName: 'Operations',
+    ItemId:0,
+    iconName: 'dashboard',
+    bgcolor: 'success',
+    children: [
+      {
+        displayName: 'Dashboard',
+        iconName: 'chart-bar',
+        route: '/dashboard/operations/dashboard',
+      },
+      {
+        displayName: 'Live Map Tracking',
+        iconName: 'map-pin',
+        route: '/dashboard/operations/live-tracking',
+      },
+      {
+        displayName: 'Dispatch Center',
+        iconName: 'send',
+        route: '/dashboard/operations/dispatch',
+      },
+      {
+        displayName: 'Delivery Queue',
+        iconName: 'list-check',
+        route: '/dashboard/operations/delivery-queue',
+      },
+      {
+        displayName: 'Pickup Requests',
+        iconName: 'package',
+        route: '/dashboard/operations/pickup-requests',
+      },
+    ],
+  },
+  {
+    displayName: 'Orders & Shipments',
+    ItemId:0,
+    iconName: 'package',
+    bgcolor: 'accent',
+    children: [
+      {
+        displayName: 'All Orders',
+        iconName: 'list',
+        route: '/dashboard/orders/all',
+      },
+      {
+        displayName: 'Create New Order',
+        iconName: 'plus',
+        route: '/dashboard/orders/new',
+      },
+      {
+        displayName: 'Corporate Orders',
+        iconName: 'building',
+        route: '/dashboard/orders/corporate',
+      },
+      {
+        displayName: 'Order Statuses',
+        iconName: 'chart-bar',
+        route: '/dashboard/orders/statuses',
+      },
+      {
+        displayName: 'Returns & Failed',
+        iconName: 'arrow-back',
+        route: '/dashboard/orders/returns',
+      },
+    ],
+  },
+  {
+    displayName: 'Shipments',
+    ItemId:0,
+    iconName: 'truck',
+    bgcolor: 'info',
+    children: [
+      {
+        displayName: 'All Shipments',
+        iconName: 'list',
+        route: '/dashboard/shipments/all',
+      },
+      {
+        displayName: 'Create New Shipment',
+        iconName: 'plus',
+        route: '/dashboard/shipments/new',
+      },
+      {
+        displayName: 'On-Demand Shipment',
+        iconName: 'bolt',
+        route: '/dashboard/shipments/new-on-demand',
+      },
+      {
+        displayName: 'Return Shipments',
+        iconName: 'arrow-back-up',
+        route: '/dashboard/shipments/returns',
+      },
+    ],
   }
 ];

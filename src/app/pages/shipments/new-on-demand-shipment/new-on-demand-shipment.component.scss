@@ -1,0 +1,63 @@
+// Selection cards
+.size-card,
+.transport-card {
+  transition: all 0.2s ease;
+  cursor: pointer;
+  
+  &:hover {
+    border-color: #5d87ff !important;
+    background-color: rgba(93, 135, 255, 0.05);
+  }
+  
+  &.selected {
+    border-color: #5d87ff !important;
+    background-color: rgba(93, 135, 255, 0.1);
+    box-shadow: 0 0 0 2px rgba(93, 135, 255, 0.2);
+    
+    i {
+      color: #5d87ff;
+    }
+  }
+  
+  i {
+    color: #6c757d;
+    transition: color 0.2s ease;
+  }
+}
+
+// Cursor pointer
+.cursor-pointer {
+  cursor: pointer;
+}
+
+// Card improvements
+.card-header.bg-warning {
+  h5 {
+    color: #333;
+  }
+}
+
+// Fee breakdown
+.fee-breakdown {
+  font-size: 0.95rem;
+}
+
+// Sticky sidebar
+.sticky-top {
+  z-index: 10;
+}
+
+// Form field improvements
+::ng-deep .mat-mdc-form-field {
+  .mat-mdc-form-field-subscript-wrapper {
+    margin-bottom: 0.25rem;
+  }
+}
+
+// Icon prefix alignment
+::ng-deep .mat-mdc-form-field-icon-prefix {
+  padding: 0 8px 0 12px;
+}
+
+
+

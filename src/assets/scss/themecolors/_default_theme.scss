@@ -119,6 +119,27 @@ $darkbluetheme: mat.m2-define-dark-theme(
 .sidebar-list {
   &.mdc-list {
     .menu-list-item {
+        // Default colorful hover for items without explicit color class
+        &:not(.primary):not(.accent):not(.warning):not(.error):not(.success) {
+          &.activeMenu,
+          &.expanded,
+          &:hover {
+            .mdc-list-item__primary-text {
+              color: mat.m2-get-color-from-palette($theme-primary, 500) !important;
+            }
+
+            .mat-mdc-list-item-icon {
+              color: mat.m2-get-color-from-palette($theme-primary, 500) !important;
+            }
+          }
+
+          &:before {
+            background-color: rgba(
+              mat.m2-get-color-from-palette($theme-primary, 500),
+              0.1
+            );
+          }
+        }
       &.primary {
         &.activeMenu,
         &.expanded,

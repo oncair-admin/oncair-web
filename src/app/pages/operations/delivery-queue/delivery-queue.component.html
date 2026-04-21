@@ -1,0 +1,143 @@
+<div class="container-fluid">
+  <div class="row mb-4">
+    <div class="col-12">
+      <h2 class="mb-1">Delivery Queue</h2>
+      <p class="text-muted mb-0">Scheduled deliveries with status and courier assignment</p>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Search by order #, customer..."
+            [(ngModel)]="searchTerm"
+            (input)="applyFilters()"
+          />
+        </div>
+        <div class="col-md-2">
+          <select class="form-select" [(ngModel)]="selectedStatus" (change)="applyFilters()">
+            <option *ngFor="let status of statusOptions" [value]="status">{{ status }}</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <select class="form-select" [(ngModel)]="selectedPriority" (change)="applyFilters()">
+            <option *ngFor="let priority of priorityOptions" [value]="priority">{{ priority }}</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bulk Actions -->
+  @if (selectedDeliveries.size > 0) {
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-center">
+        <span><strong>{{ selectedDeliveries.size }}</strong> deliveries selected</span>
+        <button class="btn btn-primary" (click)="bulkAssignCourier()">
+          <i class="ti ti-user me-1"></i>
+          Bulk Assign Courier
+        </button>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- Deliveries Table -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-white">
+      <h5 class="mb-0">Delivery List ({{ filteredDeliveries.length }} total)</h5>
+    </div>
+    <div class="card-body p-0">
+      @if (loading) {
+      <div class="text-center py-5">
+        <div class="spinner-border text-primary"></div>
+      </div>
+      } @else {
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>
+                <input type="checkbox" class="form-check-input" />
+              </th>
+              <th>Order #</th>
+              <th>Customer</th>
+              <th>Address</th>
+              <th>Scheduled</th>
+              <th>Priority</th>
+              <th>Status</th>
+              <th>Courier</th>
+              <th>COD</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (delivery of filteredDeliveries; track delivery.id) {
+            <tr>
+              <td>
+                <input
+                  type="checkbox"
+                  class="form-check-input"
+                  [checked]="selectedDeliveries.has(delivery.id)"
+                  (change)="toggleSelection(delivery.id)"
+                />
+              </td>
+              <td><strong>{{ delivery.orderNumber }}</strong></td>
+              <td>
+                <div>{{ delivery.customerName }}</div>
+                <small class="text-muted">{{ delivery.customerPhone }}</small>
+              </td>
+              <td>
+                <div>{{ delivery.deliveryAddress }}</div>
+                <small class="text-muted">{{ delivery.city }}</small>
+              </td>
+              <td>
+                <div>{{ delivery.scheduledDate | date }}</div>
+                @if (delivery.timeSlot) {
+                <small class="text-muted">{{ delivery.timeSlot }}</small>
+                }
+              </td>
+              <td>
+                <span class="badge {{ getPriorityClass(delivery.priority) }}">
+                  {{ delivery.priority }}
+                </span>
+              </td>
+              <td>
+                <span class="badge {{ getStatusClass(delivery.status) }}">
+                  {{ delivery.status }}
+                </span>
+              </td>
+              <td>
+                @if (delivery.courierName) {
+                {{ delivery.courierName }}
+                } @else {
+                <span class="text-muted">Unassigned</span>
+                }
+              </td>
+              <td>
+                @if (delivery.codAmount) {
+                <strong>{{ delivery.codAmount }} EGP</strong>
+                } @else {
+                <span class="text-muted">-</span>
+                }
+              </td>
+              <td>
+                <button class="btn btn-sm btn-outline-primary">
+                  <i class="ti ti-eye"></i>
+                </button>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      }
+    </div>
+  </div>
+</div>

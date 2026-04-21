@@ -11,10 +11,10 @@ import { MaterialModule } from 'src/app/material.module';
   templateUrl: './add-database.component.html'
 })
 export class AddDatabaseComponent {
-  loading:boolean=false;
-  alert: string = 'd-none';
-  msg: string = ' بيانات العميل';
-  DatabaseName: string = '';
+  loading=false;
+  alert = 'd-none';
+  msg = ' بيانات العميل';
+  DatabaseName = '';
   constructor(private apiController: ApiController) 
      {}
   submit() {

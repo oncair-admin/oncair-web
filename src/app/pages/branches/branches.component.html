@@ -67,11 +67,13 @@
             <tr>
               <th class="border-0">ID</th>
               <th class="border-0">Branch Name</th>
+              <th class="border-0">Operating Hours</th>
+              <th class="border-0">Code</th>
               <th class="border-0 text-end">Actions</th>
             </tr>
           </thead>
           <tbody>
-            @for (branch of branches; track branch.branchId) {
+            @for (branch of branches; track $index) {
             <tr>
               <td class="align-middle">
                 <span class="badge bg-light text-dark">{{
@@ -80,11 +82,38 @@
               </td>
               <td class="align-middle">
                 <div class="d-flex align-items-center">
-                  <span class="fw-medium">{{ branch.branchName }}</span>
+                  <span class="fw-medium">{{ branch.brancheNameEn }}</span>
+                  @if (branch.brancheNameAr) {
+                  <span class="text-muted ms-2">({{ branch.brancheNameAr }})</span>
+                  }
                 </div>
+              </td>
+              <td class="align-middle">
+                @if (branch.openCloseRemark) {
+                <div class="d-flex align-items-center gap-2">
+                  <mat-icon style="font-size: 18px; width: 18px; height: 18px; color: #28a745;">schedule</mat-icon>
+                  <span class="badge bg-light text-dark border" style="font-size: 0.875rem; padding: 0.35rem 0.65rem;">
+                    {{ branch.openCloseRemark }}
+                  </span>
+                </div>
+                } @else {
+                <span class="text-muted">N/A</span>
+                }
+              </td>
+              <td class="align-middle">
+                <span class="badge bg-info text-white">{{ branch.code }}</span>
               </td>
               <td class="align-middle text-end">
                 <div class="btn-group" role="group">
+                  <button
+                    mat-icon-button
+                    color="primary"
+                    (click)="openViewModal(branch)"
+                    matTooltip="View Details"
+                    class="me-1"
+                  >
+                    <mat-icon>visibility</mat-icon>
+                  </button>
                   <button
                     mat-icon-button
                     color="primary"
@@ -118,7 +147,6 @@
       <div class="modal-header border-0 pb-0">
         <h5 class="modal-title">Add New Branch</h5>
         <button type="button" class="btn-close" (click)="closeAddModal()">
-          Close
         </button>
       </div>
       <div class="modal-body">
@@ -132,6 +160,155 @@
             (keyup.enter)="addBranch()"
             [disabled]="loading"
           />
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Branch Code</label>
+          <input
+            type="text"
+            class="form-control"
+            [(ngModel)]="newBranchCode"
+            placeholder="Enter 2-character code (e.g., AA)"
+            maxlength="2"
+            (keyup.enter)="addBranch()"
+            [disabled]="loading"
+          />
+          <div class="form-text">Enter exactly 2 characters for the branch code</div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Address (English) *</label>
+          <input
+            type="text"
+            class="form-control"
+            [(ngModel)]="newAddressEn"
+            placeholder="Enter address in English"
+            (keyup.enter)="addBranch()"
+            [disabled]="loading"
+          />
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Address (Arabic) *</label>
+          <input
+            type="text"
+            class="form-control"
+            [(ngModel)]="newAddressAr"
+            placeholder="أدخل العنوان بالعربية"
+            dir="rtl"
+            (keyup.enter)="addBranch()"
+            [disabled]="loading"
+          />
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Operating Hours *</label>
+          <div class="row g-2">
+            <div class="col-6">
+              <label class="form-label small text-muted">Start Time</label>
+              <input
+                type="time"
+                class="form-control"
+                [(ngModel)]="newStartTime"
+                [disabled]="loading"
+              />
+            </div>
+            <div class="col-6">
+              <label class="form-label small text-muted">End Time</label>
+              <input
+                type="time"
+                class="form-control"
+                [(ngModel)]="newEndTime"
+                [disabled]="loading"
+              />
+            </div>
+          </div>
+        </div>
+        
+        <!-- Location Selection Section -->
+        <div class="mb-3">
+          <label class="form-label fw-semibold">
+            <i class="fas fa-map-marker-alt me-2 text-danger"></i>Location
+          </label>
+          
+          <!-- Search Location -->
+          <div class="position-relative mb-2">
+            <div class="input-group">
+              <span class="input-group-text bg-light">
+                <i class="fas fa-search"></i>
+              </span>
+              <input
+                type="text"
+                class="form-control"
+                [(ngModel)]="locationSearchQuery"
+                (input)="searchLocation(locationSearchQuery)"
+                placeholder="Search location (e.g., New Cairo, Maadi...)"
+                [disabled]="loading || isGettingCurrentLocation"
+              />
+              @if (isSearchingLocation) {
+                <span class="input-group-text">
+                  <span class="spinner-border spinner-border-sm"></span>
+                </span>
+              }
+            </div>
+            
+            <!-- Search Results Dropdown -->
+            @if (locationSearchResults.length > 0) {
+              <div class="location-search-results">
+                @for (result of locationSearchResults; track result.lat + result.lon) {
+                  <div class="location-result-item" (click)="selectLocation(result)">
+                    <i class="fas fa-map-pin me-2 text-muted"></i>
+                    <span>{{ result.displayName }}</span>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+          
+          <!-- Or Use Current Location -->
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <span class="text-muted small">or</span>
+            <button
+              type="button"
+              class="btn btn-outline-primary btn-sm"
+              (click)="getCurrentLocation()"
+              [disabled]="loading || isGettingCurrentLocation"
+            >
+              @if (isGettingCurrentLocation) {
+                <span class="spinner-border spinner-border-sm me-1"></span>
+              } @else {
+                <i class="fas fa-crosshairs me-1"></i>
+              }
+              Use My Current Location
+            </button>
+          </div>
+          
+          <!-- Selected Location Display -->
+          @if (newLat && newLon) {
+            <div class="selected-location-card">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                  <span class="badge bg-success mb-1">
+                    <i class="fas fa-check me-1"></i>Location Selected
+                  </span>
+                  <div class="small text-muted">
+                    Lat: {{ newLat | number:'1.6-6' }}, Lon: {{ newLon | number:'1.6-6' }}
+                  </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-danger" (click)="clearNewLocation()">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+              
+              <!-- Map Preview -->
+              @if (selectedLocationMapUrl) {
+                <div class="location-map-preview">
+                  <iframe
+                    [src]="selectedLocationMapUrl"
+                    class="w-100 rounded"
+                    style="height: 180px; border: 0;"
+                    loading="lazy"
+                  ></iframe>
+                </div>
+              }
+            </div>
+          }
         </div>
       </div>
       <div class="modal-footer border-0 pt-0">
@@ -147,7 +324,7 @@
           type="button"
           class="btn btn-primary"
           (click)="addBranch()"
-          [disabled]="!newBranchName.trim() || loading"
+          [disabled]="!newBranchName.trim() || !newBranchCode.trim() || newBranchCode.length !== 2 || !newAddressEn.trim() || !newAddressAr.trim() || loading"
         >
           @if (loading) {
           <span
@@ -155,6 +332,137 @@
             role="status"
           ></span>
           } Add
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+}
+
+<!-- View Branch Details Modal -->
+@if (showViewModal && viewBranch) {
+<div
+  class="modal fade show d-block"
+  style="background-color: rgba(0, 0, 0, 0.5)"
+  tabindex="-1"
+>
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title">Branch Details</h5>
+        <button
+          type="button"
+          class="btn-close"
+          (click)="closeViewModal()"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-4">
+          <!-- Basic Information -->
+          <div class="col-12">
+            <h6 class="text-primary mb-3">
+              <mat-icon style="vertical-align: middle; margin-right: 8px;">business</mat-icon>
+              Basic Information
+            </h6>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label text-muted small mb-1">Branch Name (English)</label>
+                <div class="fw-semibold">{{ viewBranch.brancheNameEn }}</div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label text-muted small mb-1">Branch Name (Arabic)</label>
+                <div class="fw-semibold" dir="rtl">{{ viewBranch.brancheNameAr || 'N/A' }}</div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label text-muted small mb-1">Branch Code</label>
+                <div><span class="badge bg-info text-white">{{ viewBranch.code }}</span></div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label text-muted small mb-1">Operating Hours</label>
+                <div class="d-flex align-items-center gap-2">
+                  <mat-icon style="font-size: 18px; width: 18px; height: 18px; color: #28a745;">schedule</mat-icon>
+                  <span class="fw-semibold">{{ viewBranch.openCloseRemark || 'N/A' }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Address Information -->
+          <div class="col-12">
+            <h6 class="text-primary mb-3">
+              <mat-icon style="vertical-align: middle; margin-right: 8px;">location_on</mat-icon>
+              Address Information
+            </h6>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label text-muted small mb-1">Address (English)</label>
+                <div class="fw-semibold">{{ viewBranch.addresseEn || 'N/A' }}</div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label text-muted small mb-1">Address (Arabic)</label>
+                <div class="fw-semibold" dir="rtl">{{ viewBranch.addresseAr || 'N/A' }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Location Information -->
+          @if (viewBranch.lat && viewBranch.lon) {
+          <div class="col-12">
+            <h6 class="text-primary mb-3">
+              <mat-icon style="vertical-align: middle; margin-right: 8px;">map</mat-icon>
+              Location on Map
+            </h6>
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label class="form-label text-muted small mb-1">Latitude</label>
+                <div class="fw-semibold">{{ viewBranch.lat }}</div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label text-muted small mb-1">Longitude</label>
+                <div class="fw-semibold">{{ viewBranch.lon }}</div>
+              </div>
+            </div>
+            <div style="position: relative; height: 400px; width: 100%; border-radius: 8px; overflow: hidden; border: 1px solid #dee2e6;">
+              <iframe 
+                [src]="mapSafeUrl"
+                style="width: 100%; height: 100%; border: none;"
+                loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade"
+                allowfullscreen>
+              </iframe>
+            </div>
+            <div class="mt-2 text-end">
+              <a [href]="getGoogleMapsUrl(viewBranch)" target="_blank" class="btn btn-sm btn-outline-primary">
+                <mat-icon style="vertical-align: middle; font-size: 18px; width: 18px; height: 18px;">directions</mat-icon>
+                Open in Google Maps
+              </a>
+            </div>
+          </div>
+          } @else {
+          <div class="col-12">
+            <div class="alert alert-info mb-0">
+              <mat-icon style="vertical-align: middle; margin-right: 8px;">info</mat-icon>
+              Location coordinates are not available for this branch.
+            </div>
+          </div>
+          }
+        </div>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="closeViewModal()"
+        >
+          Close
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="closeViewModal(); openEditModal(viewBranch)"
+        >
+          <mat-icon style="vertical-align: middle; margin-right: 4px;">edit</mat-icon>
+          Edit Branch
         </button>
       </div>
     </div>
@@ -191,6 +499,155 @@
             [disabled]="loading"
           />
         </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Branch Code</label>
+          <input
+            type="text"
+            class="form-control"
+            [(ngModel)]="editBranchCode"
+            placeholder="Enter 2-character code (e.g., AA)"
+            maxlength="2"
+            (keyup.enter)="updateBranch()"
+            [disabled]="loading"
+          />
+          <div class="form-text">Enter exactly 2 characters for the branch code</div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Address (English) *</label>
+          <input
+            type="text"
+            class="form-control"
+            [(ngModel)]="editAddressEn"
+            placeholder="Enter address in English"
+            (keyup.enter)="updateBranch()"
+            [disabled]="loading"
+          />
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Address (Arabic) *</label>
+          <input
+            type="text"
+            class="form-control"
+            [(ngModel)]="editAddressAr"
+            placeholder="أدخل العنوان بالعربية"
+            dir="rtl"
+            (keyup.enter)="updateBranch()"
+            [disabled]="loading"
+          />
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Operating Hours *</label>
+          <div class="row g-2">
+            <div class="col-6">
+              <label class="form-label small text-muted">Start Time</label>
+              <input
+                type="time"
+                class="form-control"
+                [(ngModel)]="editStartTime"
+                [disabled]="loading"
+              />
+            </div>
+            <div class="col-6">
+              <label class="form-label small text-muted">End Time</label>
+              <input
+                type="time"
+                class="form-control"
+                [(ngModel)]="editEndTime"
+                [disabled]="loading"
+              />
+            </div>
+          </div>
+        </div>
+        
+        <!-- Location Selection Section -->
+        <div class="mb-3">
+          <label class="form-label fw-semibold">
+            <i class="fas fa-map-marker-alt me-2 text-danger"></i>Location
+          </label>
+          
+          <!-- Search Location -->
+          <div class="position-relative mb-2">
+            <div class="input-group">
+              <span class="input-group-text bg-light">
+                <i class="fas fa-search"></i>
+              </span>
+              <input
+                type="text"
+                class="form-control"
+                [(ngModel)]="locationSearchQuery"
+                (input)="searchLocation(locationSearchQuery, true)"
+                placeholder="Search location (e.g., New Cairo, Maadi...)"
+                [disabled]="loading || isGettingCurrentLocation"
+              />
+              @if (isSearchingLocation) {
+                <span class="input-group-text">
+                  <span class="spinner-border spinner-border-sm"></span>
+                </span>
+              }
+            </div>
+            
+            <!-- Search Results Dropdown -->
+            @if (locationSearchResults.length > 0) {
+              <div class="location-search-results">
+                @for (result of locationSearchResults; track result.lat + result.lon) {
+                  <div class="location-result-item" (click)="selectLocation(result, true)">
+                    <i class="fas fa-map-pin me-2 text-muted"></i>
+                    <span>{{ result.displayName }}</span>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+          
+          <!-- Or Use Current Location -->
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <span class="text-muted small">or</span>
+            <button
+              type="button"
+              class="btn btn-outline-primary btn-sm"
+              (click)="getCurrentLocation(true)"
+              [disabled]="loading || isGettingCurrentLocation"
+            >
+              @if (isGettingCurrentLocation) {
+                <span class="spinner-border spinner-border-sm me-1"></span>
+              } @else {
+                <i class="fas fa-crosshairs me-1"></i>
+              }
+              Use My Current Location
+            </button>
+          </div>
+          
+          <!-- Selected Location Display -->
+          @if (editLat && editLon) {
+            <div class="selected-location-card">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                  <span class="badge bg-success mb-1">
+                    <i class="fas fa-check me-1"></i>Location Selected
+                  </span>
+                  <div class="small text-muted">
+                    Lat: {{ editLat | number:'1.6-6' }}, Lon: {{ editLon | number:'1.6-6' }}
+                  </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-danger" (click)="clearEditLocation()">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+              
+              <!-- Map Preview -->
+              @if (editLocationMapUrl) {
+                <div class="location-map-preview">
+                  <iframe
+                    [src]="editLocationMapUrl"
+                    class="w-100 rounded"
+                    style="height: 180px; border: 0;"
+                    loading="lazy"
+                  ></iframe>
+                </div>
+              }
+            </div>
+          }
+        </div>
       </div>
       <div class="modal-footer border-0 pt-0">
         <button
@@ -205,7 +662,7 @@
           type="button"
           class="btn btn-primary"
           (click)="updateBranch()"
-          [disabled]="!editBranchName.trim() || loading"
+          [disabled]="!editBranchName.trim() || !editBranchCode.trim() || editBranchCode.length !== 2 || !editAddressEn.trim() || !editAddressAr.trim() || loading"
         >
           @if (loading) {
           <span

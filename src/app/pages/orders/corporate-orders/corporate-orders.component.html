@@ -1,0 +1,124 @@
+<div class="container-fluid">
+  <div class="row mb-4">
+    <div class="col-12">
+      <h2 class="mb-1">Corporate Orders</h2>
+      <p class="text-muted mb-0">Manage corporate accounts and bulk order uploads</p>
+    </div>
+  </div>
+
+  <!-- Bulk Upload Section -->
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white">
+      <h5 class="mb-0">Bulk Order Upload</h5>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-12">
+          <div class="alert alert-info">
+            <i class="ti ti-info-circle me-2"></i>
+            Upload a CSV/Excel file with order data. Download the template for the correct format.
+          </div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Select File</label>
+          <input
+            type="file"
+            class="form-control"
+            accept=".csv,.xlsx,.xls"
+            (change)="onFileSelected($event)"
+          />
+          @if (selectedFile) {
+          <small class="text-muted">Selected: {{ selectedFile.name }}</small>
+          }
+        </div>
+        <div class="col-md-6 d-flex align-items-end gap-2">
+          <button
+            class="btn btn-primary"
+            (click)="uploadCSV()"
+            [disabled]="!selectedFile || loading"
+          >
+            @if (loading) {
+            <span class="spinner-border spinner-border-sm me-2"></span>
+            }
+            <i class="ti ti-upload me-1"></i>
+            Upload Orders
+          </button>
+          <button class="btn btn-outline-secondary" (click)="downloadTemplate()">
+            <i class="ti ti-download me-1"></i>
+            Download Template
+          </button>
+        </div>
+        @if (uploadStatus) {
+        <div class="col-md-12">
+          <div class="alert alert-success">{{ uploadStatus }}</div>
+        </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Corporate Accounts -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">Corporate Accounts</h5>
+      <button class="btn btn-sm btn-primary">
+        <i class="ti ti-plus me-1"></i>
+        Add Account
+      </button>
+    </div>
+    <div class="card-body p-0">
+      @if (loading) {
+      <div class="text-center py-5">
+        <div class="spinner-border text-primary"></div>
+      </div>
+      } @else if (accounts.length === 0) {
+      <div class="text-center py-5">
+        <i class="ti ti-building" style="font-size: 4rem; color: #ccc;"></i>
+        <h5 class="mt-3 text-muted">No corporate accounts</h5>
+      </div>
+      } @else {
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Company Name</th>
+              <th>Contact Person</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Sub Users</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (account of accounts; track account.id) {
+            <tr>
+              <td><strong>{{ account.companyName }}</strong></td>
+              <td>{{ account.contactPerson }}</td>
+              <td>{{ account.email }}</td>
+              <td>{{ account.phone }}</td>
+              <td>
+                <span class="badge bg-light text-dark">{{ account.subUsers.length }} users</span>
+              </td>
+              <td>
+                <span class="badge" [class]="account.isActive ? 'bg-success' : 'bg-danger'">
+                  {{ account.isActive ? 'Active' : 'Inactive' }}
+                </span>
+              </td>
+              <td>
+                <button class="btn btn-sm btn-outline-primary me-1">
+                  <i class="ti ti-eye"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-warning">
+                  <i class="ti ti-edit"></i>
+                </button>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      }
+    </div>
+  </div>
+</div>

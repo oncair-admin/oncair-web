@@ -7,7 +7,14 @@ import { ApiController } from './CarRental.serviceEnd';
 
 export interface Branch {
   branchId: number;
-  branchName: string;
+  brancheNameEn: string;
+  brancheNameAr: string;
+  addresseEn: string;
+  addresseAr: string;
+  code: string;
+  lat: number | null;
+  lon: number | null;
+  openCloseRemark: string;
 }
 
 @Injectable({
@@ -45,7 +52,16 @@ export class BranchService {
   }
 
   // Create new branch
-  createBranch(branch: { name: string }): Observable<any> {
+  createBranch(branch: { 
+    name: string; 
+    nameAr?: string;
+    code: string; 
+    addressEn: string;
+    addressAr: string;
+    openCloseRemark: string;
+    lat?: number | null;
+    lon?: number | null;
+  }): Observable<any> {
     // const newBranch: Branch = {
     //   id: this.nextId++,
     //   name: branch.name,
@@ -61,7 +77,17 @@ export class BranchService {
     // Uncomment when API is ready:
     // create random id between 0, and 1000000000
 
-    const body = { branchId: 0, branchName: branch.name };
+    const body = { 
+      branchId: 0, 
+      brancheNameEn: branch.name, 
+      brancheNameAr: branch.nameAr || '', 
+      code: branch.code,
+      addresseEn: branch.addressEn,
+      addresseAr: branch.addressAr,
+      openCloseRemark: branch.openCloseRemark,
+      lat: branch.lat || null,
+      lon: branch.lon || null
+    };
     return this.apiController.PostApi(body, 'api/Branch/AddBranch');
   }
 

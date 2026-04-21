@@ -1,0 +1,301 @@
+<div class="container-fluid">
+  <div class="row mb-4">
+    <div class="col-12">
+      <h2 class="mb-1">Dispatch Center</h2>
+      <p class="text-muted mb-0">Manual assignment, package receiving, and hub transfers</p>
+    </div>
+  </div>
+
+  <!-- View Selector -->
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+      <div class="btn-group w-100" role="group">
+        <button
+          class="btn"
+          [class.btn-primary]="selectedView === 'courier'"
+          [class.btn-outline-primary]="selectedView !== 'courier'"
+          (click)="selectedView = 'courier'"
+        >
+          <i class="ti ti-user me-2"></i>
+          Courier Assignment
+        </button>
+        <button
+          class="btn"
+          [class.btn-primary]="selectedView === 'hub'"
+          [class.btn-outline-primary]="selectedView !== 'hub'"
+          (click)="selectedView = 'hub'"
+        >
+          <i class="ti ti-building me-2"></i>
+          Hub Management
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Courier Assignment View -->
+  @if (selectedView === 'courier') {
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-white border-0">
+      <h5 class="mb-0">
+        <i class="ti ti-user-check me-2"></i>
+        Courier Availability & Assignment
+      </h5>
+    </div>
+    <div class="card-body">
+      @if (loading) {
+      <div class="text-center py-5">
+        <div class="spinner-border text-primary"></div>
+      </div>
+      } @else {
+      <div class="row g-3">
+        @for (courier of couriers; track courier.id) {
+        <div class="col-md-6 col-lg-4">
+          <div class="card border h-100">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                  <h6 class="mb-1">{{ courier.name }}</h6>
+                  <small class="text-muted">{{ courier.vehicleType }}</small>
+                </div>
+                <span class="badge {{ getCourierStatusClass(courier.status) }}">
+                  {{ courier.status }}
+                </span>
+              </div>
+              
+              <div class="mb-3">
+                <small class="text-muted d-block mb-1">Capacity</small>
+                <div class="progress" style="height: 8px;">
+                  <div
+                    class="progress-bar"
+                    [class.bg-success]="courier.currentOrders <= courier.maxCapacity * 0.5"
+                    [class.bg-warning]="courier.currentOrders > courier.maxCapacity * 0.5 && courier.currentOrders < courier.maxCapacity"
+                    [class.bg-danger]="courier.currentOrders >= courier.maxCapacity"
+                    [style.width.%]="(courier.currentOrders / courier.maxCapacity) * 100"
+                  ></div>
+                </div>
+                <small class="text-muted">{{ courier.currentOrders }}/{{ courier.maxCapacity }} orders</small>
+              </div>
+
+              <div class="d-flex justify-content-between text-muted small mb-3">
+                <div>
+                  <i class="ti ti-package me-1"></i>
+                  {{ courier.todayDeliveries }} today
+                </div>
+                <div>
+                  <i class="ti ti-star me-1"></i>
+                  {{ courier.rating || 'N/A' }}
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label small">Update Status</label>
+                <select
+                  class="form-select form-select-sm"
+                  [value]="courier.status"
+                  (change)="updateCourierStatus(courier.id, $event)"
+                >
+                  <option value="Available">Available</option>
+                  <option value="Busy">Busy</option>
+                  <option value="On Break">On Break</option>
+                  <option value="Offline">Offline</option>
+                </select>
+              </div>
+
+              <div class="d-grid gap-2">
+                <button
+                  class="btn btn-sm btn-primary"
+                  [disabled]="courier.status !== 'Available'"
+                >
+                  <i class="ti ti-plus me-1"></i>
+                  Assign Order
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        }
+      </div>
+      }
+    </div>
+  </div>
+  }
+
+  <!-- Hub Management View -->
+  @if (selectedView === 'hub') {
+  <div class="row g-4">
+    <div class="col-12">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">
+            <i class="ti ti-package me-2"></i>
+            Hub Packages
+          </h5>
+          <button class="btn btn-primary" (click)="openReceivingForm()">
+            <i class="ti ti-plus me-1"></i>
+            Receive Package
+          </button>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Tracking #</th>
+                  <th>Order #</th>
+                  <th>Sender</th>
+                  <th>Recipient</th>
+                  <th>Current Hub</th>
+                  <th>Condition</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (pkg of hubPackages; track pkg.id) {
+                <tr>
+                  <td><strong>{{ pkg.trackingNumber }}</strong></td>
+                  <td>{{ pkg.orderNumber }}</td>
+                  <td>{{ pkg.senderName }}</td>
+                  <td>
+                    <div>{{ pkg.recipientName }}</div>
+                    <small class="text-muted">{{ pkg.recipientAddress }}</small>
+                  </td>
+                  <td>{{ pkg.currentHubName }}</td>
+                  <td>
+                    <span class="badge {{ getPackageConditionClass(pkg.packageCondition) }}">
+                      {{ pkg.packageCondition }}
+                    </span>
+                    @if (pkg.conditionRemarks) {
+                    <br><small class="text-muted">{{ pkg.conditionRemarks }}</small>
+                    }
+                  </td>
+                  <td>
+                    <span class="badge bg-light text-dark">{{ pkg.status }}</span>
+                  </td>
+                  <td>
+                    <button
+                      class="btn btn-sm btn-outline-primary"
+                      (click)="openTransferForm(pkg.id)"
+                      [disabled]="pkg.status === 'In Transit'"
+                    >
+                      <i class="ti ti-arrow-right"></i>
+                      Transfer
+                    </button>
+                  </td>
+                </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+</div>
+
+<!-- Receiving Form Modal -->
+@if (showReceivingForm) {
+<div class="modal fade show d-block" style="background-color: rgba(0,0,0,0.5)">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Receive Package at Hub</h5>
+        <button type="button" class="btn-close" (click)="closeReceivingForm()"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Tracking Number *</label>
+            <input type="text" class="form-control" [(ngModel)]="receivingPackage.trackingNumber" required />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Order Number *</label>
+            <input type="text" class="form-control" [(ngModel)]="receivingPackage.orderNumber" required />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Sender Name *</label>
+            <input type="text" class="form-control" [(ngModel)]="receivingPackage.senderName" required />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Recipient Name *</label>
+            <input type="text" class="form-control" [(ngModel)]="receivingPackage.recipientName" required />
+          </div>
+          <div class="col-md-12">
+            <label class="form-label">Recipient Address *</label>
+            <input type="text" class="form-control" [(ngModel)]="receivingPackage.recipientAddress" required />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Package Type *</label>
+            <input type="text" class="form-control" [(ngModel)]="receivingPackage.packageType" required />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Weight (kg) *</label>
+            <input type="number" class="form-control" [(ngModel)]="receivingPackage.weight" step="0.1" required />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Package Condition *</label>
+            <select class="form-select" [(ngModel)]="receivingPackage.packageCondition">
+              <option value="Excellent">Excellent</option>
+              <option value="Good">Good</option>
+              <option value="Fair">Fair</option>
+              <option value="Damaged">Damaged</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Current Hub *</label>
+            <select class="form-select" [(ngModel)]="receivingPackage.currentHubId">
+              @for (hub of hubs; track hub.id) {
+              <option [value]="hub.id">{{ hub.name }}</option>
+              }
+            </select>
+          </div>
+          <div class="col-md-12">
+            <label class="form-label">Condition Remarks</label>
+            <textarea class="form-control" [(ngModel)]="receivingPackage.conditionRemarks" rows="2"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeReceivingForm()">Cancel</button>
+        <button class="btn btn-primary" (click)="submitReceiving()">Receive Package</button>
+      </div>
+    </div>
+  </div>
+</div>
+}
+
+<!-- Transfer Form Modal -->
+@if (showTransferForm) {
+<div class="modal fade show d-block" style="background-color: rgba(0,0,0,0.5)">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Transfer Package to Hub</h5>
+        <button type="button" class="btn-close" (click)="closeTransferForm()"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Select Destination Hub *</label>
+          <select class="form-select" [(ngModel)]="transferToHubId">
+            <option [value]="null">-- Select Hub --</option>
+            @for (hub of hubs; track hub.id) {
+            <option [value]="hub.id">{{ hub.name }} - {{ hub.city }}</option>
+            }
+          </select>
+        </div>
+        <div class="alert alert-info">
+          <i class="ti ti-info-circle me-2"></i>
+          The package will be marked as "In Transit" and assigned to the selected hub.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeTransferForm()">Cancel</button>
+        <button class="btn btn-primary" (click)="submitTransfer()" [disabled]="!transferToHubId">
+          Initiate Transfer
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+}

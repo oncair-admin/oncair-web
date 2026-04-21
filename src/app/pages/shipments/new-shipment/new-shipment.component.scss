@@ -1,0 +1,65 @@
+// Stepper styles
+::ng-deep .mat-horizontal-stepper-header-container {
+  padding: 0 16px;
+}
+
+::ng-deep .mat-step-header {
+  padding: 16px 24px;
+}
+
+::ng-deep .mat-step-icon {
+  width: 36px;
+  height: 36px;
+}
+
+// Form field improvements
+::ng-deep .mat-mdc-form-field {
+  .mat-mdc-form-field-subscript-wrapper {
+    margin-bottom: 0.5rem;
+  }
+}
+
+// Summary sections
+.summary-section {
+  h6 {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+}
+
+// Fee breakdown card
+.card.bg-light {
+  .table {
+    td {
+      padding: 0.5rem 0;
+      font-size: 0.9rem;
+    }
+  }
+}
+
+// Checkbox styling
+::ng-deep .mat-mdc-checkbox {
+  .mdc-checkbox {
+    margin-right: 8px;
+  }
+}
+
+// Button styling
+button[mat-raised-button] {
+  padding: 0 24px;
+  height: 42px;
+}
+
+button[mat-button] {
+  padding: 0 16px;
+}
+
+// Badge styling
+.badge {
+  font-weight: 500;
+  padding: 0.4em 0.8em;
+}
+
+
+

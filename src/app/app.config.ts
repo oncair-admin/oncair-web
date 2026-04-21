@@ -19,6 +19,7 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
 import { provideClientHydration } from '@angular/platform-browser';
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
+import { AUTH_INTERCEPTOR_PROVIDER } from './interceptors/auth.interceptor';
 
 // icons
 import { TablerIconsModule } from 'angular-tabler-icons';
@@ -65,5 +66,6 @@ export const appConfig: ApplicationConfig = {
         },
       })
     ),
+    AUTH_INTERCEPTOR_PROVIDER,
   ],
 };
