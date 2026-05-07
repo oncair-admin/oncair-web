@@ -10,6 +10,7 @@ import {
 import { Observable, BehaviorSubject, throwError } from 'rxjs';
 import { catchError, filter, switchMap, take } from 'rxjs/operators';
 import { Router } from '@angular/router';
+import { environment } from '../../environments/environment';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
@@ -89,7 +90,7 @@ export class AuthInterceptor implements HttpInterceptor {
 
   private callRefreshEndpoint(token: string, refreshToken: string): Observable<any> {
     // Use fetch to avoid circular HttpClient -> interceptor recursion
-    const baseUrl = 'http://173.208.167.153:4443/';
+    const baseUrl = environment.apiUrl;
     return new Observable((observer) => {
       fetch(baseUrl + 'auth/Auth/RefreshToken', {
         method: 'POST',
