@@ -19,6 +19,7 @@ import {
 import { Injectable, Inject, InjectionToken } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { CheckTokenService } from './check-token.service';
+import { environment } from '../src/environments/environment';
 
 export const API_BASE_URL = new InjectionToken<string>('API_BASE_URL');
 
@@ -37,7 +38,7 @@ export class ApiController {
   ) {
     this.http = http;
     //this.baseUrl =  "https://acwade.com/Booking/";
-    this.baseUrl = 'http://173.208.167.153:4443/';
+    this.baseUrl = environment.apiUrl;
     this.rebuildHeaders();
   }
   /* getData(): Observable<any> {
