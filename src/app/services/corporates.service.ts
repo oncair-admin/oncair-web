@@ -59,6 +59,24 @@ export class CorporatesService {
     );
   }
 
+  getPendingCompanies(): Observable<Company[]> {
+    return this.handleApiResponse<Company[]>(
+      this.api.getApi('api/CompanyInformation/GetPendingCompanies')
+    );
+  }
+
+  approveCompany(companyId: number): Observable<boolean> {
+    return this.handleApiResponse<boolean>(
+      this.api.PostLiteApi(`api/CompanyInformation/ApproveCompany?companyId=${companyId}`)
+    );
+  }
+
+  rejectCompany(companyId: number, reason: string): Observable<boolean> {
+    return this.handleApiResponse<boolean>(
+      this.api.PostLiteApi(`api/CompanyInformation/RejectCompany?companyId=${companyId}&reason=${reason}`)
+    );
+  }
+
   getAllCompanyContacts(companyId: number): Observable<CompanyContact[]> {
     return this.handleApiResponse<CompanyContact[]>(
       this.api.getApi(`api/CompanyContactPerson/GetAllCompanyContacts?CompanyId=${companyId}`)
