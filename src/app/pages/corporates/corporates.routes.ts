@@ -11,5 +11,10 @@ export const CorporatesRoutes: Routes = [
     loadComponent: () =>
       import('./users/corporate-users.component').then((m) => m.CorporateUsersComponent),
   },
+  {
+    path: ':id',
+    loadComponent: () =>
+      import('./detail/corporate-detail.component').then((m) => m.CorporateDetailComponent),
+  },
 ];
 

@@ -2,8 +2,8 @@
   <div class="row mb-4">
     <div class="col-12 d-flex justify-content-between align-items-center">
       <div>
-        <h2 class="mb-1">Corporates</h2>
-        <p class="text-muted mb-0">Manage corporates and their users</p>
+        <h2 class="mb-1">Corporate Registrations</h2>
+        <p class="text-muted mb-0">Review corporate requests and manage approved accounts</p>
       </div>
       <button mat-raised-button color="primary" (click)="toggleCreate()">
         {{ showCreate ? 'Close' : (isEditMode ? 'Edit Corporate' : 'Create Corporate') }}
@@ -14,7 +14,7 @@
   @if (showError) {
   <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
     <strong>Error:</strong> {{ errorMessage }}
-    <button type="button" class="btn-close" (click)="showError=false"></button>
+    <button type="button" class="btn-close" (click)="showError=false"><span class="visually-hidden">Close</span></button>
   </div>
   }
 
@@ -96,11 +96,17 @@
         <button class="btn btn-outline-secondary" type="button"><mat-icon>search</mat-icon></button>
       </div>
     </div>
+    <div class="col-md-6 d-flex justify-content-md-end gap-2 mt-3 mt-md-0">
+      <button mat-stroked-button [color]="statusFilter === 'all' ? 'primary' : undefined" (click)="setStatusFilter('all')">All</button>
+      <button mat-stroked-button [color]="statusFilter === 'pending' ? 'primary' : undefined" (click)="setStatusFilter('pending')">Pending</button>
+      <button mat-stroked-button [color]="statusFilter === 'approved' ? 'primary' : undefined" (click)="setStatusFilter('approved')">Approved</button>
+      <button mat-stroked-button [color]="statusFilter === 'rejected' ? 'primary' : undefined" (click)="setStatusFilter('rejected')">Rejected</button>
+    </div>
   </div>
 
   <div class="card border-0 shadow-sm">
     <div class="card-header bg-white border-0 py-3">
-      <h5 class="mb-0">All Corporates</h5>
+      <h5 class="mb-0">Registration Queue</h5>
     </div>
     <div class="card-body p-0">
       @if (loading) {
@@ -117,11 +123,11 @@
             <tr>
               <th class="border-0">ID</th>
               <th class="border-0">Company</th>
-              <th class="border-0">Business Type</th>
+              <th class="border-0">Services</th>
               <th class="border-0">Phone</th>
               <th class="border-0">Email</th>
-              <th class="border-0">Address</th>
-              <th class="border-0">Active</th>
+              <th class="border-0">Status</th>
+              <th class="border-0">Submitted</th>
               <th class="border-0 text-end">Actions</th>
             </tr>
           </thead>
@@ -130,17 +136,21 @@
             <tr>
               <td class="align-middle"><span class="badge bg-light text-dark">{{ c.id }}</span></td>
               <td class="align-middle">{{ c.companyName }}</td>
-              <td class="align-middle"><span class="badge bg-info">{{ c.businessType || '-' }}</span></td>
+              <td class="align-middle">
+                <div>{{ c.requestedServices || c.businessType || '-' }}</div>
+                <small class="text-muted">{{ c.monthlyShipmentEstimate || '-' }} shipments / month</small>
+              </td>
               <td class="align-middle">{{ c.companyPhoneNumber }}</td>
               <td class="align-middle">{{ c.companyEmail || '-' }}</td>
-              <td class="align-middle">{{ c.companyAddress || '-' }}</td>
               <td class="align-middle">
-                <span class="badge" [class.bg-success]="c.isActive" [class.bg-secondary]="!c.isActive">
-                  {{ c.isActive ? 'Yes' : 'No' }}
+                <span class="badge" [class.bg-warning]="c.status === 1" [class.bg-success]="c.status === 2" [class.bg-danger]="c.status === 3">
+                  {{ statusLabel(c) }}
                 </span>
               </td>
+              <td class="align-middle">{{ c.submittedDate ? (c.submittedDate | date: 'mediumDate') : '-' }}</td>
               <td class="align-middle text-end">
                 <div class="d-flex gap-2 justify-content-end">
+                  <button mat-stroked-button color="primary" (click)="viewCorporate(c)">Review</button>
                   <button mat-stroked-button color="primary" (click)="openUsers(c)">Users</button>
                   <button mat-icon-button color="primary" (click)="editCorporate(c)" title="Edit">
                     <mat-icon>edit</mat-icon>

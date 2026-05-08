@@ -1,6 +1,5 @@
 import { Routes } from '@angular/router';
 import { FullComponent } from './layouts/full/full.component';
-import { AppSideLoginComponent } from './pages/authentication/side-login/side-login.component';
 
 export const routes: Routes = [
   {
@@ -33,7 +32,6 @@ export const routes: Routes = [
   },
   {
     path: '',
-    component: AppSideLoginComponent,
     children: [
       {
         path: 'authentication',

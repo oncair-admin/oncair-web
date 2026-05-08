@@ -47,6 +47,7 @@ export class CorporatesListComponent implements OnInit {
   };
 
   searchTerm = '';
+  statusFilter: 'all' | 'pending' | 'approved' | 'rejected' = 'all';
   showCreate = false;
   editingCompany: Company | null = null;
   isEditMode = false;
@@ -91,7 +92,7 @@ export class CorporatesListComponent implements OnInit {
     this.corporatesService.getAllCompanies().subscribe({
       next: (list: Company[]) => {
         this.corporates = list;
-        this.filtered = [...list];
+        this.applyFilters();
         this.loading = false;
       },
       error: (error: unknown) => {
@@ -192,7 +193,7 @@ export class CorporatesListComponent implements OnInit {
           this.corporatesService.getAllCompanies().subscribe({
             next: (list: Company[]) => {
               this.corporates = list;
-              this.filtered = [...list];
+              this.applyFilters();
               const found = list.find(
                 (c) =>
                   c.companyName === this.createForm.companyName &&
@@ -300,7 +301,7 @@ export class CorporatesListComponent implements OnInit {
     });
   }
 
-  deleteCorporate(id: number): void {
+  deleteCorporate(_id: number): void {
     if (!confirm('Are you sure you want to delete this company? This action cannot be undone.')) {
       return;
     }
@@ -335,17 +336,40 @@ export class CorporatesListComponent implements OnInit {
   }
 
   search(): void {
+    this.applyFilters();
+  }
+
+  applyFilters(): void {
     const term = this.searchTerm.toLowerCase();
-    if (!term) {
-      this.filtered = [...this.corporates];
-      return;
-    }
-    this.filtered = this.corporates.filter(
-      (c) =>
+    this.filtered = this.corporates.filter((c) => {
+      const matchesTerm =
+        !term ||
         c.companyName.toLowerCase().includes(term) ||
         (c.businessType || '').toLowerCase().includes(term) ||
-        (c.companyEmail || '').toLowerCase().includes(term)
-    );
+        (c.companyEmail || '').toLowerCase().includes(term) ||
+        (c.companyPhoneNumber || '').toLowerCase().includes(term);
+      const matchesStatus =
+        this.statusFilter === 'all' ||
+        (this.statusFilter === 'pending' && c.status === 1) ||
+        (this.statusFilter === 'approved' && c.status === 2) ||
+        (this.statusFilter === 'rejected' && c.status === 3);
+      return matchesTerm && matchesStatus;
+    });
+  }
+
+  setStatusFilter(status: 'all' | 'pending' | 'approved' | 'rejected'): void {
+    this.statusFilter = status;
+    this.applyFilters();
+  }
+
+  statusLabel(company: Company): string {
+    if (company.status === 2) return 'Approved';
+    if (company.status === 3) return 'Rejected';
+    return 'Pending';
+  }
+
+  viewCorporate(company: Company): void {
+    this.router.navigate(['/dashboard/corporates', company.id]);
   }
 
   openUsers(company: Company): void {

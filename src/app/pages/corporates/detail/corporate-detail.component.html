@@ -1,0 +1,112 @@
+<div class="container-fluid">
+  <div class="row mb-4">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+      <div>
+        <h2 class="mb-1">{{ company?.companyName || 'Corporate request' }}</h2>
+        <p class="text-muted mb-0">Review registration details, security checks, permissions, and audit activity</p>
+      </div>
+      <a mat-stroked-button routerLink="/dashboard/corporates">Back</a>
+    </div>
+  </div>
+
+  @if (errorMessage) {
+  <div class="alert alert-danger">{{ errorMessage }}</div>
+  }
+
+  @if (loading) {
+  <div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div></div>
+  } @else if (company) {
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-0 py-3 d-flex justify-content-between">
+          <h5 class="mb-0">Company information</h5>
+          <span class="badge" [class.bg-warning]="company.status === 1" [class.bg-success]="company.status === 2" [class.bg-danger]="company.status === 3">
+            {{ statusLabel(company.status) }}
+          </span>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-6"><strong>Email</strong><div>{{ company.companyEmail || '-' }}</div></div>
+            <div class="col-md-6"><strong>Phone</strong><div>{{ company.companyPhoneNumber || '-' }}</div></div>
+            <div class="col-md-6"><strong>Business type</strong><div>{{ company.businessType || '-' }}</div></div>
+            <div class="col-md-6"><strong>Account ID</strong><div>{{ company.corporateAccountId || '-' }}</div></div>
+            <div class="col-md-6"><strong>Requested services</strong><div>{{ company.requestedServices || '-' }}</div></div>
+            <div class="col-md-6"><strong>Monthly estimate</strong><div>{{ company.monthlyShipmentEstimate || '-' }}</div></div>
+            <div class="col-12"><strong>Billing address</strong><div>{{ company.billingAddressLine1 || company.companyAddress || '-' }} {{ company.billingCity || '' }} {{ company.billingCountry || '' }}</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card border-0 shadow-sm mt-4">
+        <div class="card-header bg-white border-0 py-3"><h5 class="mb-0">Corporate roles</h5></div>
+        <div class="card-body p-0">
+          <table class="table mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Role</th>
+                <th>Create</th>
+                <th>Track</th>
+                <th>Billing</th>
+                <th>Reports</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (role of roles; track role.id) {
+              <tr>
+                <td>{{ role.roleName }}</td>
+                <td><mat-checkbox [(ngModel)]="role.canCreateShipments"></mat-checkbox></td>
+                <td><mat-checkbox [(ngModel)]="role.canTrackShipments"></mat-checkbox></td>
+                <td><mat-checkbox [(ngModel)]="role.canViewBilling"></mat-checkbox></td>
+                <td><mat-checkbox [(ngModel)]="role.canViewReports"></mat-checkbox></td>
+                <td class="text-end"><button mat-stroked-button color="primary" (click)="saveRole(role)">Save</button></td>
+              </tr>
+              } @empty {
+              <tr><td colspan="6" class="text-center text-muted py-4">Roles are provisioned after approval</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-0 py-3"><h5 class="mb-0">Security validation</h5></div>
+        <div class="card-body">
+          <div class="d-flex justify-content-between mb-2"><span>CAPTCHA</span><span class="badge" [class.bg-success]="company.isCaptchaVerified" [class.bg-secondary]="!company.isCaptchaVerified">{{ company.isCaptchaVerified ? 'Verified' : 'Missing' }}</span></div>
+          <div class="d-flex justify-content-between mb-2"><span>Email OTP</span><span class="badge" [class.bg-success]="company.isEmailOtpVerified" [class.bg-secondary]="!company.isEmailOtpVerified">{{ company.isEmailOtpVerified ? 'Verified' : 'Missing' }}</span></div>
+          <div class="d-flex justify-content-between"><span>Phone OTP</span><span class="badge" [class.bg-success]="company.isPhoneOtpVerified" [class.bg-secondary]="!company.isPhoneOtpVerified">{{ company.isPhoneOtpVerified ? 'Verified' : 'Missing' }}</span></div>
+        </div>
+      </div>
+
+      <div class="card border-0 shadow-sm mt-4">
+        <div class="card-header bg-white border-0 py-3"><h5 class="mb-0">Admin actions</h5></div>
+        <div class="card-body">
+          <button mat-flat-button color="primary" class="w-100 mb-3" (click)="approve()">Approve</button>
+          <textarea class="form-control mb-2" rows="3" placeholder="Rejection reason" [(ngModel)]="rejectionReason"></textarea>
+          <button mat-stroked-button color="warn" class="w-100 mb-3" (click)="reject()">Reject</button>
+          <textarea class="form-control mb-2" rows="3" placeholder="Request more information" [(ngModel)]="infoMessage"></textarea>
+          <button mat-stroked-button class="w-100" (click)="requestInfo()">Request info</button>
+        </div>
+      </div>
+
+      <div class="card border-0 shadow-sm mt-4">
+        <div class="card-header bg-white border-0 py-3"><h5 class="mb-0">Audit trail</h5></div>
+        <div class="card-body">
+          @for (entry of auditTrail; track entry.id) {
+          <div class="audit-entry">
+            <strong>{{ entry.action }}</strong>
+            <div class="text-muted small">{{ entry.createdAt | date: 'medium' }}</div>
+            <div>{{ entry.details || '-' }}</div>
+          </div>
+          } @empty {
+          <div class="text-muted">No audit entries</div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+</div>

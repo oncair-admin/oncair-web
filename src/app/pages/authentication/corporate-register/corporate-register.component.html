@@ -1,0 +1,101 @@
+<div class="blank-layout-container justify-content-center">
+  <div class="auth-wrapper corporate-register">
+    <div class="position-relative rounded bg-white auth-card">
+      <div class="auth-body">
+        <a [routerLink]="['/authentication/login']" class="m-t-20 d-flex">
+          <img src="./assets/images/logos/dark-logo.svg" class="align-middle m-2" alt="logo" />
+        </a>
+
+        @if (submitted) {
+        <div class="text-center p-4">
+          <mat-icon class="text-success confirmation-icon">check_circle</mat-icon>
+          <h3 class="m-t-16">Registration submitted</h3>
+          <p class="text-muted">Your corporate request is pending admin review.</p>
+          <a mat-flat-button color="primary" routerLink="/authentication/corporate-login">Back to corporate sign in</a>
+        </div>
+        } @else {
+        <div class="d-flex justify-content-between align-items-start m-b-24">
+          <div>
+            <h3 class="f-w-700 f-s-30 m-0">Corporate Registration</h3>
+            <span class="text-muted">Submit your company profile for review</span>
+          </div>
+          <a mat-stroked-button routerLink="/authentication/corporate-login">Sign in</a>
+        </div>
+
+        @if (errorMessage) {
+        <div class="alert alert-danger">{{ errorMessage }}</div>
+        }
+
+        <form class="row g-3">
+          <div class="col-12"><h6>Company</h6></div>
+          <div class="col-md-4"><input class="form-control" placeholder="Company name *" [(ngModel)]="form.companyName" name="companyName" /></div>
+          <div class="col-md-4">
+            <select class="form-select" [(ngModel)]="form.businessType" name="businessType">
+              <option>E-commerce</option>
+              <option>Retail</option>
+              <option>Manufacturing</option>
+              <option>Healthcare</option>
+            </select>
+          </div>
+          <div class="col-md-4"><input class="form-control" placeholder="Company email *" [(ngModel)]="form.companyEmail" name="companyEmail" /></div>
+          <div class="col-md-4"><input class="form-control" placeholder="Company phone *" [(ngModel)]="form.companyPhoneNumber" name="companyPhoneNumber" /></div>
+          <div class="col-md-4"><input class="form-control" placeholder="Commercial registration" [(ngModel)]="form.commercialRegistrationNumber" name="commercialRegistrationNumber" /></div>
+          <div class="col-md-4"><input class="form-control" placeholder="Tax / VAT number" [(ngModel)]="form.taxVatNumber" name="taxVatNumber" /></div>
+          <div class="col-md-12"><input class="form-control" placeholder="Website URL" [(ngModel)]="form.websiteUrl" name="websiteUrl" /></div>
+
+          <div class="col-12 pt-2"><h6>Billing</h6></div>
+          <div class="col-md-6"><input class="form-control" placeholder="Billing address line 1 *" [(ngModel)]="form.billingAddressLine1" name="billingAddressLine1" /></div>
+          <div class="col-md-6"><input class="form-control" placeholder="Billing address line 2" [(ngModel)]="form.billingAddressLine2" name="billingAddressLine2" /></div>
+          <div class="col-md-4"><input class="form-control" placeholder="City *" [(ngModel)]="form.billingCity" name="billingCity" /></div>
+          <div class="col-md-4"><input class="form-control" placeholder="Country *" [(ngModel)]="form.billingCountry" name="billingCountry" /></div>
+          <div class="col-md-4">
+            <select class="form-select" [(ngModel)]="form.paymentMethod" name="paymentMethod">
+              <option>Invoice</option>
+              <option>Wallet</option>
+              <option>Credit Card</option>
+              <option>Bank Transfer</option>
+            </select>
+          </div>
+
+          <div class="col-12 pt-2"><h6>Services</h6></div>
+          <div class="col-md-8 d-flex flex-wrap gap-3">
+            <mat-checkbox [checked]="selectedServices.has('OnDemand')" (change)="toggleService('OnDemand', $event.checked)">On demand</mat-checkbox>
+            <mat-checkbox [checked]="selectedServices.has('Dropoff')" (change)="toggleService('Dropoff', $event.checked)">Dropoff</mat-checkbox>
+            <mat-checkbox [checked]="selectedServices.has('Returns')" (change)="toggleService('Returns', $event.checked)">Returns</mat-checkbox>
+          </div>
+          <div class="col-md-4"><input type="number" class="form-control" placeholder="Monthly shipment estimate" [(ngModel)]="form.monthlyShipmentEstimate" name="monthlyShipmentEstimate" /></div>
+
+          <div class="col-12 pt-2"><h6>Primary Contact</h6></div>
+          <div class="col-md-4"><input class="form-control" placeholder="Full name *" [(ngModel)]="form.contactFullName" name="contactFullName" /></div>
+          <div class="col-md-4"><input class="form-control" placeholder="Job title" [(ngModel)]="form.contactJobTitle" name="contactJobTitle" /></div>
+          <div class="col-md-4"><input class="form-control" placeholder="Contact email *" [(ngModel)]="form.contactEmail" name="contactEmail" /></div>
+          <div class="col-md-4"><input class="form-control" placeholder="Contact phone *" [(ngModel)]="form.contactPhoneNumber" name="contactPhoneNumber" /></div>
+          <div class="col-md-4"><input class="form-control" placeholder="Alternate phone" [(ngModel)]="form.alternateContactNumber" name="alternateContactNumber" /></div>
+          <div class="col-md-4"><input type="password" class="form-control" placeholder="Account password *" [(ngModel)]="form.password" name="password" /></div>
+
+          <div class="col-12 pt-2"><h6>Security</h6></div>
+          <div class="col-md-6">
+            <div class="input-group">
+              <input class="form-control" placeholder="OTP code" [(ngModel)]="otpCode" name="otpCode" />
+              <button class="btn btn-outline-secondary" type="button" (click)="sendOtp()">Send</button>
+              <button class="btn btn-outline-primary" type="button" (click)="verifyOtp()">Verify</button>
+            </div>
+            @if (otpVerified) { <small class="text-success">Email OTP verified</small> }
+          </div>
+          <div class="col-md-6">
+            <button type="button" mat-stroked-button color="primary" (click)="markCaptchaVerified()">
+              {{ form.isCaptchaVerified ? 'CAPTCHA verified' : 'Validate CAPTCHA' }}
+            </button>
+          </div>
+
+          <div class="col-12 d-flex justify-content-end">
+            <button type="button" mat-flat-button color="primary" [disabled]="loading" (click)="submit()">
+              {{ loading ? 'Submitting...' : 'Submit request' }}
+            </button>
+          </div>
+        </form>
+        }
+      </div>
+    </div>
+  </div>
+</div>
