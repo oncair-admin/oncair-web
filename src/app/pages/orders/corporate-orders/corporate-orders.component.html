@@ -61,7 +61,7 @@
   <div class="card border-0 shadow-sm">
     <div class="card-header bg-white d-flex justify-content-between align-items-center">
       <h5 class="mb-0">Corporate Accounts</h5>
-      <button class="btn btn-sm btn-primary">
+      <button class="btn btn-sm btn-primary" (click)="addAccount()">
         <i class="ti ti-plus me-1"></i>
         Add Account
       </button>
@@ -82,10 +82,10 @@
           <thead class="table-light">
             <tr>
               <th>Company Name</th>
-              <th>Contact Person</th>
+              <th>Business Type</th>
               <th>Email</th>
               <th>Phone</th>
-              <th>Sub Users</th>
+              <th>Address</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
@@ -98,7 +98,7 @@
               <td>{{ account.email }}</td>
               <td>{{ account.phone }}</td>
               <td>
-                <span class="badge bg-light text-dark">{{ account.subUsers.length }} users</span>
+                <small class="text-muted">{{ account.address }}</small>
               </td>
               <td>
                 <span class="badge" [class]="account.isActive ? 'bg-success' : 'bg-danger'">
@@ -106,10 +106,10 @@
                 </span>
               </td>
               <td>
-                <button class="btn btn-sm btn-outline-primary me-1">
+                <button class="btn btn-sm btn-outline-primary me-1" (click)="viewAccount(account.id)">
                   <i class="ti ti-eye"></i>
                 </button>
-                <button class="btn btn-sm btn-outline-warning">
+                <button class="btn btn-sm btn-outline-warning" (click)="editAccount(account.id)">
                   <i class="ti ti-edit"></i>
                 </button>
               </td>

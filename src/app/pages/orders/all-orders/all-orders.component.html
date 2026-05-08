@@ -163,6 +163,9 @@
     </div>
 
     <div class="card-body p-0">
+      <div class="p-3 bg-light border-bottom" *ngIf="totalOrders > 0">
+        <span class="text-muted">Total Shipments in System: <strong>{{ totalOrders }}</strong></span>
+      </div>
       @if (loading) {
       <div class="text-center py-5">
         <div class="spinner-border text-primary" role="status">
@@ -289,8 +292,8 @@
       <div class="d-flex justify-content-between align-items-center p-3 border-top">
         <div class="text-muted">
           Showing {{ (currentPage - 1) * pageSize + 1 }} to 
-          {{ Math.min(currentPage * pageSize, filteredOrders.length) }} of 
-          {{ filteredOrders.length }} orders
+          {{ Math.min(currentPage * pageSize, totalOrders) }} of 
+          {{ totalOrders }} orders
         </div>
         <nav aria-label="Orders pagination">
           <ul class="pagination pagination-sm mb-0">

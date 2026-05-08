@@ -54,12 +54,105 @@ export class CorporateOrdersComponent implements OnInit {
     this.loading = true;
     this.uploadStatus = 'Processing file...';
 
-    // Simulate file processing
-    setTimeout(() => {
-      this.uploadStatus = 'File uploaded successfully! 10 orders created.';
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      const text = e.target.result;
+      const lines = text.split('\n');
+      const shipments: any[] = [];
+
+      // Skip header (Customer Name,Customer Phone,Recipient Name,Recipient Phone,Recipient Address,City,Package Description,Weight,Value,Delivery Type,Payment Method)
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+        
+        const columns = line.split(',');
+        if (columns.length < 11) continue;
+
+        // Basic mapping to AddShipmentRequest structure
+        const shipment = {
+          shipmentType: columns[9]?.toLowerCase().includes('express') ? 2 : 1,
+          openPackageAllowed: true,
+          consignee: columns[2],
+          consigneePhone: columns[3],
+          fromCityId: 1,
+          fromAddress: 'Main Corporate Hub',
+          fromLatitude: 30.0444,
+          fromLongitude: 31.2357,
+          toAddress: columns[4],
+          toCityId: 1,
+          consigneeAddress: columns[4],
+          senderAddress: 'Main Corporate Hub',
+          instructions: '',
+          quantity: 1,
+          toLatitude: 30.0444,
+          toLongitude: 31.2357,
+          kilometres: 5,
+          deliveryMethod: 1,
+          serviceType: 1,
+          paymentMethod: columns[10]?.toLowerCase().includes('cash') ? 1 : 2,
+          expiryMonthYear: '',
+          cardHolderName: '',
+          cardNuber: '',
+          contentCategoryId: 1,
+          contentCategoryText: columns[6],
+          reqShipmentPaymentDetailsDto: {
+            openPackageAllowed: true,
+            isPickup: true,
+            isReturn: false,
+            isReplacment: false,
+            fromCityId: 1,
+            toCityId: 1,
+            codAmount: parseFloat(columns[8]) || 0,
+            insuranance: 0,
+            lenght: 10,
+            width: 10,
+            height: 10,
+            weight: parseFloat(columns[7]) || 1,
+            isFragile: false,
+            pickupFees: 0,
+            zonalRate: 35,
+            chargeableWeight: parseFloat(columns[7]) || 1,
+            codCollectionFees: 0,
+            goPlusService: 0,
+            insurance: 0,
+            fragile: 0,
+            taxPercentage: 14,
+            total: parseFloat(columns[8]) || 100,
+            openPackageAllowedFees: 0
+          }
+        };
+        shipments.push(shipment);
+      }
+
+      if (shipments.length === 0) {
+        this.uploadStatus = 'No valid data found in file';
+        this.loading = false;
+        return;
+      }
+
+      this.ordersService.createBulkOrders(shipments).subscribe({
+        next: (response) => {
+          if (response.succeeded) {
+            this.uploadStatus = `File uploaded successfully! ${response.data.length} orders created.`;
+            this.loadCorporateAccounts();
+          } else {
+            this.uploadStatus = 'Error: ' + response.message;
+          }
+          this.loading = false;
+          this.selectedFile = null;
+        },
+        error: (error) => {
+          console.error('Error uploading bulk orders:', error);
+          this.uploadStatus = 'Error uploading file';
+          this.loading = false;
+        }
+      });
+    };
+    reader.onerror = () => {
+      this.uploadStatus = 'Error reading file';
       this.loading = false;
-      this.selectedFile = null;
-    }, 2000);
+    };
+    reader.readAsText(this.selectedFile);
   }
 
   downloadTemplate(): void {
@@ -72,5 +165,19 @@ export class CorporateOrdersComponent implements OnInit {
     link.href = url;
     link.download = 'bulk_order_template.csv';
     link.click();
+  }
+
+  addAccount(): void {
+    alert('Feature coming soon: Add Corporate Account');
+  }
+
+  viewAccount(id: number): void {
+    console.log('View corporate account:', id);
+    alert('Viewing account details for ID: ' + id);
+  }
+
+  editAccount(id: number): void {
+    console.log('Edit corporate account:', id);
+    alert('Editing account for ID: ' + id);
   }
 }

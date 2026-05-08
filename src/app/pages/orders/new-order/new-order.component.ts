@@ -75,9 +75,62 @@ export class NewOrderComponent implements OnInit {
     if (this.order.paymentMethod === 'Cash on Delivery') {
       this.order.codAmount = this.order.packageValue;
     }
+
+    const request = {
+      shipmentType: 1,
+      openPackageAllowed: true,
+      consignee: this.order.recipientName,
+      consigneePhone: this.order.recipientPhone,
+      fromCityId: 1,
+      fromAddress: this.order.senderAddress,
+      fromLatitude: 30.0444,
+      fromLongitude: 31.2357,
+      toAddress: this.order.recipientAddress,
+      toCityId: 1,
+      consigneeAddress: this.order.recipientAddress,
+      senderAddress: this.order.senderAddress,
+      instructions: this.order.notes || '',
+      quantity: 1,
+      toLatitude: 30.0444,
+      toLongitude: 31.2357,
+      kilometres: 5,
+      deliveryMethod: 1,
+      serviceType: 1,
+      paymentMethod: this.order.paymentMethod === 'Cash on Delivery' ? 1 : 2,
+      expiryMonthYear: '',
+      cardHolderName: '',
+      cardNuber: '',
+      contentCategoryId: 1,
+      contentCategoryText: this.order.packageDescription,
+      reqShipmentPaymentDetailsDto: {
+        openPackageAllowed: true,
+        isPickup: true,
+        isReturn: false,
+        isReplacment: false,
+        fromCityId: 1,
+        toCityId: 1,
+        codAmount: this.order.codAmount || 0,
+        insuranance: 0,
+        lenght: 10,
+        width: 10,
+        height: 10,
+        weight: this.order.packageWeight || 1,
+        isFragile: false,
+        pickupFees: 0,
+        zonalRate: 35,
+        chargeableWeight: this.order.packageWeight || 1,
+        codCollectionFees: 0,
+        goPlusService: 0,
+        insurance: 0,
+        fragile: 0,
+        taxPercentage: 14,
+        total: this.order.packageValue || 100,
+        openPackageAllowedFees: 0
+      }
+    };
     
     this.loading = true;
-    this.ordersService.createOrder(this.order as Order).subscribe({
+    this.ordersService.createOrder(request).subscribe({
       next: (response) => {
         if (response.succeeded) {
           this.alert = 'alert alert-success';

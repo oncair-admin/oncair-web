@@ -47,6 +47,15 @@ export interface ShipmentListItem {
   shipmentsFromEn: string;
   shipmentsToAr: string;
   shipmentsToEn: string;
+  customerName?: string;
+  codAmount?: number;
+  createdat?: string;
+}
+
+// ... rest of interfaces ...
+
+export interface ReqBulkShipmentDto {
+  shipments: AddShipmentRequest[];
 }
 
 // Full shipment details (from GetShipmentById)

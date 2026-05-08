@@ -51,9 +51,9 @@ export class OrderStatusesComponent implements OnInit {
   }
 
   loadOrders(): void {
-    this.ordersService.getAllOrders().subscribe({
-      next: (orders) => {
-        this.orders = orders;
+    this.ordersService.getAllOrders(1, 100).subscribe({
+      next: (response) => {
+        this.orders = response.items;
         this.updateStatusCounts();
       },
       error: (error) => {

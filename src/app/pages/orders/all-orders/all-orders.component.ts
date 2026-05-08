@@ -37,6 +37,7 @@ export class AllOrdersComponent implements OnInit {
   currentPage = 1;
   pageSize = 10;
   totalPages = 0;
+  totalOrders = 0;
   Math = Math;
   
   // Selected filters for display
@@ -57,10 +58,13 @@ export class AllOrdersComponent implements OnInit {
   
   loadOrders(): void {
     this.loading = true;
-    this.ordersService.getAllOrders().subscribe({
-      next: (orders) => {
-        this.orders = orders;
-        this.applyFilters();
+    const statusId = this.getStatusId(this.selectedStatus);
+    this.ordersService.getAllOrders(this.currentPage, this.pageSize, statusId).subscribe({
+      next: (response) => {
+        this.orders = response.items;
+        this.filteredOrders = response.items;
+        this.totalPages = response.totalPages;
+        this.totalOrders = response.totalCount;
         this.loading = false;
       },
       error: (error) => {
@@ -69,51 +73,36 @@ export class AllOrdersComponent implements OnInit {
       }
     });
   }
+
+  private getStatusId(status: OrderStatus | 'All'): number {
+    const mapping: Record<string, number> = {
+      'Pending': 1,
+      'Confirmed': 1,
+      'Picked Up': 3,
+      'In Transit': 3,
+      'Out for Delivery': 3,
+      'Delivered': 7,
+      'Failed': 9,
+      'Returned': 10,
+      'Cancelled': 11
+    };
+    return status === 'All' ? 0 : mapping[status] || 0;
+  }
   
   applyFilters(): void {
+    // Note: Most filters are now handled server-side via loadOrders()
+    // Local search for the current page results
     let filtered = [...this.orders];
     
-    // Search filter
     if (this.filters.searchTerm) {
       const search = this.filters.searchTerm.toLowerCase();
       filtered = filtered.filter(order =>
         order.orderNumber.toLowerCase().includes(search) ||
-        order.customerName.toLowerCase().includes(search) ||
-        order.customerPhone.includes(search) ||
-        order.recipientName.toLowerCase().includes(search) ||
-        order.recipientPhone.includes(search)
+        order.customerName.toLowerCase().includes(search)
       );
     }
     
-    // Status filter
-    if (this.selectedStatus && this.selectedStatus !== 'All') {
-      filtered = filtered.filter(order => order.status === this.selectedStatus);
-    }
-    
-    // Delivery type filter
-    if (this.selectedDeliveryType !== 'All') {
-      filtered = filtered.filter(order => order.deliveryType === this.selectedDeliveryType);
-    }
-    
-    // Payment method filter
-    if (this.selectedPaymentMethod !== 'All') {
-      filtered = filtered.filter(order => order.paymentMethod === this.selectedPaymentMethod);
-    }
-    
-    // Date filters
-    if (this.dateFrom) {
-      const fromDate = new Date(this.dateFrom);
-      filtered = filtered.filter(order => new Date(order.createdDate) >= fromDate);
-    }
-    
-    if (this.dateTo) {
-      const toDate = new Date(this.dateTo);
-      toDate.setHours(23, 59, 59);
-      filtered = filtered.filter(order => new Date(order.createdDate) <= toDate);
-    }
-    
     this.filteredOrders = filtered;
-    this.totalPages = Math.ceil(this.filteredOrders.length / this.pageSize);
   }
   
   onSearchChange(event: Event): void {
@@ -124,7 +113,7 @@ export class AllOrdersComponent implements OnInit {
   
   onFilterChange(): void {
     this.currentPage = 1;
-    this.applyFilters();
+    this.loadOrders();
   }
   
   clearFilters(): void {
@@ -134,18 +123,17 @@ export class AllOrdersComponent implements OnInit {
     this.selectedPaymentMethod = 'All';
     this.dateFrom = '';
     this.dateTo = '';
-    this.applyFilters();
+    this.loadOrders();
   }
   
   get paginatedOrders(): Order[] {
-    const start = (this.currentPage - 1) * this.pageSize;
-    const end = start + this.pageSize;
-    return this.filteredOrders.slice(start, end);
+    return this.filteredOrders;
   }
   
   goToPage(page: number): void {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
+      this.loadOrders();
     }
   }
   
