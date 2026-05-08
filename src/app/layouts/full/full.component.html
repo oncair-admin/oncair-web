@@ -17,19 +17,9 @@
       <ng-scrollbar class="position-relative" style="height: 100%">
         <mat-nav-list class="sidebar-list">
           @for(item of navItems; track item)
-          { @if (item.ItemId === 0)
-            {
-              <app-nav-item [item]="item" (notify)="sidenav.toggle()">
-              </app-nav-item>
-            }
-            @for(Permission of respPermissionList; track Permission)
-              {
-              @if (item.ItemId === Permission.id)
-                {
-                  <app-nav-item [item]="item" (notify)="sidenav.toggle()">
-                  </app-nav-item>
-                }
-            }
+          { 
+            <app-nav-item [item]="item" (notify)="sidenav.toggle()">
+            </app-nav-item>
           }
         </mat-nav-list>
       </ng-scrollbar>

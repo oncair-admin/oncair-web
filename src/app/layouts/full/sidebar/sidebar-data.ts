@@ -64,6 +64,7 @@ export const navItems: NavItem[] = [
   {
     displayName: 'Dashboard',
     ItemId:0,
+    audience: 'both',
     iconName: 'dashboard',
     bgcolor: 'error',
     route: '/dashboard',
@@ -71,6 +72,8 @@ export const navItems: NavItem[] = [
   {
     displayName: 'Branches',
     ItemId:0,
+    audience: 'admin',
+    permissionCode: 'VB',
     iconName: 'business',
     bgcolor: 'primary',
     route: '/dashboard/branches',
@@ -78,6 +81,8 @@ export const navItems: NavItem[] = [
   {
     displayName: 'Chats',
     ItemId:0,
+    audience: 'admin',
+    permissionCode: 'RI',
     iconName: 'message-circle',
     bgcolor: 'success',
     route: '/dashboard/chat',
@@ -85,6 +90,8 @@ export const navItems: NavItem[] = [
   {
     displayName: 'Complaints',
     ItemId: 0,
+    audience: 'admin',
+    permissionCode: 'HC',
     iconName: 'alert-triangle',
     bgcolor: 'warning',
     route: '/dashboard/complaints',
@@ -92,13 +99,26 @@ export const navItems: NavItem[] = [
   {
     displayName: 'Corporates',
     ItemId: 0,
+    audience: 'admin',
+    permissionCode: 'AM',
     iconName: 'building',
     bgcolor: 'primary',
     route: '/dashboard/corporates',
   },
   {
+    displayName: 'Corporate Users',
+    ItemId: 1005,
+    audience: 'corporate',
+    permissionCode: 'AS',
+    iconName: 'users',
+    bgcolor: 'primary',
+    route: '/dashboard/corporates/:id/users',
+  },
+  {
     displayName: 'اضافة قاعدة بيانات',
     ItemId:3,
+    audience: 'admin',
+    permissionCode: 'VB',
     iconName: 'tooltip',
     bgcolor: 'primary',
     route: '/extra/AddDatabase',
@@ -106,6 +126,8 @@ export const navItems: NavItem[] = [
   {
     displayName: 'Customers',
     ItemId:0,
+    audience: 'admin',
+    permissionCode: 'MK',
     iconName: 'users',
     bgcolor: 'warning',
     children: [
@@ -129,6 +151,8 @@ export const navItems: NavItem[] = [
   {
     displayName: 'Operations',
     ItemId:0,
+    audience: 'admin',
+    permissionCode: 'MC',
     iconName: 'dashboard',
     bgcolor: 'success',
     children: [
@@ -162,6 +186,8 @@ export const navItems: NavItem[] = [
   {
     displayName: 'Orders & Shipments',
     ItemId:0,
+    audience: 'admin',
+    permissionCode: 'CS',
     iconName: 'package',
     bgcolor: 'accent',
     children: [
@@ -195,6 +221,8 @@ export const navItems: NavItem[] = [
   {
     displayName: 'Shipments',
     ItemId:0,
+    audience: 'both',
+    permissionCode: 'US',
     iconName: 'truck',
     bgcolor: 'info',
     children: [

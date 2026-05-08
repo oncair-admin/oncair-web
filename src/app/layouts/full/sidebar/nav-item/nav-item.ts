@@ -1,6 +1,8 @@
 export interface NavItem {
     displayName?: string;
     ItemId?: number;
+    audience?: 'admin' | 'corporate' | 'both';
+    permissionCode?: string;
     disabled?: boolean;
     external?: boolean;
     twoLines?: boolean;
