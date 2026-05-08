@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MaterialModule } from 'src/app/material.module';
@@ -13,11 +13,13 @@ import { Courier, HubPackage, Hub } from 'src/app/models/operations.models';
   styleUrls: ['./dispatch-center.component.scss']
 })
 export class DispatchCenterComponent implements OnInit {
+  private operationsService = inject(OperationsService);
   couriers: Courier[] = [];
   hubPackages: HubPackage[] = [];
   hubs: Hub[] = [];
   loading = false;
   selectedView: 'courier' | 'hub' = 'courier';
+  selectedHubId: number | null = null;
   
   // Hub receiving form
   showReceivingForm = false;
@@ -30,9 +32,7 @@ export class DispatchCenterComponent implements OnInit {
   showTransferForm = false;
   transferPackageId: number | null = null;
   transferToHubId: number | null = null;
-  transferredBy = 'Current User';
-
-  constructor(private operationsService: OperationsService) {}
+  transferNote = '';
 
   ngOnInit(): void {
     this.loadData();
@@ -48,15 +48,26 @@ export class DispatchCenterComponent implements OnInit {
       }
     });
 
-    this.operationsService.getHubPackages().subscribe({
-      next: (packages) => {
-        this.hubPackages = packages;
-      }
-    });
-
     this.operationsService.getHubs().subscribe({
       next: (hubs) => {
         this.hubs = hubs;
+        if (!this.selectedHubId && hubs.length > 0) {
+          this.selectedHubId = hubs[0].id;
+        }
+        this.loadHubPackages();
+      }
+    });
+  }
+
+  loadHubPackages(): void {
+    if (!this.selectedHubId) {
+      this.hubPackages = [];
+      return;
+    }
+
+    this.operationsService.getHubPackages(this.selectedHubId).subscribe({
+      next: (packages) => {
+        this.hubPackages = packages;
       }
     });
   }
@@ -99,10 +110,7 @@ export class DispatchCenterComponent implements OnInit {
     this.receivingPackage = {
       packageCondition: 'Good',
       status: 'Received',
-      receivedDate: new Date(),
-      receivedBy: 'Current User',
-      currentHubId: 1,
-      currentHubName: 'Cairo Hub'
+      currentHubId: this.selectedHubId || undefined
     };
   }
 
@@ -111,12 +119,23 @@ export class DispatchCenterComponent implements OnInit {
   }
 
   submitReceiving(): void {
+    if (!this.receivingPackage.currentHubId || !this.receivingPackage.packageCondition) {
+      alert('Hub and package condition are required');
+      return;
+    }
+
+    if (!this.receivingPackage.trackingNumber && !this.receivingPackage.orderNumber) {
+      alert('Tracking number or order number is required');
+      return;
+    }
+
     this.operationsService.receivePackageAtHub(this.receivingPackage).subscribe({
       next: (response) => {
         if (response.succeeded) {
           alert('Package received successfully');
           this.closeReceivingForm();
-          this.loadData();
+          this.selectedHubId = this.receivingPackage.currentHubId || this.selectedHubId;
+          this.loadHubPackages();
         }
       }
     });
@@ -131,27 +150,24 @@ export class DispatchCenterComponent implements OnInit {
     this.showTransferForm = false;
     this.transferPackageId = null;
     this.transferToHubId = null;
+    this.transferNote = '';
   }
 
   submitTransfer(): void {
     if (this.transferPackageId && this.transferToHubId) {
-      const toHub = this.hubs.find(h => h.id === this.transferToHubId);
-      if (toHub) {
-        this.operationsService.transferPackage(
-          this.transferPackageId,
-          this.transferToHubId,
-          toHub.name,
-          this.transferredBy
-        ).subscribe({
-          next: (response) => {
-            if (response.succeeded) {
-              alert('Transfer initiated successfully');
-              this.closeTransferForm();
-              this.loadData();
-            }
+      this.operationsService.transferPackage(
+        this.transferPackageId,
+        this.transferToHubId,
+        this.transferNote
+      ).subscribe({
+        next: (response) => {
+          if (response.succeeded) {
+            alert('Transfer initiated successfully');
+            this.closeTransferForm();
+            this.loadHubPackages();
           }
-        });
-      }
+        }
+      });
     }
   }
 }

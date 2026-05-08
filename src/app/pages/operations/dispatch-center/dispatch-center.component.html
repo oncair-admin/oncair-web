@@ -88,8 +88,9 @@
               </div>
 
               <div class="mb-3">
-                <label class="form-label small">Update Status</label>
+                <label class="form-label small" [attr.for]="'courier-status-' + courier.id">Update Status</label>
                 <select
+                  [id]="'courier-status-' + courier.id"
                   class="form-select form-select-sm"
                   [value]="courier.status"
                   (change)="updateCourierStatus(courier.id, $event)"
@@ -130,10 +131,17 @@
             <i class="ti ti-package me-2"></i>
             Hub Packages
           </h5>
-          <button class="btn btn-primary" (click)="openReceivingForm()">
-            <i class="ti ti-plus me-1"></i>
-            Receive Package
-          </button>
+          <div class="d-flex gap-2 align-items-center">
+            <select class="form-select form-select-sm" [(ngModel)]="selectedHubId" (change)="loadHubPackages()">
+              @for (hub of hubs; track hub.id) {
+              <option [ngValue]="hub.id">{{ hub.name }}</option>
+              }
+            </select>
+            <button class="btn btn-primary" (click)="openReceivingForm()">
+              <i class="ti ti-plus me-1"></i>
+              Receive Package
+            </button>
+          </div>
         </div>
         <div class="card-body p-0">
           <div class="table-responsive">
@@ -201,41 +209,23 @@
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">Receive Package at Hub</h5>
-        <button type="button" class="btn-close" (click)="closeReceivingForm()"></button>
+        <button type="button" class="btn-close" aria-label="Close" (click)="closeReceivingForm()">
+          <span class="visually-hidden">Close</span>
+        </button>
       </div>
       <div class="modal-body">
         <div class="row g-3">
           <div class="col-md-6">
-            <label class="form-label">Tracking Number *</label>
-            <input type="text" class="form-control" [(ngModel)]="receivingPackage.trackingNumber" required />
+            <label class="form-label" for="receiveTrackingNumber">Tracking Number</label>
+            <input id="receiveTrackingNumber" type="text" class="form-control" [(ngModel)]="receivingPackage.trackingNumber" required />
           </div>
           <div class="col-md-6">
-            <label class="form-label">Order Number *</label>
-            <input type="text" class="form-control" [(ngModel)]="receivingPackage.orderNumber" required />
+            <label class="form-label" for="receiveOrderNumber">Order Number</label>
+            <input id="receiveOrderNumber" type="text" class="form-control" [(ngModel)]="receivingPackage.orderNumber" required />
           </div>
           <div class="col-md-6">
-            <label class="form-label">Sender Name *</label>
-            <input type="text" class="form-control" [(ngModel)]="receivingPackage.senderName" required />
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">Recipient Name *</label>
-            <input type="text" class="form-control" [(ngModel)]="receivingPackage.recipientName" required />
-          </div>
-          <div class="col-md-12">
-            <label class="form-label">Recipient Address *</label>
-            <input type="text" class="form-control" [(ngModel)]="receivingPackage.recipientAddress" required />
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">Package Type *</label>
-            <input type="text" class="form-control" [(ngModel)]="receivingPackage.packageType" required />
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">Weight (kg) *</label>
-            <input type="number" class="form-control" [(ngModel)]="receivingPackage.weight" step="0.1" required />
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">Package Condition *</label>
-            <select class="form-select" [(ngModel)]="receivingPackage.packageCondition">
+            <label class="form-label" for="receivePackageCondition">Package Condition *</label>
+            <select id="receivePackageCondition" class="form-select" [(ngModel)]="receivingPackage.packageCondition">
               <option value="Excellent">Excellent</option>
               <option value="Good">Good</option>
               <option value="Fair">Fair</option>
@@ -243,16 +233,16 @@
             </select>
           </div>
           <div class="col-md-6">
-            <label class="form-label">Current Hub *</label>
-            <select class="form-select" [(ngModel)]="receivingPackage.currentHubId">
+            <label class="form-label" for="receiveCurrentHub">Current Hub *</label>
+            <select id="receiveCurrentHub" class="form-select" [(ngModel)]="receivingPackage.currentHubId">
               @for (hub of hubs; track hub.id) {
-              <option [value]="hub.id">{{ hub.name }}</option>
+              <option [ngValue]="hub.id">{{ hub.name }}</option>
               }
             </select>
           </div>
           <div class="col-md-12">
-            <label class="form-label">Condition Remarks</label>
-            <textarea class="form-control" [(ngModel)]="receivingPackage.conditionRemarks" rows="2"></textarea>
+            <label class="form-label" for="receiveConditionRemarks">Condition Remarks</label>
+            <textarea id="receiveConditionRemarks" class="form-control" [(ngModel)]="receivingPackage.conditionRemarks" rows="2"></textarea>
           </div>
         </div>
       </div>
@@ -272,17 +262,23 @@
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">Transfer Package to Hub</h5>
-        <button type="button" class="btn-close" (click)="closeTransferForm()"></button>
+        <button type="button" class="btn-close" aria-label="Close" (click)="closeTransferForm()">
+          <span class="visually-hidden">Close</span>
+        </button>
       </div>
       <div class="modal-body">
         <div class="mb-3">
-          <label class="form-label">Select Destination Hub *</label>
-          <select class="form-select" [(ngModel)]="transferToHubId">
-            <option [value]="null">-- Select Hub --</option>
+          <label class="form-label" for="transferToHub">Select Destination Hub *</label>
+          <select id="transferToHub" class="form-select" [(ngModel)]="transferToHubId">
+            <option [ngValue]="null">-- Select Hub --</option>
             @for (hub of hubs; track hub.id) {
-            <option [value]="hub.id">{{ hub.name }} - {{ hub.city }}</option>
+            <option [ngValue]="hub.id">{{ hub.name }} - {{ hub.city }}</option>
             }
           </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="transferNote">Transfer Note</label>
+          <textarea id="transferNote" class="form-control" [(ngModel)]="transferNote" rows="2"></textarea>
         </div>
         <div class="alert alert-info">
           <i class="ti ti-info-circle me-2"></i>
