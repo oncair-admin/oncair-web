@@ -24,6 +24,37 @@ interface BranchLookup {
   AddresseEn?: string;
 }
 
+interface OperationsShipmentDto {
+  shipmentId?: number;
+  ShipmentId?: number;
+  shipmentBarcode?: string;
+  ShipmentBarcode?: string;
+  customerId?: number;
+  CustomerId?: number;
+  codAmount?: number;
+  CodAmount?: number;
+  totalEgp?: number;
+  TotalEgp?: number;
+  customerName?: string;
+  CustomerName?: string;
+  statusId?: number;
+  StatusId?: number;
+  statusName?: string;
+  StatusName?: string;
+  shipmentsFromAr?: string;
+  ShipmentsFromAr?: string;
+  shipmentsFromEn?: string;
+  ShipmentsFromEn?: string;
+  shipmentsToAr?: string;
+  ShipmentsToAr?: string;
+  shipmentsToEn?: string;
+  ShipmentsToEn?: string;
+  quantity?: number;
+  Quantity?: number;
+  createdat?: string | Date;
+  Createdat?: string | Date;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -90,10 +121,11 @@ export class OperationsService {
   }
 
   getDeliveryQueue(): Observable<DeliveryQueueItem[]> {
-    return this.handleApiResponse<DeliveryQueueItem[]>(
+    return this.handleApiResponse<OperationsShipmentDto[]>(
       this.api.getApi('api/Home/GetDeliveryQueue')
     ).pipe(
-      map(items => {
+      map(shipments => {
+        const items = shipments.map(shipment => this.mapDeliveryQueueItem(shipment));
         this.deliveryQueueSubject.next(items);
         return items;
       })
@@ -107,10 +139,11 @@ export class OperationsService {
   }
 
   getPickupRequests(): Observable<PickupRequest[]> {
-    return this.handleApiResponse<PickupRequest[]>(
+    return this.handleApiResponse<OperationsShipmentDto[]>(
       this.api.getApi('api/Home/GetPickupRequests')
     ).pipe(
-      map(items => {
+      map(shipments => {
+        const items = shipments.map(shipment => this.mapPickupRequest(shipment));
         this.pickupRequestsSubject.next(items);
         return items;
       })
@@ -182,5 +215,124 @@ export class OperationsService {
     };
 
     return condition ? conditionIds[condition] ?? null : null;
+  }
+
+  private mapPickupRequest(shipment: OperationsShipmentDto): PickupRequest {
+    const id = this.getShipmentId(shipment);
+    const createdDate = this.toDate(shipment.createdat ?? shipment.Createdat);
+    const pickupAddress = shipment.shipmentsFromEn || shipment.ShipmentsFromEn || shipment.shipmentsFromAr || shipment.ShipmentsFromAr || '';
+
+    return {
+      id,
+      requestNumber: this.getShipmentBarcode(shipment) || String(id),
+      customerName: this.getCustomerName(shipment),
+      customerPhone: '',
+      pickupAddress,
+      city: this.getCityFromAddress(pickupAddress),
+      packageType: 'Shipment',
+      estimatedPackages: shipment.quantity ?? shipment.Quantity,
+      preferredDate: createdDate,
+      preferredTimeSlot: 'Anytime',
+      requestDate: createdDate,
+      status: this.mapPickupStatus(shipment.statusId ?? shipment.StatusId, shipment.statusName || shipment.StatusName),
+      priority: 'Normal'
+    };
+  }
+
+  private mapDeliveryQueueItem(shipment: OperationsShipmentDto): DeliveryQueueItem {
+    const id = this.getShipmentId(shipment);
+    const deliveryAddress = shipment.shipmentsToEn || shipment.ShipmentsToEn || shipment.shipmentsToAr || shipment.ShipmentsToAr || '';
+
+    return {
+      id,
+      orderNumber: this.getShipmentBarcode(shipment) || String(id),
+      customerName: this.getCustomerName(shipment),
+      customerPhone: '',
+      deliveryAddress,
+      city: this.getCityFromAddress(deliveryAddress),
+      packageDescription: 'Shipment',
+      scheduledDate: this.toDate(shipment.createdat ?? shipment.Createdat),
+      status: this.mapDeliveryStatus(shipment.statusId ?? shipment.StatusId, shipment.statusName || shipment.StatusName),
+      priority: 'Normal',
+      deliveryType: '',
+      codAmount: shipment.codAmount ?? shipment.CodAmount ?? shipment.totalEgp ?? shipment.TotalEgp,
+      attempts: 0
+    };
+  }
+
+  private getShipmentId(shipment: OperationsShipmentDto): number {
+    return shipment.shipmentId ?? shipment.ShipmentId ?? 0;
+  }
+
+  private getShipmentBarcode(shipment: OperationsShipmentDto): string {
+    return shipment.shipmentBarcode || shipment.ShipmentBarcode || '';
+  }
+
+  private getCustomerName(shipment: OperationsShipmentDto): string {
+    const customerName = shipment.customerName || shipment.CustomerName;
+    const customerId = shipment.customerId ?? shipment.CustomerId;
+
+    return customerName || (customerId ? `Customer #${customerId}` : '');
+  }
+
+  private getCityFromAddress(address: string): string {
+    const parts = address.split(',').map(part => part.trim()).filter(Boolean);
+    return parts[parts.length - 1] || '';
+  }
+
+  private toDate(value?: string | Date): Date {
+    return value ? new Date(value) : new Date();
+  }
+
+  private mapPickupStatus(statusId?: number, statusName?: string): PickupRequest['status'] {
+    const normalizedStatus = this.normalizeStatus(statusName);
+
+    if (statusId === 1 || normalizedStatus === 'order received' || normalizedStatus === 'pending') {
+      return 'Pending';
+    }
+
+    if (normalizedStatus.includes('deliver')) {
+      return 'Completed';
+    }
+
+    if (normalizedStatus.includes('cancel')) {
+      return 'Cancelled';
+    }
+
+    if (normalizedStatus.includes('reject') || normalizedStatus.includes('fail')) {
+      return 'Rejected';
+    }
+
+    if (normalizedStatus.includes('assign') || normalizedStatus.includes('pick')) {
+      return 'Approved';
+    }
+
+    return 'Scheduled';
+  }
+
+  private mapDeliveryStatus(statusId?: number, statusName?: string): DeliveryQueueItem['status'] {
+    const normalizedStatus = this.normalizeStatus(statusName);
+
+    if (statusId === 2 || normalizedStatus.includes('assign')) {
+      return 'Assigned';
+    }
+
+    if (statusId === 3 || statusId === 4 || normalizedStatus.includes('picked up') || normalizedStatus.includes('at hub')) {
+      return 'In Progress';
+    }
+
+    if (normalizedStatus.includes('deliver') && !normalizedStatus.includes('fail')) {
+      return 'Completed';
+    }
+
+    if (normalizedStatus.includes('fail')) {
+      return 'Failed';
+    }
+
+    return 'Scheduled';
+  }
+
+  private normalizeStatus(statusName?: string): string {
+    return (statusName || '').trim().toLowerCase();
   }
 }

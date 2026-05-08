@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MaterialModule } from 'src/app/material.module';
@@ -13,6 +13,8 @@ import { PickupRequest, Courier } from 'src/app/models/operations.models';
   styleUrls: ['./pickup-requests.component.scss']
 })
 export class PickupRequestsComponent implements OnInit {
+  private operationsService = inject(OperationsService);
+
   requests: PickupRequest[] = [];
   filteredRequests: PickupRequest[] = [];
   couriers: Courier[] = [];
@@ -22,8 +24,6 @@ export class PickupRequestsComponent implements OnInit {
   searchTerm = '';
   
   statusOptions = ['All', 'Pending', 'Approved', 'Rejected', 'Scheduled', 'Completed', 'Cancelled'];
-
-  constructor(private operationsService: OperationsService) {}
 
   ngOnInit(): void {
     this.loadData();

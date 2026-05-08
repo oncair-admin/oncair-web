@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MaterialModule } from 'src/app/material.module';
@@ -13,6 +13,8 @@ import { DeliveryQueueItem, Courier } from 'src/app/models/operations.models';
   styleUrls: ['./delivery-queue.component.scss']
 })
 export class DeliveryQueueComponent implements OnInit {
+  private operationsService = inject(OperationsService);
+
   deliveries: DeliveryQueueItem[] = [];
   filteredDeliveries: DeliveryQueueItem[] = [];
   couriers: Courier[] = [];
@@ -25,8 +27,6 @@ export class DeliveryQueueComponent implements OnInit {
   
   statusOptions = ['All', 'Scheduled', 'Assigned', 'In Progress', 'Completed', 'Failed'];
   priorityOptions = ['All', 'Low', 'Normal', 'High', 'Urgent'];
-
-  constructor(private operationsService: OperationsService) {}
 
   ngOnInit(): void {
     this.loadData();

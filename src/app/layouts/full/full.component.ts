@@ -72,9 +72,19 @@ export class FullComponent implements OnInit {
   }
 
   ngOnInit(): void {
-     this.respPermissionList= JSON.parse(sessionStorage.getItem('respPermissionList') as string);
-     console.log(this.respPermissionList);
-     }
+    const permissions = sessionStorage.getItem('respPermissionList');
+    if (permissions && permissions !== 'undefined') {
+      try {
+        this.respPermissionList = JSON.parse(permissions);
+      } catch (e) {
+        console.error('Error parsing respPermissionList from sessionStorage', e);
+        this.respPermissionList = [];
+      }
+    } else {
+      this.respPermissionList = [];
+    }
+    console.log(this.respPermissionList);
+  }
 
   ngOnDestroy() {
     this.layoutChangesSubscription.unsubscribe(); 
