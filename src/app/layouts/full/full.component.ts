@@ -83,8 +83,10 @@ export class FullComponent implements OnInit {
     const isCorporate = !!companyId;
 
     this.navItems = navItems.filter(item => {
-      // 1. Super Admin bypass
-      if (this.permissionService.hasPermission('SA')) return true;
+      // 1. Super Admin bypass 
+      if (this.permissionService.hasPermission('SA')) {
+        return true;
+      }
 
       // 2. Filter by audience (legacy compatibility)
       const matchesAudience = isCorporate 

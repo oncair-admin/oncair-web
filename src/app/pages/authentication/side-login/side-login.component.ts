@@ -81,7 +81,7 @@ export class AppSideLoginComponent {
           );
           sessionStorage.setItem(
             'respPermissionList',
-            JSON.stringify(this.loginResp.permissions || [])
+            JSON.stringify(this.loginResp.permissions || this.loginResp.respPermissionList || [])
           );
           // Store userId for SignalR notifications
           if (this.loginResp.id) {

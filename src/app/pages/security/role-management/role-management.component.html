@@ -1,0 +1,55 @@
+<mat-card class="cardWithShadow theme-card">
+  <mat-card-header>
+    <mat-card-title class="m-b-0">Role & Permission Management</mat-card-title>
+    <mat-card-subtitle class="mat-body-1">Configure granular access for system roles</mat-card-subtitle>
+  </mat-card-header>
+  <mat-card-content class="b-t-1">
+    <div class="row m-t-20">
+      <!-- Role List -->
+      <div class="col-lg-4 col-md-5">
+        <h3 class="mat-h3 font-medium m-b-16">System Roles</h3>
+        <mat-list class="role-list">
+          @for(role of roles; track role.jobId) {
+          <mat-list-item 
+            (click)="selectRole(role.jobId)" 
+            [class.active]="selectedRoleId === role.jobId"
+            class="cursor-pointer">
+            <span matListItemTitle>{{ role.jobTitle }}</span>
+            <span matListItemLine>{{ role.roleCode }}</span>
+          </mat-list-item>
+          }
+        </mat-list>
+      </div>
+
+      <!-- Permission Checklist -->
+      <div class="col-lg-8 col-md-7 b-l-1">
+        <div class="d-flex align-items-center justify-content-between m-b-20">
+          <h3 class="mat-h3 font-medium m-0">Permissions for: <span class="text-primary">{{ getRoleName(selectedRoleId) }}</span></h3>
+          <button mat-raised-button color="primary" [disabled]="saving || !selectedRoleId" (click)="savePermissions()">
+            @if(saving) { <mat-spinner diameter="20" class="m-r-8"></mat-spinner> }
+            Save Changes
+          </button>
+        </div>
+
+        @if(loading) {
+          <div class="d-flex justify-content-center p-40">
+            <mat-spinner></mat-spinner>
+          </div>
+        } @else {
+          <div class="row">
+            @for(perm of permissions; track perm.permissionId) {
+              <div class="col-sm-6 m-b-10">
+                <mat-checkbox 
+                  [checked]="isPermissionSelected(perm.permissionId)" 
+                  (change)="togglePermission(perm.permissionId)">
+                  {{ perm.permissionName }} 
+                  <small class="text-muted">({{ perm.code }})</small>
+                </mat-checkbox>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  </mat-card-content>
+</mat-card>

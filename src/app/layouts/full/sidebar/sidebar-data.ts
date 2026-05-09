@@ -114,15 +114,15 @@ export const navItems: NavItem[] = [
     bgcolor: 'primary',
     route: '/dashboard/corporates/:id/users',
   },
-  {
-    displayName: 'اضافة قاعدة بيانات',
-    ItemId:3,
-    audience: 'admin',
-    permissionCode: 'VB',
-    iconName: 'tooltip',
-    bgcolor: 'primary',
-    route: '/extra/AddDatabase',
-  },
+  // {
+  //   displayName: 'اضافة قاعدة بيانات',
+  //   ItemId:3,
+  //   audience: 'admin',
+  //   permissionCode: 'VB',
+  //   iconName: 'tooltip',
+  //   bgcolor: 'primary',
+  //   route: '/extra/AddDatabase',
+  // },
   {
     displayName: 'Customers',
     ItemId:0,
@@ -132,11 +132,6 @@ export const navItems: NavItem[] = [
     bgcolor: 'warning',
     children: [
       {
-        displayName: 'Customer Directory',
-        iconName: 'address-book',
-        route: '/dashboard/customers/directory',
-      },
-      {
         displayName: 'Support Tickets',
         iconName: 'message-circle',
         route: '/dashboard/customers/tickets',
@@ -145,6 +140,26 @@ export const navItems: NavItem[] = [
         displayName: 'Feedback & Ratings',
         iconName: 'star',
         route: '/dashboard/customers/feedback',
+      },
+    ],
+  },
+  {
+    displayName: 'Security & Access',
+    ItemId: 0,
+    audience: 'admin',
+    permissionCode: 'SA',
+    iconName: 'lock',
+    bgcolor: 'error',
+    children: [
+      {
+        displayName: 'User Management',
+        iconName: 'user-plus',
+        route: '/dashboard/customers/directory',
+      },
+      {
+        displayName: 'Role Management',
+        iconName: 'shield-check',
+        route: '/dashboard/security/roles',
       },
     ],
   },

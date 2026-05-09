@@ -100,6 +100,18 @@ export const PagesRoutes: Routes = [
     },
   },
   {
+    path: 'security',
+    loadChildren: () =>
+      import('./security/security.routes').then((m) => m.SecurityRoutes),
+    data: {
+      title: 'Security',
+      urls: [
+        { title: 'Dashboard', url: '/dashboard' },
+        { title: 'Security' },
+      ],
+    },
+  },
+  {
     path: 'shipments',
     loadChildren: () =>
       import('./shipments/shipments.routes').then((m) => m.ShipmentsRoutes),
