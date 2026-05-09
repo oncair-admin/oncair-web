@@ -20,30 +20,28 @@ export interface Permission {
   providedIn: 'root'
 })
 export class RoleService {
-  private apiUrl = `${environment.apiUrl}/api/Role`;
+  private get apiUrl() {
+    const base = environment.apiUrl.endsWith('/') 
+      ? environment.apiUrl.slice(0, -1) 
+      : environment.apiUrl;
+    return `${base}/api/Role`;
+  }
 
   constructor(private http: HttpClient) {}
 
-  private getHeaders(): HttpHeaders {
-    return new HttpHeaders({
-      'Lang': 'en',
-      'Authorization': `Bearer ${sessionStorage.getItem('token')}`
-    });
-  }
-
   getAllRoles(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/GetAllRoles`, { headers: this.getHeaders() });
+    return this.http.get(`${this.apiUrl}/GetAllRoles`);
   }
 
   getAllPermissions(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/GetAllPermissions`, { headers: this.getHeaders() });
+    return this.http.get(`${this.apiUrl}/GetAllPermissions`);
   }
 
   getRolePermissionIds(jobId: number): Observable<any> {
-    return this.http.get(`${this.apiUrl}/GetRolePermissionIds?jobId=${jobId}`, { headers: this.getHeaders() });
+    return this.http.get(`${this.apiUrl}/GetRolePermissionIds?jobId=${jobId}`);
   }
 
   updateRolePermissions(jobId: number, permissionIds: number[]): Observable<any> {
-    return this.http.post(`${this.apiUrl}/UpdateRolePermissions`, { jobId, permissionIds }, { headers: this.getHeaders() });
+    return this.http.post(`${this.apiUrl}/UpdateRolePermissions`, { jobId, permissionIds });
   }
 }

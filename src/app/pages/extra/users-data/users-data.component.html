@@ -67,7 +67,7 @@
           name="email"
           class="form-control"
           [required]="true"
-          pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+          pattern="^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$"
           #email="ngModel"
         />
         <div
@@ -97,8 +97,8 @@
           <option [ngValue]="null">-- Select Job --</option>
 
           <!-- Dynamic options from jobList -->
-          <option *ngFor="let job of jobList" [ngValue]="+job.jobId">
-            {{ job.jobTitle }}
+          <option *ngFor="let job of jobList" [ngValue]="job.jobId || job.id">
+            {{ job.jobTitle || job.title || job.name }}
           </option>
         </select>
 
@@ -154,11 +154,11 @@
             (optionSelected)="
               User.branchId = $event.option.value.branchId;
               User.branchName =
-                $event.option.value.name || $event.option.value.branchName
+                $event.option.value.brancheNameEn || $event.option.value.brancheNameAr
             "
           >
             <mat-option *ngFor="let b of filteredBranches" [value]="b">
-              {{ b.name || b.branchName || "Branch #" + b.id }}
+              {{ b.brancheNameEn || b.brancheNameAr || "Branch #" + b.branchId }}
             </mat-option>
           </mat-autocomplete>
         </mat-form-field>

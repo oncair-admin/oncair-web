@@ -20,9 +20,14 @@ export class AuthInterceptor implements HttpInterceptor {
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     const token = sessionStorage.getItem('token');
-    const authedReq = token
-      ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } })
-      : req;
+    const lang = 'EN'; // Default to EN, could be dynamic if needed
+    
+    let headers = req.headers.set('Lang', lang);
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+
+    const authedReq = req.clone({ headers });
 
     return next.handle(authedReq).pipe(
       catchError((error: HttpErrorResponse) => {

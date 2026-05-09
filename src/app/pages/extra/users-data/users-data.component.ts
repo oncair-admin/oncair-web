@@ -4,7 +4,7 @@
 /* eslint-disable @angular-eslint/prefer-inject */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
-import { AfterViewInit, Component } from '@angular/core';
+import { AfterViewInit, Component, ChangeDetectorRef } from '@angular/core';
 import {
   FormGroup,
   Validators,
@@ -49,7 +49,7 @@ export class UsersDataComponent implements AfterViewInit {
     nameAr: '',
     nameEn: '',
     email: '',
-    jobId: 0,
+    jobId: null,
     deptId: 0,
     hireDate: '',
     salary: 0,
@@ -103,7 +103,8 @@ export class UsersDataComponent implements AfterViewInit {
 
   constructor(
     private fb: NonNullableFormBuilder,
-    private apiController: ApiController
+    private apiController: ApiController,
+    private cdr: ChangeDetectorRef
   ) {
     this.registrationForm = this.fb.group({
       nameAr: [
@@ -116,7 +117,7 @@ export class UsersDataComponent implements AfterViewInit {
         [
           Validators.required,
           Validators.pattern(
-            /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/
+            /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/
           ),
         ],
       ],
@@ -362,18 +363,25 @@ export class UsersDataComponent implements AfterViewInit {
   GetUserLookup() {
     this.apiController.getApi('api/Lookup/UserLookup').subscribe({
       next: (res: any) => {
-        if (res !== null) {
-          console.log(res.data);
-          this.jobList = res.data.jobList;
-          this.departmentList = res.data.departmentList;
-          this.usersList = res.data.userList;
-          this.PermissionList = res.data.permissionList;
+        if (res && res.data) {
+          console.log('UserLookup Full Response:', res);
+          // Handle both camelCase and PascalCase from backend
+          const data = res.data;
+          this.jobList = data.jobList || data.JobList || [];
+          this.departmentList = data.departmentList || data.DepartmentList || [];
+          this.usersList = data.userList || data.UserList || [];
+          this.PermissionList = data.permissionList || data.PermissionList || [];
+          
+          console.log('Processed jobList:', this.jobList);
         } else {
-          alert('NO DATA For This Emirates');
+          console.warn('UserLookup returned null or empty data');
+          this.jobList = [];
+          this.departmentList = [];
+          this.PermissionList = [];
         }
       },
       error: (err) => {
-        console.log(err);
+        console.error('Error fetching UserLookup:', err);
       },
     });
   }
@@ -747,6 +755,7 @@ export class UsersDataComponent implements AfterViewInit {
     this.IsDtl = false;
     this.GetAllUser();
     this.selectedPermissionId = 1; // Reset to default permission
+    this.cdr.detectChanges();
   }
 
   GoToAdd() {
@@ -784,6 +793,7 @@ export class UsersDataComponent implements AfterViewInit {
     this.IsDtl = true;
     this.alert = 'd-none';
     this.selectedPermissionId = 1; // Default to permission ID 1
+    this.cdr.detectChanges();
   }
 
   deleteUser(id: number) {

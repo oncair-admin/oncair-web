@@ -38,8 +38,7 @@ export function HttpLoaderFactory(http: HttpClient): any {
 }
 
 export const appConfig: ApplicationConfig = {
-   providers: [provideRouter(routes), provideClientHydration(),provideHttpClient(withFetch()),
-    provideZoneChangeDetection({ eventCoalescing: true }), 
+   providers: [
     provideRouter(
       routes,
       withInMemoryScrolling({
@@ -48,7 +47,11 @@ export const appConfig: ApplicationConfig = {
       }),
       withComponentInputBinding()
     ),
-    provideHttpClient(withInterceptorsFromDi()),
+    provideHttpClient(
+      withFetch(),
+      withInterceptorsFromDi()
+    ),
+    provideZoneChangeDetection({ eventCoalescing: true }), 
     provideClientHydration(),
     provideAnimationsAsync(),
     importProvidersFrom(
