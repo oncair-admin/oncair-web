@@ -88,4 +88,72 @@ describe('OperationsService', () => {
     expect(rows[0].status).toBe('In Progress');
     expect(rows[0].scheduledDate).toEqual(new Date('2026-05-02T08:15:00'));
   });
+
+  it('maps top-level courier coordinates to the current location used by live tracking', async () => {
+    api.getApi.and.returnValue(of({
+      succeeded: true,
+      message: 'ok',
+      errors: [],
+      data: [{
+        id: 501,
+        name: 'Courier One',
+        phone: '01000000000',
+        status: 'Available',
+        currentOrders: 1,
+        maxCapacity: 5,
+        branchId: 10,
+        branchName: 'Cairo Hub',
+        vehicleType: 'Bike',
+        latitude: 30.0444,
+        longitude: 31.2357,
+        todayDeliveries: 4
+      }]
+    }));
+
+    const couriers = await firstValueFrom(service.getCouriers());
+
+    expect(api.getApi).toHaveBeenCalledWith('api/Home/GetAllCouriers');
+    expect(couriers[0].currentLocation).toEqual({
+      latitude: 30.0444,
+      longitude: 31.2357
+    });
+  });
+
+  it('does not create a courier current location when coordinates are null or missing', async () => {
+    api.getApi.and.returnValue(of({
+      succeeded: true,
+      message: 'ok',
+      errors: [],
+      data: [{
+        id: 502,
+        name: 'Courier Two',
+        phone: '01000000001',
+        status: 'Available',
+        currentOrders: 0,
+        maxCapacity: 5,
+        branchId: 10,
+        branchName: 'Cairo Hub',
+        vehicleType: 'Bike',
+        latitude: null,
+        longitude: null,
+        todayDeliveries: 0
+      }, {
+        id: 503,
+        name: 'Courier Three',
+        phone: '01000000002',
+        status: 'Offline',
+        currentOrders: 0,
+        maxCapacity: 5,
+        branchId: 10,
+        branchName: 'Cairo Hub',
+        vehicleType: 'Bike',
+        todayDeliveries: 0
+      }]
+    }));
+
+    const couriers = await firstValueFrom(service.getCouriers());
+
+    expect(couriers[0].currentLocation).toBeUndefined();
+    expect(couriers[1].currentLocation).toBeUndefined();
+  });
 });

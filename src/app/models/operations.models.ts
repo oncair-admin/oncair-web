@@ -44,6 +44,8 @@ export interface Courier {
   branchId: number;
   branchName: string;
   vehicleType: string;
+  latitude?: number | null;
+  longitude?: number | null;
   currentLocation?: {
     latitude: number;
     longitude: number;

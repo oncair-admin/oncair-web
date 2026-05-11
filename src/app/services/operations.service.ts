@@ -127,8 +127,9 @@ export class OperationsService {
       this.api.getApi('api/Home/GetAllCouriers')
     ).pipe(
       map(couriers => {
-        this.couriersSubject.next(couriers);
-        return couriers;
+        const normalizedCouriers = couriers.map(courier => this.mapCourier(courier));
+        this.couriersSubject.next(normalizedCouriers);
+        return normalizedCouriers;
       })
     );
   }
@@ -283,6 +284,31 @@ export class OperationsService {
     };
 
     return condition ? conditionIds[condition] ?? null : null;
+  }
+
+  private mapCourier(courier: Courier): Courier {
+    if (courier.currentLocation) {
+      return courier;
+    }
+
+    if (!this.hasValidCoordinates(courier)) {
+      return courier;
+    }
+
+    return {
+      ...courier,
+      currentLocation: {
+        latitude: courier.latitude,
+        longitude: courier.longitude
+      }
+    };
+  }
+
+  private hasValidCoordinates(courier: Courier): courier is Courier & { latitude: number; longitude: number } {
+    return typeof courier.latitude === 'number'
+      && Number.isFinite(courier.latitude)
+      && typeof courier.longitude === 'number'
+      && Number.isFinite(courier.longitude);
   }
 
   private mapPickupRequest(shipment: OperationsShipmentDto): PickupRequest {
