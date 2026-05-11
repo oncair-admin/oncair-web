@@ -97,12 +97,12 @@ export class AuthInterceptor implements HttpInterceptor {
     // Use fetch to avoid circular HttpClient -> interceptor recursion
     const baseUrl = environment.apiUrl;
     return new Observable((observer) => {
-      fetch(baseUrl + 'auth/Auth/RefreshToken', {
+      fetch(baseUrl + 'auth/Auth/GetToken', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ token, refreshToken }),
+        body: JSON.stringify({ refreshToken }),
       })
         .then(async (res) => {
           if (!res.ok) throw new Error('Refresh failed');
