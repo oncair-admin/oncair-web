@@ -15,7 +15,8 @@ import {
   HubMonitoringStats,
   HubTransfer,
   HubException,
-  RespOptimizeRoute
+  RespOptimizeRoute,
+  CustomerServiceMetrics
 } from '../models/operations.models';
 
 interface BranchLookup {
@@ -188,6 +189,12 @@ export class OperationsService {
   getBranchPerformance(): Observable<BranchPerformance[]> {
     return this.handleApiResponse<BranchPerformance[]>(
       this.api.getApi('api/Home/GetBranchPerformance')
+    );
+  }
+
+  getCustomerServiceMetrics(): Observable<CustomerServiceMetrics> {
+    return this.handleApiResponse<CustomerServiceMetrics>(
+      this.api.getApi('api/Home/GetCustomerServiceMetrics')
     );
   }
 

@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { MaterialModule } from 'src/app/material.module';
 import { OperationsService } from 'src/app/services/operations.service';
 import { SignalRService, DashboardUpdate } from 'src/app/services/signalr.service';
-import { OperationsDashboardStats, BranchPerformance, Escalation } from 'src/app/models/operations.models';
+import { OperationsDashboardStats, BranchPerformance, Escalation, CustomerServiceMetrics } from 'src/app/models/operations.models';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 
@@ -17,6 +17,7 @@ import { Subscription } from 'rxjs';
 export class OperationsDashboardComponent implements OnInit, OnDestroy {
   stats: OperationsDashboardStats | null = null;
   branchPerformance: BranchPerformance[] = [];
+  customerServiceMetrics: CustomerServiceMetrics | null = null;
   escalations: Escalation[] = [];
   loading = false;
   private dashboardSubscription?: Subscription;
@@ -88,6 +89,15 @@ export class OperationsDashboardComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('Error loading escalations:', error);
+      }
+    });
+
+    this.operationsService.getCustomerServiceMetrics().subscribe({
+      next: (metrics) => {
+        this.customerServiceMetrics = metrics;
+      },
+      error: (error) => {
+        console.error('Error loading customer service metrics:', error);
       }
     });
   }

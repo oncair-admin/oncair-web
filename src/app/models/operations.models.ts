@@ -252,3 +252,32 @@ export interface DelayAlert {
   message: string;
   timestamp: string | Date;
 }
+
+export interface TopCorporateCustomer {
+  customerId: number;
+  companyName: string;
+  shipmentVolume: number;
+}
+
+export interface CustomerSatisfactionStats {
+  averageRating: number;
+  totalReviews: number;
+}
+
+export interface ComplaintStatistics {
+  openTickets: number;
+  resolvedTickets: number;
+  slaBreachedTickets: number;
+}
+
+export interface ChatManagementActivity {
+  activeConversations: number;
+  averageResponseTimeMinutes: number;
+}
+
+export interface CustomerServiceMetrics {
+  topCorporateCustomers: TopCorporateCustomer[];
+  customerSatisfaction: CustomerSatisfactionStats;
+  complaintStatistics: ComplaintStatistics;
+  chatActivity: ChatManagementActivity;
+}
