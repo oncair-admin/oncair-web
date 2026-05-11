@@ -87,6 +87,26 @@ export class PickupRequestsComponent implements OnInit {
     return classes[priority] || 'bg-secondary';
   }
 
+  getCouriersForBranch(branchId?: number): Courier[] {
+    if (!branchId) return this.couriers;
+    return this.couriers.filter(c => c.branchId === branchId);
+  }
+
+  assignCourier(requestId: number, courierId: string): void {
+    if (!courierId) return;
+    
+    this.operationsService.assignCourierToDelivery(requestId, parseInt(courierId)).subscribe({
+      next: (response) => {
+        if (response.succeeded) {
+          this.loadData();
+        }
+      },
+      error: (err) => {
+        alert(err.message || 'Failed to assign courier');
+      }
+    });
+  }
+
   approveRequest(requestId: number): void {
     this.operationsService.updatePickupRequest(requestId, { status: 'Approved' }).subscribe({
       next: (response) => {

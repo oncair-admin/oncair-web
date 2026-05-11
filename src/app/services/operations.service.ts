@@ -62,6 +62,16 @@ interface OperationsShipmentDto {
   Quantity?: number;
   createdat?: string | Date;
   Createdat?: string | Date;
+  weight?: number;
+  Weight?: number;
+  instructions?: string;
+  Instructions?: string;
+  customerPhone?: string;
+  CustomerPhone?: string;
+  branchName?: string;
+  BranchName?: string;
+  branchId?: number;
+  BranchId?: number;
 }
 
 @Injectable({
@@ -284,16 +294,20 @@ export class OperationsService {
       id,
       requestNumber: this.getShipmentBarcode(shipment) || String(id),
       customerName: this.getCustomerName(shipment),
-      customerPhone: '',
+      customerPhone: shipment.customerPhone || shipment.CustomerPhone || '',
       pickupAddress,
       city: this.getCityFromAddress(pickupAddress),
       packageType: 'Shipment',
+      estimatedWeight: shipment.weight ?? shipment.Weight,
       estimatedPackages: shipment.quantity ?? shipment.Quantity,
       preferredDate: createdDate,
       preferredTimeSlot: 'Anytime',
       requestDate: createdDate,
       status: this.mapPickupStatus(shipment.statusId ?? shipment.StatusId, shipment.statusName || shipment.StatusName),
-      priority: 'Normal'
+      priority: 'Normal',
+      specialInstructions: shipment.instructions || shipment.Instructions || '',
+      branchName: shipment.branchName || shipment.BranchName || '',
+      branchId: shipment.branchId ?? shipment.BranchId
     };
   }
 

@@ -45,8 +45,10 @@
             <tr>
               <th>Request #</th>
               <th>Customer</th>
+              <th>Branch</th>
               <th>Pickup Address</th>
-              <th>Package Type</th>
+              <th>Weight / Pkgs</th>
+              <th>Instructions</th>
               <th>Preferred Date & Time</th>
               <th>Priority</th>
               <th>Status</th>
@@ -62,11 +64,20 @@
                 <div>{{ request.customerName }}</div>
                 <small class="text-muted">{{ request.customerPhone }}</small>
               </td>
+              <td>{{ request.branchName || 'N/A' }}</td>
               <td>
                 <div>{{ request.pickupAddress }}</div>
                 <small class="text-muted">{{ request.city }}</small>
               </td>
-              <td>{{ request.packageType }}</td>
+              <td>
+                <div>{{ request.estimatedWeight || 0 }} kg</div>
+                <small class="text-muted">{{ request.estimatedPackages || 1 }} pkgs</small>
+              </td>
+              <td>
+                <span class="text-truncate d-inline-block" style="max-width: 150px;" [title]="request.specialInstructions">
+                  {{ request.specialInstructions || '-' }}
+                </span>
+              </td>
               <td>
                 <div>{{ request.preferredDate | date }}</div>
                 <small class="text-muted">{{ request.preferredTimeSlot }}</small>
@@ -84,6 +95,16 @@
               <td>
                 @if (request.assignedCourierName) {
                 {{ request.assignedCourierName }}
+                } @else if (request.status === 'Pending' || request.status === 'Approved') {
+                  <select 
+                    class="form-select form-select-sm" 
+                    (change)="assignCourier(request.id, $any($event.target).value)"
+                  >
+                    <option value="">Quick Assign...</option>
+                    @for (courier of getCouriersForBranch(request.branchId); track courier.id) {
+                      <option [value]="courier.id">{{ courier.name }}</option>
+                    }
+                  </select>
                 } @else {
                 <span class="text-muted">Not assigned</span>
                 }
