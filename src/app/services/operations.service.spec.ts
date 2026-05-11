@@ -89,6 +89,97 @@ describe('OperationsService', () => {
     expect(rows[0].scheduledDate).toEqual(new Date('2026-05-02T08:15:00'));
   });
 
+  it('maps operational delivery queue metadata from shipment DTOs', async () => {
+    api.getApi.and.returnValue(of({
+      succeeded: true,
+      message: 'ok',
+      errors: [],
+      data: [{
+        shipmentId: 3003,
+        shipmentBarcode: 'SHP3003',
+        customerId: 88,
+        customerName: 'North Market',
+        customerPhone: '01012345678',
+        consignee: 'Mona Ali',
+        consigneePhone: '01111111111',
+        statusId: 2,
+        statusName: 'Assigned',
+        branchId: 12,
+        branchName: 'Nasr City Branch',
+        courierId: 501,
+        courierName: 'Courier One',
+        shipmentsFromEn: 'Warehouse A, Cairo',
+        shipmentsToEn: 'Customer Street, Cairo',
+        weight: 4.5,
+        quantity: 3,
+        fromLatitude: 30.01,
+        fromLongitude: 31.20,
+        toLatitude: 30.05,
+        toLongitude: 31.25,
+        rescheduledAt: '2026-05-04T12:00:00',
+        etaAt: '2026-05-04T14:30:00',
+        deliveryPriority: 'High',
+        queueOrder: 7,
+        vehicleType: 'Bike',
+        validationMessages: ['Capacity data unavailable'],
+        warnings: ['ETA is estimated']
+      }]
+    }));
+
+    const rows = await firstValueFrom(service.getDeliveryQueue({
+      branchId: 12,
+      courierId: 501,
+      vehicleType: 'Bike',
+      status: 'Assigned',
+      priority: 'High',
+      search: 'SHP3003'
+    }));
+
+    expect(api.getApi).toHaveBeenCalledWith('api/Home/GetDeliveryQueue?branchId=12&courierId=501&vehicleType=Bike&status=Assigned&priority=High&search=SHP3003');
+    expect(rows[0]).toEqual(jasmine.objectContaining({
+      id: 3003,
+      orderNumber: 'SHP3003',
+      trackingNumber: 'SHP3003',
+      customerName: 'North Market',
+      customerPhone: '01012345678',
+      consigneeName: 'Mona Ali',
+      consigneePhone: '01111111111',
+      branchId: 12,
+      branchName: 'Nasr City Branch',
+      courierId: 501,
+      courierName: 'Courier One',
+      pickupAddress: 'Warehouse A, Cairo',
+      deliveryAddress: 'Customer Street, Cairo',
+      weight: 4.5,
+      quantity: 3,
+      priority: 'High',
+      queueOrder: 7,
+      vehicleType: 'Bike',
+      validationMessages: ['Capacity data unavailable'],
+      warnings: ['ETA is estimated']
+    }));
+    expect(rows[0].pickupCoordinates).toEqual({ latitude: 30.01, longitude: 31.20 });
+    expect(rows[0].dropoffCoordinates).toEqual({ latitude: 30.05, longitude: 31.25 });
+    expect(rows[0].rescheduledAt).toEqual(new Date('2026-05-04T12:00:00'));
+    expect(rows[0].etaAt).toEqual(new Date('2026-05-04T14:30:00'));
+  });
+
+  it('calls delivery queue operation endpoints with explicit command payloads', async () => {
+    api.PostApi.and.returnValue(of({ succeeded: true, message: 'ok', errors: [], data: { succeeded: true, message: 'ok' } }));
+
+    await firstValueFrom(service.unassignCourierFromDelivery(3003));
+    await firstValueFrom(service.rescheduleDelivery(3003, new Date(Date.UTC(2026, 4, 6, 9, 0, 0))));
+    await firstValueFrom(service.updateDeliveryPriority(3003, 'Urgent'));
+    await firstValueFrom(service.reorderDeliveries([{ deliveryId: 3003, queueOrder: 1 }]));
+    await firstValueFrom(service.sendCustomerDeliveryNotification(3003, 'eta_update'));
+
+    expect(api.PostApi).toHaveBeenCalledWith({ shipmentId: 3003 }, 'api/Shipment/UnassignCourier');
+    expect(api.PostApi).toHaveBeenCalledWith({ shipmentId: 3003, scheduledAt: '2026-05-06T09:00:00.000Z' }, 'api/Shipment/RescheduleDelivery');
+    expect(api.PostApi).toHaveBeenCalledWith({ shipmentId: 3003, priority: 'Urgent' }, 'api/Shipment/UpdateDeliveryPriority');
+    expect(api.PostApi).toHaveBeenCalledWith({ changes: [{ shipmentId: 3003, queueOrder: 1 }] }, 'api/Shipment/ReorderDeliveries');
+    expect(api.PostApi).toHaveBeenCalledWith({ shipmentId: 3003, messageType: 'eta_update' }, 'api/Shipment/SendCustomerDeliveryNotification');
+  });
+
   it('maps top-level courier coordinates to the current location used by live tracking', async () => {
     api.getApi.and.returnValue(of({
       succeeded: true,

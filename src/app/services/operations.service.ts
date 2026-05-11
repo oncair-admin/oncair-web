@@ -72,6 +72,70 @@ interface OperationsShipmentDto {
   BranchName?: string;
   branchId?: number;
   BranchId?: number;
+  courierId?: number;
+  CourierId?: number;
+  courierName?: string;
+  CourierName?: string;
+  consignee?: string;
+  Consignee?: string;
+  consigneePhone?: string;
+  ConsigneePhone?: string;
+  phoneNumber?: string;
+  PhoneNumber?: string;
+  fromLatitude?: number;
+  FromLatitude?: number;
+  fromLongitude?: number;
+  FromLongitude?: number;
+  toLatitude?: number;
+  ToLatitude?: number;
+  toLongitude?: number;
+  ToLongitude?: number;
+  etaAt?: string | Date;
+  EtaAt?: string | Date;
+  rescheduledAt?: string | Date;
+  RescheduledAt?: string | Date;
+  reschdule?: string | Date;
+  Reschdule?: string | Date;
+  deliveryPriority?: string;
+  DeliveryPriority?: string;
+  priority?: string;
+  Priority?: string;
+  queueOrder?: number;
+  QueueOrder?: number;
+  vehicleType?: string;
+  VehicleType?: string;
+  volume?: number;
+  Volume?: number;
+  validationMessages?: string[];
+  ValidationMessages?: string[];
+  warnings?: string[];
+  Warnings?: string[];
+  canAssign?: boolean;
+  CanAssign?: boolean;
+  canUnassign?: boolean;
+  CanUnassign?: boolean;
+  canReschedule?: boolean;
+  CanReschedule?: boolean;
+  canUpdatePriority?: boolean;
+  CanUpdatePriority?: boolean;
+  canUpdateStatus?: boolean;
+  CanUpdateStatus?: boolean;
+  canNotify?: boolean;
+  CanNotify?: boolean;
+}
+
+export interface DeliveryQueueFilters {
+  branchId?: number | string;
+  courierId?: number | string;
+  vehicleType?: string;
+  status?: string;
+  priority?: string;
+  search?: string;
+}
+
+export interface DeliveryReorderChange {
+  deliveryId: number;
+  queueOrder: number;
 }
 
 @Injectable({
@@ -140,9 +204,9 @@ export class OperationsService {
     );
   }
 
-  getDeliveryQueue(): Observable<DeliveryQueueItem[]> {
+  getDeliveryQueue(filters?: DeliveryQueueFilters): Observable<DeliveryQueueItem[]> {
     return this.handleApiResponse<OperationsShipmentDto[]>(
-      this.api.getApi('api/Home/GetDeliveryQueue')
+      this.api.getApi(this.withQuery('api/Home/GetDeliveryQueue', filters))
     ).pipe(
       map(shipments => {
         const items = shipments.map(shipment => this.mapDeliveryQueueItem(shipment));
@@ -155,6 +219,47 @@ export class OperationsService {
   assignCourierToDelivery(deliveryId: number, courierId: number): Observable<{succeeded: boolean, message: string}> {
     return this.handleApiResponse<{succeeded: boolean, message: string}>(
       this.api.PostApi({ shipmentId: deliveryId, courierId: courierId }, 'api/Shipment/AssignCourier')
+    );
+  }
+
+  unassignCourierFromDelivery(deliveryId: number): Observable<{succeeded: boolean, message: string}> {
+    return this.handleApiResponse<{succeeded: boolean, message: string}>(
+      this.api.PostApi({ shipmentId: deliveryId }, 'api/Shipment/UnassignCourier')
+    );
+  }
+
+  rescheduleDelivery(deliveryId: number, scheduledAt: Date): Observable<{succeeded: boolean, message: string}> {
+    return this.handleApiResponse<{succeeded: boolean, message: string}>(
+      this.api.PostApi({ shipmentId: deliveryId, scheduledAt: scheduledAt.toISOString() }, 'api/Shipment/RescheduleDelivery')
+    );
+  }
+
+  updateDeliveryPriority(deliveryId: number, priority: DeliveryQueueItem['priority']): Observable<{succeeded: boolean, message: string}> {
+    return this.handleApiResponse<{succeeded: boolean, message: string}>(
+      this.api.PostApi({ shipmentId: deliveryId, priority }, 'api/Shipment/UpdateDeliveryPriority')
+    );
+  }
+
+  reorderDeliveries(changes: DeliveryReorderChange[]): Observable<{succeeded: boolean, message: string}> {
+    return this.handleApiResponse<{succeeded: boolean, message: string}>(
+      this.api.PostApi({
+        changes: changes.map(change => ({
+          shipmentId: change.deliveryId,
+          queueOrder: change.queueOrder
+        }))
+      }, 'api/Shipment/ReorderDeliveries')
+    );
+  }
+
+  updateDeliveryStatus(deliveryId: number, statusId: number, note = ''): Observable<{succeeded: boolean, message: string}> {
+    return this.handleApiResponse<{succeeded: boolean, message: string}>(
+      this.api.PostApi({ shipmentId: deliveryId, statusId, note }, 'api/Shipment/UpdateDeliveryStatus')
+    );
+  }
+
+  sendCustomerDeliveryNotification(deliveryId: number, messageType: string): Observable<{succeeded: boolean, message: string}> {
+    return this.handleApiResponse<{succeeded: boolean, message: string}>(
+      this.api.PostApi({ shipmentId: deliveryId, messageType }, 'api/Shipment/SendCustomerDeliveryNotification')
     );
   }
 
@@ -339,22 +444,55 @@ export class OperationsService {
 
   private mapDeliveryQueueItem(shipment: OperationsShipmentDto): DeliveryQueueItem {
     const id = this.getShipmentId(shipment);
+    const trackingNumber = this.getShipmentBarcode(shipment) || String(id);
+    const pickupAddress = shipment.shipmentsFromEn || shipment.ShipmentsFromEn || shipment.shipmentsFromAr || shipment.ShipmentsFromAr || '';
     const deliveryAddress = shipment.shipmentsToEn || shipment.ShipmentsToEn || shipment.shipmentsToAr || shipment.ShipmentsToAr || '';
+    const rescheduledAt = this.toOptionalDate(shipment.rescheduledAt ?? shipment.RescheduledAt ?? shipment.reschdule ?? shipment.Reschdule);
+    const etaAt = this.toOptionalDate(shipment.etaAt ?? shipment.EtaAt);
+    const priority = this.mapDeliveryPriority(shipment.deliveryPriority || shipment.DeliveryPriority || shipment.priority || shipment.Priority);
 
     return {
       id,
-      orderNumber: this.getShipmentBarcode(shipment) || String(id),
+      orderNumber: trackingNumber,
+      trackingNumber,
       customerName: this.getCustomerName(shipment),
-      customerPhone: '',
+      customerPhone: shipment.customerPhone || shipment.CustomerPhone || shipment.phoneNumber || shipment.PhoneNumber || '',
+      consigneeName: shipment.consignee || shipment.Consignee,
+      consigneePhone: shipment.consigneePhone || shipment.ConsigneePhone,
+      branchId: shipment.branchId ?? shipment.BranchId,
+      branchName: shipment.branchName || shipment.BranchName || '',
+      courierId: shipment.courierId ?? shipment.CourierId,
+      courierName: shipment.courierName || shipment.CourierName,
+      pickupAddress,
       deliveryAddress,
       city: this.getCityFromAddress(deliveryAddress),
-      packageDescription: 'Shipment',
-      scheduledDate: this.toDate(shipment.createdat ?? shipment.Createdat),
+      packageDescription: shipment.instructions || shipment.Instructions || 'Shipment',
+      scheduledDate: rescheduledAt || this.toDate(shipment.createdat ?? shipment.Createdat),
+      rescheduledAt,
+      etaAt,
       status: this.mapDeliveryStatus(shipment.statusId ?? shipment.StatusId, shipment.statusName || shipment.StatusName),
-      priority: 'Normal',
-      deliveryType: '',
+      priority,
+      queueOrder: shipment.queueOrder ?? shipment.QueueOrder,
+      vehicleType: shipment.vehicleType || shipment.VehicleType,
+      weight: shipment.weight ?? shipment.Weight,
+      volume: shipment.volume ?? shipment.Volume,
+      quantity: shipment.quantity ?? shipment.Quantity,
+      pickupCoordinates: this.toCoordinates(shipment.fromLatitude ?? shipment.FromLatitude, shipment.fromLongitude ?? shipment.FromLongitude),
+      dropoffCoordinates: this.toCoordinates(shipment.toLatitude ?? shipment.ToLatitude, shipment.toLongitude ?? shipment.ToLongitude),
+      deliveryType: shipment.vehicleType || shipment.VehicleType || '',
       codAmount: shipment.codAmount ?? shipment.CodAmount ?? shipment.totalEgp ?? shipment.TotalEgp,
-      attempts: 0
+      attempts: 0,
+      notes: shipment.instructions || shipment.Instructions || '',
+      validationMessages: shipment.validationMessages || shipment.ValidationMessages || [],
+      warnings: shipment.warnings || shipment.Warnings || [],
+      allowedActions: {
+        canAssign: shipment.canAssign ?? shipment.CanAssign ?? true,
+        canUnassign: shipment.canUnassign ?? shipment.CanUnassign ?? Boolean(shipment.courierId ?? shipment.CourierId),
+        canReschedule: shipment.canReschedule ?? shipment.CanReschedule ?? true,
+        canUpdatePriority: shipment.canUpdatePriority ?? shipment.CanUpdatePriority ?? true,
+        canUpdateStatus: shipment.canUpdateStatus ?? shipment.CanUpdateStatus ?? true,
+        canNotify: shipment.canNotify ?? shipment.CanNotify ?? true
+      }
     };
   }
 
@@ -380,6 +518,28 @@ export class OperationsService {
 
   private toDate(value?: string | Date): Date {
     return value ? new Date(value) : new Date();
+  }
+
+  private toOptionalDate(value?: string | Date): Date | undefined {
+    return value ? new Date(value) : undefined;
+  }
+
+  private toCoordinates(latitude?: number, longitude?: number): { latitude: number; longitude: number } | undefined {
+    if (typeof latitude !== 'number' || !Number.isFinite(latitude) || typeof longitude !== 'number' || !Number.isFinite(longitude)) {
+      return undefined;
+    }
+
+    return { latitude, longitude };
+  }
+
+  private mapDeliveryPriority(priority?: string): DeliveryQueueItem['priority'] {
+    const normalizedPriority = (priority || '').trim().toLowerCase();
+
+    if (normalizedPriority === 'low') return 'Low';
+    if (normalizedPriority === 'high') return 'High';
+    if (normalizedPriority === 'urgent') return 'Urgent';
+
+    return 'Normal';
   }
 
   private mapPickupStatus(statusId?: number, statusName?: string): PickupRequest['status'] {
@@ -427,10 +587,31 @@ export class OperationsService {
       return 'Failed';
     }
 
+    if (normalizedStatus.includes('cancel')) {
+      return 'Cancelled';
+    }
+
+    if (normalizedStatus.includes('return')) {
+      return 'Returned';
+    }
+
     return 'Scheduled';
   }
 
   private normalizeStatus(statusName?: string): string {
     return (statusName || '').trim().toLowerCase();
+  }
+
+  private withQuery(url: string, filters?: DeliveryQueueFilters): string {
+    const params = new URLSearchParams();
+
+    Object.entries(filters || {}).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '' && value !== 'All') {
+        params.set(key, String(value));
+      }
+    });
+
+    const query = params.toString();
+    return query ? `${url}?${query}` : url;
   }
 }

@@ -112,22 +112,53 @@ export interface HubTransfer {
 export interface DeliveryQueueItem {
   id: number;
   orderNumber: string;
+  trackingNumber?: string;
   customerName: string;
   customerPhone: string;
+  consigneeName?: string;
+  consigneePhone?: string;
+  branchId?: number;
+  branchName?: string;
+  pickupAddress?: string;
   deliveryAddress: string;
   city: string;
   packageDescription: string;
   scheduledDate: Date;
+  rescheduledAt?: Date;
+  etaAt?: Date;
   timeSlot?: string;
-  status: 'Scheduled' | 'Assigned' | 'In Progress' | 'Completed' | 'Failed';
+  status: 'Scheduled' | 'Assigned' | 'In Progress' | 'Completed' | 'Failed' | 'Cancelled' | 'Returned';
   courierId?: number;
   courierName?: string;
   priority: 'Low' | 'Normal' | 'High' | 'Urgent';
+  queueOrder?: number;
+  vehicleType?: string;
+  weight?: number;
+  volume?: number;
+  quantity?: number;
+  pickupCoordinates?: {
+    latitude: number;
+    longitude: number;
+  };
+  dropoffCoordinates?: {
+    latitude: number;
+    longitude: number;
+  };
   deliveryType: string;
   codAmount?: number;
   attempts: number;
   lastAttemptDate?: Date;
   notes?: string;
+  validationMessages?: string[];
+  warnings?: string[];
+  allowedActions?: {
+    canAssign?: boolean;
+    canUnassign?: boolean;
+    canReschedule?: boolean;
+    canUpdatePriority?: boolean;
+    canUpdateStatus?: boolean;
+    canNotify?: boolean;
+  };
 }
 
 export interface PickupRequest {
