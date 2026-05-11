@@ -172,6 +172,8 @@ export class OperationsService {
   getDashboardStats(): Observable<OperationsDashboardStats> {
     return this.handleApiResponse<OperationsDashboardStats>(
       this.api.getApi('api/Home/GetOperationsDashboardStats')
+    ).pipe(
+      map(stats => this.mapDashboardStats(stats))
     );
   }
 
@@ -406,6 +408,23 @@ export class OperationsService {
         latitude: courier.latitude,
         longitude: courier.longitude
       }
+    };
+  }
+
+  private mapDashboardStats(stats: Partial<OperationsDashboardStats> | null | undefined): OperationsDashboardStats {
+    return {
+      deliveriesCompleted: stats?.deliveriesCompleted ?? 0,
+      inTransitShipments: stats?.inTransitShipments ?? 0,
+      pendingPickups: stats?.pendingPickups ?? 0,
+      failedDeliveries: stats?.failedDeliveries ?? 0,
+      todayRevenue: stats?.todayRevenue ?? 0,
+      activeRoutes: stats?.activeRoutes ?? 0,
+      activeCouriers: stats?.activeCouriers ?? 0,
+      averageDeliveryTime: stats?.averageDeliveryTime ?? 0,
+      totalShipmentsToday: stats?.totalShipmentsToday ?? 0,
+      totalShipmentsThisWeek: stats?.totalShipmentsThisWeek ?? 0,
+      totalShipmentsThisMonth: stats?.totalShipmentsThisMonth ?? 0,
+      highValueShipments: stats?.highValueShipments ?? 0
     };
   }
 

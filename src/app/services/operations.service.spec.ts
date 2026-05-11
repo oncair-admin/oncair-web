@@ -20,6 +20,36 @@ describe('OperationsService', () => {
     service = TestBed.inject(OperationsService);
   });
 
+  it('maps dashboard stats shipment overview fields with numeric fallbacks', async () => {
+    api.getApi.and.returnValue(of({
+      succeeded: true,
+      message: 'ok',
+      errors: [],
+      data: {
+        deliveriesCompleted: 10,
+        inTransitShipments: 4,
+        pendingPickups: 3,
+        failedDeliveries: 2,
+        todayRevenue: 1250.75,
+        activeCouriers: 5,
+        totalShipmentsToday: 6,
+        totalShipmentsThisWeek: 7,
+        totalShipmentsThisMonth: 8,
+        highValueShipments: 9
+      }
+    }));
+
+    const stats = await firstValueFrom(service.getDashboardStats());
+
+    expect(api.getApi).toHaveBeenCalledWith('api/Home/GetOperationsDashboardStats');
+    expect(stats.totalShipmentsToday).toBe(6);
+    expect(stats.totalShipmentsThisWeek).toBe(7);
+    expect(stats.totalShipmentsThisMonth).toBe(8);
+    expect(stats.highValueShipments).toBe(9);
+    expect(stats.averageDeliveryTime).toBe(0);
+    expect(stats.activeRoutes).toBe(0);
+  });
+
   it('maps shipment-shaped pickup requests to pickup table rows', async () => {
     api.getApi.and.returnValue(of({
       succeeded: true,

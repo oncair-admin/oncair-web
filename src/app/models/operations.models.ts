@@ -7,6 +7,10 @@ export interface OperationsDashboardStats {
   activeRoutes: number;
   activeCouriers: number;
   averageDeliveryTime: number;
+  totalShipmentsToday: number;
+  totalShipmentsThisWeek: number;
+  totalShipmentsThisMonth: number;
+  highValueShipments: number;
 }
 
 export interface BranchPerformance {
