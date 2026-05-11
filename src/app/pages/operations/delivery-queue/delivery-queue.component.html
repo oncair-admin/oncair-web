@@ -21,12 +21,12 @@
         class="form-control"
         placeholder="Order, barcode, customer, phone"
         [(ngModel)]="searchTerm"
-        (input)="applyFilters()"
+        (input)="onFilterChange()"
       />
     </div>
     <div>
       <label class="form-label">Branch</label>
-      <select class="form-select" [(ngModel)]="selectedBranch" (change)="applyFilters()">
+      <select class="form-select" [(ngModel)]="selectedBranch" (change)="onFilterChange()">
         <option value="All">All</option>
         @for (branch of branchOptions; track branch.id) {
         <option [value]="branch.id">{{ branch.name }}</option>
@@ -35,7 +35,7 @@
     </div>
     <div>
       <label class="form-label">Driver</label>
-      <select class="form-select" [(ngModel)]="selectedCourier" (change)="applyFilters()">
+      <select class="form-select" [(ngModel)]="selectedCourier" (change)="onFilterChange()">
         <option value="All">All</option>
         <option value="0">Unassigned</option>
         @for (courier of couriers; track courier.id) {
@@ -45,7 +45,7 @@
     </div>
     <div>
       <label class="form-label">Vehicle</label>
-      <select class="form-select" [(ngModel)]="selectedVehicle" (change)="applyFilters()">
+      <select class="form-select" [(ngModel)]="selectedVehicle" (change)="onFilterChange()">
         <option value="All">All</option>
         @for (vehicle of vehicleOptions; track vehicle) {
         <option [value]="vehicle">{{ vehicle }}</option>
@@ -54,7 +54,7 @@
     </div>
     <div>
       <label class="form-label">Status</label>
-      <select class="form-select" [(ngModel)]="selectedStatus" (change)="applyFilters()">
+      <select class="form-select" [(ngModel)]="selectedStatus" (change)="onFilterChange()">
         @for (status of statusOptions; track status) {
         <option [value]="status">{{ status }}</option>
         }
@@ -62,7 +62,7 @@
     </div>
     <div>
       <label class="form-label">Priority</label>
-      <select class="form-select" [(ngModel)]="selectedPriority" (change)="applyFilters()">
+      <select class="form-select" [(ngModel)]="selectedPriority" (change)="onFilterChange()">
         @for (priority of priorityOptions; track priority) {
         <option [value]="priority">{{ priority }}</option>
         }
@@ -277,6 +277,7 @@
           <mat-paginator
             [length]="totalItems"
             [pageSize]="pageSize"
+            [pageIndex]="pageNumber - 1"
             [pageSizeOptions]="[5, 10, 25, 100]"
             (page)="onPageChange($event)"
             aria-label="Select page"

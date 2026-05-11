@@ -214,29 +214,41 @@ export class DeliveryQueueComponent implements OnInit, AfterViewInit, OnDestroy 
   }
 
   focusOnShipment(delivery: DeliveryQueueItem): void {
+    if (!this.map) return;
+    
     const marker = this.shipmentMarkers.get(delivery.id);
-    if (marker && this.map) {
-      const latLng = marker.getLatLng();
-      if (latLng.lat !== 0 || latLng.lng !== 0) {
-        this.map.setView(latLng, 17); // Zoom in closer for focused view
-        
-        if ((this.markers as any).zoomToShowLayer) {
-          (this.markers as any).zoomToShowLayer(marker, () => {
+    if (marker) {
+      try {
+        const latLng = marker.getLatLng();
+        if (latLng && (latLng.lat !== 0 || latLng.lng !== 0)) {
+          this.map.setView(latLng, 17); // Zoom in closer for focused view
+          
+          if (this.markers && (this.markers as any).zoomToShowLayer) {
+            (this.markers as any).zoomToShowLayer(marker, () => {
+              marker.openPopup();
+            });
+          } else {
             marker.openPopup();
-          });
-        } else {
-          marker.openPopup();
+          }
         }
+      } catch (e) {
+        console.warn('Failed to focus on shipment marker', e);
       }
     }
   }
 
   clearFocus(): void {
-    if (this.map && this.markers.getLayers().length > 0) {
-      const bounds = this.markers.getBounds();
-      if (bounds.isValid()) {
-        this.map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+    if (!this.map || !this.markers) return;
+    
+    try {
+      if (this.markers.getLayers().length > 0) {
+        const bounds = this.markers.getBounds();
+        if (bounds && typeof bounds.isValid === 'function' && bounds.isValid()) {
+          this.map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+        }
       }
+    } catch (e) {
+      console.warn('Failed to clear focus/reset map bounds', e);
     }
   }
 
@@ -335,9 +347,14 @@ export class DeliveryQueueComponent implements OnInit, AfterViewInit, OnDestroy 
     this.loadData();
   }
 
+  onFilterChange(): void {
+    this.pageNumber = 1;
+    this.loadData();
+  }
+
   applyFilters(): void {
-    // Note: Search and logic filtering is now handled server-side in loadData via buildServerFilters.
-    // We only keep basic local filtering if needed for sub-filtering, but usually it's just:
+    // This is called locally after loadData. 
+    // If we wanted local sub-filtering we would do it here.
     this.filteredDeliveries = [...this.deliveries];
     this.updateMapMarkers();
   }
