@@ -1,10 +1,13 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, inject, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Observable } from 'rxjs';
 import { MaterialModule } from 'src/app/material.module';
 import { OperationsService, DeliveryQueueFilters } from 'src/app/services/operations.service';
 import { CourierLocation, SignalRService } from 'src/app/services/signalr.service';
 import { DeliveryQueueItem, Courier } from 'src/app/models/operations.models';
+import * as L from 'leaflet';
+import 'leaflet.markercluster';
 
 @Component({
   selector: 'app-delivery-queue',
@@ -13,16 +16,27 @@ import { DeliveryQueueItem, Courier } from 'src/app/models/operations.models';
   templateUrl: './delivery-queue.component.html',
   styleUrls: ['./delivery-queue.component.scss']
 })
-export class DeliveryQueueComponent implements OnInit {
+export class DeliveryQueueComponent implements OnInit, AfterViewInit, OnDestroy {
+  @ViewChild('mapElement') mapElement!: ElementRef;
   private operationsService = inject(OperationsService);
   private signalRService = inject(SignalRService);
 
+  private map?: L.Map;
+  private markers = L.markerClusterGroup();
+  private shipmentMarkers = new Map<number, L.Marker>();
+  private courierMarkers = new Map<number, L.Marker>();
+
   deliveries: DeliveryQueueItem[] = [];
   filteredDeliveries: DeliveryQueueItem[] = [];
+  totalItems = 0;
+  pageSize = 10;
+  pageNumber = 1;
+
   couriers: Courier[] = [];
   courierLocations: CourierLocation[] = [];
   selectedDeliveries = new Set<number>();
   loading = false;
+  rowLoading = new Map<number, boolean>();
   actionMessage = '';
   actionError = '';
   
@@ -73,15 +87,129 @@ export class DeliveryQueueComponent implements OnInit {
     this.loadData();
     this.signalRService.courierLocations$.subscribe(locations => {
       this.courierLocations = locations;
+      this.updateCourierMarkers();
     });
+  }
+
+  ngAfterViewInit(): void {
+    this.initMap();
+  }
+
+  ngOnDestroy(): void {
+    if (this.map) {
+      this.map.remove();
+    }
+  }
+
+  private initMap(): void {
+    this.map = L.map(this.mapElement.nativeElement).setView([30.0444, 31.2357], 12);
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(this.map);
+
+    this.map.addLayer(this.markers);
+  }
+
+  private updateMapMarkers(): void {
+    if (!this.map) return;
+
+    this.markers.clearLayers();
+    this.shipmentMarkers.clear();
+    
+    this.filteredDeliveries.forEach(delivery => {
+      if (delivery.dropoffCoordinates) {
+        const marker = L.marker([delivery.dropoffCoordinates.latitude, delivery.dropoffCoordinates.longitude], {
+          icon: this.createMarkerIcon('dropoff', delivery.status)
+        }).bindPopup(`
+          <strong>Order: ${delivery.orderNumber}</strong><br>
+          Status: ${delivery.status}<br>
+          Customer: ${delivery.customerName}
+        `);
+        this.markers.addLayer(marker);
+        this.shipmentMarkers.set(delivery.id, marker);
+      }
+
+      if (delivery.pickupCoordinates) {
+        const marker = L.marker([delivery.pickupCoordinates.latitude, delivery.pickupCoordinates.longitude], {
+          icon: this.createMarkerIcon('pickup', delivery.status)
+        }).bindPopup(`
+          <strong>Pickup: ${delivery.orderNumber}</strong><br>
+          Address: ${delivery.pickupAddress}
+        `);
+        this.markers.addLayer(marker);
+      }
+    });
+
+    if (this.markers.getLayers().length > 0) {
+      this.map.fitBounds(this.markers.getBounds(), { padding: [20, 20] });
+    }
+  }
+
+  focusOnShipment(delivery: DeliveryQueueItem): void {
+    const marker = this.shipmentMarkers.get(delivery.id);
+    if (marker && this.map) {
+      this.map.setView(marker.getLatLng(), 15);
+      marker.openPopup();
+    }
+  }
+
+  clearFocus(): void {
+    if (this.map && this.markers.getLayers().length > 0) {
+      this.map.fitBounds(this.markers.getBounds(), { padding: [20, 20] });
+    }
+  }
+
+  private updateCourierMarkers(): void {
+    if (!this.map) return;
+
+    this.courierLocations.forEach(location => {
+      let marker = this.courierMarkers.get(Number(location.id));
+      const latLng: L.LatLngExpression = [location.latitude, location.longitude];
+
+      if (marker) {
+        marker.setLatLng(latLng);
+      } else {
+        marker = L.marker(latLng, {
+          icon: this.createMarkerIcon('courier', location.status)
+        }).bindPopup(`<strong>Courier: ${location.name}</strong><br>Status: ${location.status}`);
+        marker.addTo(this.map!);
+        this.courierMarkers.set(Number(location.id), marker);
+      }
+    });
+  }
+
+  private createMarkerIcon(type: 'pickup' | 'dropoff' | 'courier', status: string): L.DivIcon {
+    const color = this.getMarkerColor(type, status);
+    return L.divIcon({
+      className: 'custom-marker',
+      html: `<div style="background-color: ${color}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.4);"></div>`,
+      iconSize: [12, 12],
+      iconAnchor: [6, 6]
+    });
+  }
+
+  private getMarkerColor(type: 'pickup' | 'dropoff' | 'courier', status: string): string {
+    if (type === 'courier') {
+      return status === 'delivering' ? '#FF9800' : '#4CAF50';
+    }
+    
+    switch (status) {
+      case 'Completed': return '#4CAF50';
+      case 'Failed': return '#F44336';
+      case 'In Progress': return '#2196F3';
+      case 'Assigned': return '#9C27B0';
+      default: return '#607D8B';
+    }
   }
 
   loadData(): void {
     this.loading = true;
     
     this.operationsService.getDeliveryQueue(this.buildServerFilters()).subscribe({
-      next: (deliveries) => {
-        this.deliveries = deliveries;
+      next: (result) => {
+        this.deliveries = result.items;
+        this.totalItems = result.totalCount;
         this.applyFilters();
         this.loading = false;
       },
@@ -98,47 +226,21 @@ export class DeliveryQueueComponent implements OnInit {
     });
   }
 
+  onPageChange(event: any): void {
+    this.pageNumber = event.pageIndex + 1;
+    this.pageSize = event.pageSize;
+    this.loadData();
+  }
+
   applyFilters(): void {
-    let filtered = [...this.deliveries];
-
-    if (this.searchTerm) {
-      const search = this.searchTerm.toLowerCase();
-      filtered = filtered.filter(d =>
-        d.orderNumber.toLowerCase().includes(search) ||
-        (d.trackingNumber || '').toLowerCase().includes(search) ||
-        d.customerName.toLowerCase().includes(search) ||
-        d.customerPhone.includes(search) ||
-        (d.consigneePhone || '').includes(search)
-      );
-    }
-
-    if (this.selectedBranch !== 'All') {
-      filtered = filtered.filter(d => d.branchId === Number(this.selectedBranch));
-    }
-
-    if (this.selectedCourier !== 'All') {
-      const courierId = Number(this.selectedCourier);
-      filtered = courierId === 0
-        ? filtered.filter(d => !d.courierId)
-        : filtered.filter(d => d.courierId === courierId);
-    }
-
-    if (this.selectedVehicle !== 'All') {
-      filtered = filtered.filter(d => d.vehicleType === this.selectedVehicle);
-    }
-
-    if (this.selectedStatus !== 'All') {
-      filtered = filtered.filter(d => d.status === this.selectedStatus);
-    }
-
-    if (this.selectedPriority !== 'All') {
-      filtered = filtered.filter(d => d.priority === this.selectedPriority);
-    }
-
-    this.filteredDeliveries = filtered;
+    // Note: Search and logic filtering is now handled server-side in loadData via buildServerFilters.
+    // We only keep basic local filtering if needed for sub-filtering, but usually it's just:
+    this.filteredDeliveries = [...this.deliveries];
+    this.updateMapMarkers();
   }
 
   refreshWithFilters(): void {
+    this.pageNumber = 1;
     this.loadData();
   }
 
@@ -200,14 +302,16 @@ export class DeliveryQueueComponent implements OnInit {
 
     this.runDeliveryAction(
       this.operationsService.assignCourierToDelivery(delivery.id, courierId),
-      'Courier assigned.'
+      'Courier assigned.',
+      delivery.id
     );
   }
 
   unassignCourier(delivery: DeliveryQueueItem): void {
     this.runDeliveryAction(
       this.operationsService.unassignCourierFromDelivery(delivery.id),
-      'Courier unassigned.'
+      'Courier unassigned.',
+      delivery.id
     );
   }
 
@@ -216,14 +320,16 @@ export class DeliveryQueueComponent implements OnInit {
 
     this.runDeliveryAction(
       this.operationsService.rescheduleDelivery(delivery.id, new Date(value)),
-      'Delivery rescheduled.'
+      'Delivery rescheduled.',
+      delivery.id
     );
   }
 
   updatePriority(delivery: DeliveryQueueItem, priority: DeliveryQueueItem['priority']): void {
     this.runDeliveryAction(
       this.operationsService.updateDeliveryPriority(delivery.id, priority),
-      'Priority updated.'
+      'Priority updated.',
+      delivery.id
     );
   }
 
@@ -233,8 +339,17 @@ export class DeliveryQueueComponent implements OnInit {
 
     this.runDeliveryAction(
       this.operationsService.reorderDeliveries([{ deliveryId: delivery.id, queueOrder }]),
-      'Queue order updated.'
+      'Queue order updated.',
+      delivery.id
     );
+  }
+
+  moveInQueue(delivery: DeliveryQueueItem, delta: number): void {
+    const currentOrder = delivery.queueOrder || 1;
+    const newOrder = Math.max(1, currentOrder + delta);
+    if (newOrder === currentOrder) return;
+
+    this.updateQueueOrder(delivery, newOrder.toString());
   }
 
   updateStatus(delivery: DeliveryQueueItem, statusIdValue: string): void {
@@ -243,14 +358,16 @@ export class DeliveryQueueComponent implements OnInit {
 
     this.runDeliveryAction(
       this.operationsService.updateDeliveryStatus(delivery.id, statusId),
-      'Status updated.'
+      'Status updated.',
+      delivery.id
     );
   }
 
   notifyCustomer(delivery: DeliveryQueueItem, messageType: string): void {
     this.runDeliveryAction(
       this.operationsService.sendCustomerDeliveryNotification(delivery.id, messageType),
-      'Customer notification queued.'
+      'Customer notification queued.',
+      delivery.id
     );
   }
 
@@ -278,21 +395,26 @@ export class DeliveryQueueComponent implements OnInit {
       vehicleType: this.selectedVehicle,
       status: this.selectedStatus,
       priority: this.selectedPriority,
-      search: this.searchTerm
+      search: this.searchTerm,
+      pageNumber: this.pageNumber,
+      pageSize: this.pageSize
     };
   }
 
-  private runDeliveryAction(action$: ReturnType<OperationsService['assignCourierToDelivery']>, successMessage: string): void {
+  private runDeliveryAction(action$: Observable<any>, successMessage: string, deliveryId?: number): void {
     this.actionMessage = '';
     this.actionError = '';
+    if (deliveryId) this.rowLoading.set(deliveryId, true);
 
     action$.subscribe({
       next: () => {
         this.actionMessage = successMessage;
+        if (deliveryId) this.rowLoading.delete(deliveryId);
         this.loadData();
       },
       error: (error) => {
         this.actionError = error?.message || 'Delivery queue action failed.';
+        if (deliveryId) this.rowLoading.delete(deliveryId);
       }
     });
   }

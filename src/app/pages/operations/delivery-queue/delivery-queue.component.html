@@ -120,7 +120,11 @@
               </thead>
               <tbody>
                 @for (delivery of filteredDeliveries; track delivery.id) {
-                <tr>
+                <tr 
+                  [class.row-processing]="rowLoading.get(delivery.id)"
+                  (mouseenter)="focusOnShipment(delivery)"
+                  (mouseleave)="clearFocus()"
+                >
                   <td>
                     <input
                       type="checkbox"
@@ -130,9 +134,22 @@
                     />
                   </td>
                   <td>
-                    <strong>{{ delivery.orderNumber }}</strong>
-                    <div class="text-muted small">Queue {{ delivery.queueOrder || '-' }}</div>
-                    <input class="form-control form-control-sm mt-1 order-input" type="number" min="1" [value]="delivery.queueOrder || ''" (change)="updateQueueOrder(delivery, $any($event.target).value)" />
+                    <div class="d-flex align-items-center gap-2">
+                      @if (rowLoading.get(delivery.id)) {
+                        <div class="spinner-border spinner-border-sm text-primary"></div>
+                      }
+                      <div>
+                        <strong>{{ delivery.orderNumber }}</strong>
+                        <div class="text-muted small">Queue {{ delivery.queueOrder || '-' }}</div>
+                      </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-1 mt-1">
+                      <input class="form-control form-control-sm order-input" type="number" min="1" [value]="delivery.queueOrder || ''" (change)="updateQueueOrder(delivery, $any($event.target).value)" />
+                      <div class="d-flex flex-column">
+                        <button class="btn btn-link btn-xs p-0 lh-1" (click)="moveInQueue(delivery, -1)" [disabled]="(delivery.queueOrder || 0) <= 1"><i class="ti ti-chevron-up"></i></button>
+                        <button class="btn btn-link btn-xs p-0 lh-1" (click)="moveInQueue(delivery, 1)"><i class="ti ti-chevron-down"></i></button>
+                      </div>
+                    </div>
                   </td>
                   <td>
                     <div>{{ delivery.customerName || delivery.consigneeName }}</div>
@@ -149,14 +166,26 @@
                     @if (delivery.rescheduledAt) {
                     <small class="text-muted">Rescheduled {{ delivery.rescheduledAt | date:'shortDate' }}</small>
                     }
-                    <input class="form-control form-control-sm mt-1" type="datetime-local" (change)="rescheduleDelivery(delivery, $any($event.target).value)" [disabled]="delivery.allowedActions?.canReschedule === false" />
+                    <input 
+                      class="form-control form-control-sm mt-1" 
+                      type="datetime-local" 
+                      (change)="rescheduleDelivery(delivery, $any($event.target).value)" 
+                      [disabled]="delivery.allowedActions?.canReschedule === false"
+                      [matTooltip]="(delivery.allowedActions?.canReschedule === false) ? (delivery.validationMessages?.join(', ') || 'Rescheduling not allowed in current state') : ''"
+                    />
                   </td>
                   <td>
                     <div>{{ delivery.weight || '-' }} kg</div>
                     <small class="text-muted">{{ delivery.quantity || '-' }} pkg {{ delivery.vehicleType || '' }}</small>
                   </td>
                   <td>
-                    <select class="form-select form-select-sm priority-select" [(ngModel)]="delivery.priority" (change)="updatePriority(delivery, delivery.priority)" [disabled]="delivery.allowedActions?.canUpdatePriority === false">
+                    <select 
+                      class="form-select form-select-sm priority-select" 
+                      [(ngModel)]="delivery.priority" 
+                      (change)="updatePriority(delivery, delivery.priority)" 
+                      [disabled]="delivery.allowedActions?.canUpdatePriority === false"
+                      [matTooltip]="(delivery.allowedActions?.canUpdatePriority === false) ? 'Priority update locked' : ''"
+                    >
                       @for (priority of priorityOptions; track priority) {
                       @if (priority !== 'All') {
                       <option [value]="priority">{{ priority }}</option>
@@ -166,22 +195,41 @@
                   </td>
                   <td>
                     <span class="badge {{ getStatusClass(delivery.status) }}">{{ delivery.status }}</span>
-                    <select class="form-select form-select-sm mt-1 status-select" (change)="updateStatus(delivery, $any($event.target).value)" [disabled]="delivery.allowedActions?.canUpdateStatus === false">
+                    <select 
+                      class="form-select form-select-sm mt-1 status-select" 
+                      (change)="updateStatus(delivery, $any($event.target).value)" 
+                      [disabled]="delivery.allowedActions?.canUpdateStatus === false || !delivery.availableStatuses?.length"
+                      [matTooltip]="(delivery.allowedActions?.canUpdateStatus === false) ? 'Status workflow locked' : ''"
+                    >
                       <option value="">Update</option>
-                      @for (option of statusUpdateOptions; track option.statusId) {
-                      <option [value]="option.statusId">{{ option.label }}</option>
+                      @for (option of delivery.availableStatuses; track option.id) {
+                      <option [value]="option.id">{{ option.statusNameEn }}</option>
                       }
                     </select>
                   </td>
                   <td>
                     @if (delivery.courierName) {
-                    <div>{{ delivery.courierName }}</div>
-                    <button class="btn btn-link btn-sm p-0" (click)="unassignCourier(delivery)" [disabled]="delivery.allowedActions?.canUnassign === false">Unassign</button>
+                    <div class="d-flex align-items-center gap-1">
+                      <span>{{ delivery.courierName }}</span>
+                      <button 
+                        class="btn btn-link btn-sm p-0 text-danger" 
+                        (click)="unassignCourier(delivery)" 
+                        [disabled]="delivery.allowedActions?.canUnassign === false"
+                        [matTooltip]="(delivery.allowedActions?.canUnassign === false) ? 'Unassignment restricted' : 'Unassign Courier'"
+                      >
+                        <i class="ti ti-x fs-6"></i>
+                      </button>
+                    </div>
                     } @else {
-                    <select class="form-select form-select-sm courier-select" (change)="assignCourier(delivery, $any($event.target).value)" [disabled]="delivery.allowedActions?.canAssign === false">
+                    <select 
+                      class="form-select form-select-sm courier-select" 
+                      (change)="assignCourier(delivery, $any($event.target).value)" 
+                      [disabled]="delivery.allowedActions?.canAssign === false"
+                      [matTooltip]="(delivery.allowedActions?.canAssign === false) ? (delivery.validationMessages?.join(', ') || 'Assignment locked') : 'Assign to courier'"
+                    >
                       <option value="">Assign</option>
                       @for (courier of couriers; track courier.id) {
-                      <option [value]="courier.id">{{ courier.name }}</option>
+                      <option [value]="courier.id">{{ courier.name }} ({{ courier.branchName }})</option>
                       }
                     </select>
                     }
@@ -195,10 +243,15 @@
                   </td>
                   <td>
                     <div class="action-stack">
-                      <select class="form-select form-select-sm" (change)="notifyCustomer(delivery, $any($event.target).value)" [disabled]="delivery.allowedActions?.canNotify === false">
+                      <select 
+                        class="form-select form-select-sm" 
+                        (change)="notifyCustomer(delivery, $any($event.target).value)" 
+                        [disabled]="delivery.allowedActions?.canNotify === false"
+                        [matTooltip]="(delivery.allowedActions?.canNotify === false) ? 'Customer notifications disabled' : 'Notify Customer'"
+                      >
                         <option value="">Notify</option>
                         @for (option of notificationOptions; track option) {
-                        <option [value]="option">{{ option }}</option>
+                        <option [value]="option">{{ option.replace('_', ' ') | titlecase }}</option>
                         }
                       </select>
                     </div>
@@ -221,6 +274,14 @@
               </tbody>
             </table>
           </div>
+          <mat-paginator
+            [length]="totalItems"
+            [pageSize]="pageSize"
+            [pageSizeOptions]="[5, 10, 25, 100]"
+            (page)="onPageChange($event)"
+            aria-label="Select page"
+          >
+          </mat-paginator>
           }
         </div>
       </div>
@@ -232,26 +293,10 @@
           <h5 class="mb-0">Live Map</h5>
           <span>{{ courierLocations.length }} live couriers</span>
         </div>
-        <div class="map-canvas">
-          @for (delivery of filteredDeliveries.slice(0, 8); track delivery.id) {
-          <div class="map-card">
-            <div>
-              <strong>{{ delivery.orderNumber }}</strong>
-              <div class="text-muted small">{{ delivery.courierName || 'Unassigned' }}</div>
-            </div>
-            <div class="text-end small">
-              <div>Pickup: {{ formatCoordinate(delivery.pickupCoordinates) }}</div>
-              <div>Drop: {{ formatCoordinate(delivery.dropoffCoordinates) }}</div>
-              @if (getCourierLocation(delivery); as location) {
-              <div class="text-success">Courier: {{ location.latitude | number:'1.4-4' }}, {{ location.longitude | number:'1.4-4' }}</div>
-              }
-            </div>
-          </div>
-          }
-        </div>
+        <div class="map-container" #mapElement style="height: 500px;"></div>
         <div class="suggestion-panel">
           <h6>Route Suggestions</h6>
-          <p class="mb-2">Route optimization and traffic alerts are shown only when supplied by backend validation messages.</p>
+          <p class="mb-2">Markers show pickup/dropoff points. Clusters bundle nearby shipments. Live couriers are tracked via SignalR.</p>
           @for (delivery of filteredDeliveries; track delivery.id) {
           @if ((delivery.warnings?.length || 0) > 0) {
           <div class="small mb-1"><strong>{{ delivery.orderNumber }}:</strong> {{ delivery.warnings?.join(', ') }}</div>

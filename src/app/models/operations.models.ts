@@ -45,9 +45,12 @@ export interface Courier {
   status: 'Available' | 'Busy' | 'On Break' | 'Offline';
   currentOrders: number;
   maxCapacity: number;
+  loadPercentage?: number;
   branchId: number;
   branchName: string;
+  branchIds?: number[];
   vehicleType: string;
+  vehicleTypeId?: number;
   latitude?: number | null;
   longitude?: number | null;
   currentLocation?: {
@@ -113,6 +116,14 @@ export interface HubTransfer {
   notes?: string;
 }
 
+export interface PagedResult<T> {
+  items: T[];
+  totalCount: number;
+  pageNumber: number;
+  pageSize: number;
+  totalPages: number;
+}
+
 export interface DeliveryQueueItem {
   id: number;
   orderNumber: string;
@@ -163,6 +174,7 @@ export interface DeliveryQueueItem {
     canUpdateStatus?: boolean;
     canNotify?: boolean;
   };
+  availableStatuses?: Array<{ id: number; statusNameEn: string; statusNameAr: string }>;
 }
 
 export interface PickupRequest {

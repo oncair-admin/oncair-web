@@ -9,6 +9,7 @@ import {
   Courier,
   HubPackage,
   DeliveryQueueItem,
+  PagedResult,
   PickupRequest,
   Hub,
   HubMonitoringStats,
@@ -131,6 +132,8 @@ export interface DeliveryQueueFilters {
   status?: string;
   priority?: string;
   search?: string;
+  pageNumber?: number;
+  pageSize?: number;
 }
 
 export interface DeliveryReorderChange {
@@ -206,14 +209,21 @@ export class OperationsService {
     );
   }
 
-  getDeliveryQueue(filters?: DeliveryQueueFilters): Observable<DeliveryQueueItem[]> {
-    return this.handleApiResponse<OperationsShipmentDto[]>(
+  getDeliveryQueue(filters?: DeliveryQueueFilters): Observable<PagedResult<DeliveryQueueItem>> {
+    return this.handleApiResponse<{ items: OperationsShipmentDto[], totalCount: number, pageNumber: number, pageSize: number, totalPages: number }>(
       this.api.getApi(this.withQuery('api/Home/GetDeliveryQueue', filters))
     ).pipe(
-      map(shipments => {
-        const items = shipments.map(shipment => this.mapDeliveryQueueItem(shipment));
+      map(pagedResult => {
+        const items = pagedResult.items.map(shipment => this.mapDeliveryQueueItem(shipment));
+        const result: PagedResult<DeliveryQueueItem> = {
+          items,
+          totalCount: pagedResult.totalCount,
+          pageNumber: pagedResult.pageNumber,
+          pageSize: pagedResult.pageSize,
+          totalPages: pagedResult.totalPages
+        };
         this.deliveryQueueSubject.next(items);
-        return items;
+        return result;
       })
     );
   }
@@ -393,22 +403,35 @@ export class OperationsService {
     return condition ? conditionIds[condition] ?? null : null;
   }
 
-  private mapCourier(courier: Courier): Courier {
-    if (courier.currentLocation) {
-      return courier;
-    }
-
-    if (!this.hasValidCoordinates(courier)) {
-      return courier;
-    }
-
-    return {
-      ...courier,
-      currentLocation: {
-        latitude: courier.latitude,
-        longitude: courier.longitude
-      }
+  private mapCourier(courier: any): Courier {
+    const normalized: Courier = {
+      id: courier.id || courier.Id,
+      name: courier.name || courier.Name,
+      phone: courier.phone || courier.Phone || '',
+      email: courier.email || courier.Email,
+      status: courier.status || courier.Status || 'Offline',
+      currentOrders: courier.currentOrders ?? courier.CurrentOrders ?? 0,
+      maxCapacity: courier.maxCapacity ?? courier.MaxCapacity ?? 10,
+      loadPercentage: courier.loadPercentage ?? courier.LoadPercentage,
+      branchId: courier.branchId ?? courier.BranchId ?? 0,
+      branchName: courier.branchName || courier.BranchName || '',
+      branchIds: courier.branchIds || courier.BranchIds,
+      vehicleType: courier.vehicleType || courier.VehicleType || '',
+      vehicleTypeId: courier.vehicleTypeId ?? courier.VehicleTypeId,
+      latitude: courier.latitude ?? courier.Latitude,
+      longitude: courier.longitude ?? courier.Longitude,
+      todayDeliveries: courier.todayDeliveries ?? courier.TodayDeliveries ?? 0,
+      rating: courier.rating ?? courier.Rating ?? 5
     };
+
+    if (normalized.latitude && normalized.longitude) {
+      normalized.currentLocation = {
+        latitude: normalized.latitude,
+        longitude: normalized.longitude
+      };
+    }
+
+    return normalized;
   }
 
   private mapDashboardStats(stats: Partial<OperationsDashboardStats> | null | undefined): OperationsDashboardStats {
@@ -511,7 +534,8 @@ export class OperationsService {
         canUpdatePriority: shipment.canUpdatePriority ?? shipment.CanUpdatePriority ?? true,
         canUpdateStatus: shipment.canUpdateStatus ?? shipment.CanUpdateStatus ?? true,
         canNotify: shipment.canNotify ?? shipment.CanNotify ?? true
-      }
+      },
+      availableStatuses: (shipment as any).availableStatuses || (shipment as any).AvailableStatuses || []
     };
   }
 

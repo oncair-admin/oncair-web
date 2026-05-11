@@ -27,6 +27,12 @@
     td {
       vertical-align: middle;
     }
+
+    .row-processing {
+      opacity: 0.7;
+      pointer-events: none;
+      background-color: rgba(248, 250, 252, 0.5);
+    }
   }
 
   .route-line {
@@ -80,25 +86,15 @@
     }
   }
 
-  .map-canvas {
-    min-height: 360px;
-    padding: 14px;
-    background:
-      linear-gradient(90deg, rgba(148, 163, 184, 0.18) 1px, transparent 1px),
-      linear-gradient(rgba(148, 163, 184, 0.18) 1px, transparent 1px),
-      #f8fafc;
-    background-size: 32px 32px;
+  .map-container {
+    height: 500px;
+    width: 100%;
+    z-index: 1;
   }
 
-  .map-card {
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 10px;
-    margin-bottom: 10px;
-    background: rgba(255, 255, 255, 0.92);
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
+  .custom-marker {
+    background: transparent;
+    border: none;
   }
 
   .suggestion-panel {
