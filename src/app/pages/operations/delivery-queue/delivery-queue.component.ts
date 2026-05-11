@@ -102,6 +102,8 @@ export class DeliveryQueueComponent implements OnInit, AfterViewInit, OnDestroy 
   }
 
   private initMap(): void {
+    if (this.map) return;
+
     this.map = L.map(this.mapElement.nativeElement).setView([30.0444, 31.2357], 12);
     
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -109,6 +111,21 @@ export class DeliveryQueueComponent implements OnInit, AfterViewInit, OnDestroy 
     }).addTo(this.map);
 
     this.map.addLayer(this.markers);
+
+    // Ensure map is correctly sized
+    setTimeout(() => {
+      if (this.map) {
+        this.map.invalidateSize();
+      }
+    }, 100);
+
+    // If data is already loaded before map was ready, update markers now
+    if (this.filteredDeliveries.length > 0) {
+      this.updateMapMarkers();
+    }
+    if (this.courierLocations.length > 0) {
+      this.updateCourierMarkers();
+    }
   }
 
   private updateMapMarkers(): void {
@@ -117,46 +134,109 @@ export class DeliveryQueueComponent implements OnInit, AfterViewInit, OnDestroy 
     this.markers.clearLayers();
     this.shipmentMarkers.clear();
     
+    const newMarkers: L.Marker[] = [];
+    // Track seen coordinates to add jitter for overlapping points
+    const coordinateCounts = new Map<string, number>();
+    
     this.filteredDeliveries.forEach(delivery => {
-      if (delivery.dropoffCoordinates) {
-        const marker = L.marker([delivery.dropoffCoordinates.latitude, delivery.dropoffCoordinates.longitude], {
+      // Handle Dropoff
+      if (delivery.dropoffCoordinates && 
+          typeof delivery.dropoffCoordinates.latitude === 'number' && 
+          typeof delivery.dropoffCoordinates.longitude === 'number') {
+        
+        let lat = delivery.dropoffCoordinates.latitude;
+        let lng = delivery.dropoffCoordinates.longitude;
+        const coordKey = `${lat.toFixed(6)},${lng.toFixed(6)}`;
+        const count = coordinateCounts.get(coordKey) || 0;
+        coordinateCounts.set(coordKey, count + 1);
+
+        // Add a tiny jitter if this spot is occupied (approx 2-3 meters offset)
+        if (count > 0) {
+          lat += (Math.random() - 0.5) * 0.0001;
+          lng += (Math.random() - 0.5) * 0.0001;
+        }
+
+        const marker = L.marker([lat, lng], {
           icon: this.createMarkerIcon('dropoff', delivery.status)
         }).bindPopup(`
-          <strong>Order: ${delivery.orderNumber}</strong><br>
-          Status: ${delivery.status}<br>
-          Customer: ${delivery.customerName}
+          <div class="p-2" style="min-width: 150px;">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <strong class="text-primary">${delivery.orderNumber}</strong>
+              <span class="badge ${this.getStatusClass(delivery.status)}">${delivery.status}</span>
+            </div>
+            <div class="small mb-1"><strong>To:</strong> ${delivery.customerName}</div>
+            <div class="small text-muted">${delivery.deliveryAddress}</div>
+          </div>
         `);
-        this.markers.addLayer(marker);
+        newMarkers.push(marker);
         this.shipmentMarkers.set(delivery.id, marker);
       }
 
-      if (delivery.pickupCoordinates) {
-        const marker = L.marker([delivery.pickupCoordinates.latitude, delivery.pickupCoordinates.longitude], {
+      // Handle Pickup
+      if (delivery.pickupCoordinates && 
+          typeof delivery.pickupCoordinates.latitude === 'number' && 
+          typeof delivery.pickupCoordinates.longitude === 'number') {
+        
+        let lat = delivery.pickupCoordinates.latitude;
+        let lng = delivery.pickupCoordinates.longitude;
+        const coordKey = `${lat.toFixed(6)},${lng.toFixed(6)}`;
+        const count = coordinateCounts.get(coordKey) || 0;
+        coordinateCounts.set(coordKey, count + 1);
+
+        if (count > 0) {
+          lat += (Math.random() - 0.5) * 0.0001;
+          lng += (Math.random() - 0.5) * 0.0001;
+        }
+
+        const marker = L.marker([lat, lng], {
           icon: this.createMarkerIcon('pickup', delivery.status)
         }).bindPopup(`
-          <strong>Pickup: ${delivery.orderNumber}</strong><br>
-          Address: ${delivery.pickupAddress}
+          <div class="p-2" style="min-width: 150px;">
+            <div class="mb-2"><strong class="text-success">Pickup: ${delivery.orderNumber}</strong></div>
+            <div class="small text-muted">${delivery.pickupAddress}</div>
+          </div>
         `);
-        this.markers.addLayer(marker);
+        newMarkers.push(marker);
       }
     });
 
-    if (this.markers.getLayers().length > 0) {
-      this.map.fitBounds(this.markers.getBounds(), { padding: [20, 20] });
+    if (newMarkers.length > 0) {
+      this.markers.addLayers(newMarkers);
+      try {
+        const bounds = this.markers.getBounds();
+        if (bounds.isValid()) {
+          this.map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+        }
+      } catch (e) {
+        console.warn('Could not fit map bounds', e);
+      }
     }
   }
 
   focusOnShipment(delivery: DeliveryQueueItem): void {
     const marker = this.shipmentMarkers.get(delivery.id);
     if (marker && this.map) {
-      this.map.setView(marker.getLatLng(), 15);
-      marker.openPopup();
+      const latLng = marker.getLatLng();
+      if (latLng.lat !== 0 || latLng.lng !== 0) {
+        this.map.setView(latLng, 17); // Zoom in closer for focused view
+        
+        if ((this.markers as any).zoomToShowLayer) {
+          (this.markers as any).zoomToShowLayer(marker, () => {
+            marker.openPopup();
+          });
+        } else {
+          marker.openPopup();
+        }
+      }
     }
   }
 
   clearFocus(): void {
     if (this.map && this.markers.getLayers().length > 0) {
-      this.map.fitBounds(this.markers.getBounds(), { padding: [20, 20] });
+      const bounds = this.markers.getBounds();
+      if (bounds.isValid()) {
+        this.map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+      }
     }
   }
 
@@ -181,11 +261,34 @@ export class DeliveryQueueComponent implements OnInit, AfterViewInit, OnDestroy 
 
   private createMarkerIcon(type: 'pickup' | 'dropoff' | 'courier', status: string): L.DivIcon {
     const color = this.getMarkerColor(type, status);
+    const size = type === 'courier' ? 28 : 22;
+    const label = type === 'pickup' ? 'P' : type === 'dropoff' ? 'D' : 'C';
+    const borderColor = type === 'courier' ? '#2d3436' : 'white';
+    
     return L.divIcon({
       className: 'custom-marker',
-      html: `<div style="background-color: ${color}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.4);"></div>`,
-      iconSize: [12, 12],
-      iconAnchor: [6, 6]
+      html: `
+        <div style="
+          background-color: ${color}; 
+          width: ${size}px; 
+          height: ${size}px; 
+          border-radius: 50%; 
+          display: flex; 
+          align-items: center; 
+          justify-content: center; 
+          border: 2px solid ${borderColor}; 
+          box-shadow: 0 2px 10px rgba(0,0,0,0.35);
+          color: white;
+          font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+          font-size: ${size > 24 ? '12px' : '10px'};
+          font-weight: 700;
+          line-height: 1;
+          transition: transform 0.2s ease;
+        ">
+          ${label}
+        </div>`,
+      iconSize: [size, size],
+      iconAnchor: [size / 2, size / 2]
     });
   }
 
