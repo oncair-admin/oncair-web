@@ -124,6 +124,11 @@ export const navItems: NavItem[] = [
     bgcolor: 'warning',
     children: [
       {
+        displayName: 'Customer Directory',
+        iconName: 'users',
+        route: '/dashboard/customers/directory',
+      },
+      {
         displayName: 'Support Tickets',
         iconName: 'message-circle',
         route: '/dashboard/customers/tickets',
@@ -143,11 +148,6 @@ export const navItems: NavItem[] = [
     iconName: 'lock',
     bgcolor: 'error',
     children: [
-      {
-        displayName: 'User Management',
-        iconName: 'user-plus',
-        route: '/dashboard/customers/directory',
-      },
       {
         displayName: 'Role Management',
         iconName: 'shield-check',
