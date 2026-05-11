@@ -14,7 +14,8 @@ import {
   Hub,
   HubMonitoringStats,
   HubTransfer,
-  HubException
+  HubException,
+  RespOptimizeRoute
 } from '../models/operations.models';
 
 interface BranchLookup {
@@ -123,6 +124,10 @@ interface OperationsShipmentDto {
   CanUpdateStatus?: boolean;
   canNotify?: boolean;
   CanNotify?: boolean;
+  isDelayed?: boolean;
+  IsDelayed?: boolean;
+  trafficCondition?: string;
+  TrafficCondition?: string;
 }
 
 export interface DeliveryQueueFilters {
@@ -272,6 +277,12 @@ export class OperationsService {
   sendCustomerDeliveryNotification(deliveryId: number, messageType: string): Observable<{succeeded: boolean, message: string}> {
     return this.handleApiResponse<{succeeded: boolean, message: string}>(
       this.api.PostApi({ shipmentId: deliveryId, messageType }, 'api/Shipment/SendCustomerDeliveryNotification')
+    );
+  }
+
+  optimizeRoute(shipmentIds: number[]): Observable<RespOptimizeRoute> {
+    return this.handleApiResponse<RespOptimizeRoute>(
+      this.api.PostApi({ shipmentIds }, 'api/operations/optimize-route')
     );
   }
 
@@ -525,6 +536,8 @@ export class OperationsService {
       codAmount: shipment.codAmount ?? shipment.CodAmount ?? shipment.totalEgp ?? shipment.TotalEgp,
       attempts: 0,
       notes: shipment.instructions || shipment.Instructions || '',
+      isDelayed: shipment.isDelayed ?? shipment.IsDelayed ?? false,
+      trafficCondition: shipment.trafficCondition || shipment.TrafficCondition || '',
       validationMessages: shipment.validationMessages || shipment.ValidationMessages || [],
       warnings: shipment.warnings || shipment.Warnings || [],
       allowedActions: {

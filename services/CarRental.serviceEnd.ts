@@ -71,16 +71,19 @@ export class ApiController {
 
   getApi(Url: string | undefined): Observable<any> {
     this.checkTokenService.CheckToken();
-    return this.http.get<any>(this.baseUrl + Url);
+    const fullUrl = Url?.startsWith('http') ? Url : this.baseUrl + Url;
+    return this.http.get<any>(fullUrl);
   }
 
   PostApi(data: any | undefined, Url: string | undefined): Observable<any> {
     this.checkTokenService.CheckToken();
-    return this.http.post<any>(this.baseUrl + Url, data);
+    const fullUrl = Url?.startsWith('http') ? Url : this.baseUrl + Url;
+    return this.http.post<any>(fullUrl, data);
   }
   PostLiteApi(Url: string | undefined): Observable<any> {
     this.checkTokenService.CheckToken();
-    return this.http.post<any>(this.baseUrl + Url, {});
+    const fullUrl = Url?.startsWith('http') ? Url : this.baseUrl + Url;
+    return this.http.post<any>(fullUrl, {});
   }
 
   private rebuildHeaders() {

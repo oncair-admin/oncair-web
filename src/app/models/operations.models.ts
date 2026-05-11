@@ -164,6 +164,8 @@ export interface DeliveryQueueItem {
   attempts: number;
   lastAttemptDate?: Date;
   notes?: string;
+  isDelayed?: boolean;
+  trafficCondition?: string;
   validationMessages?: string[];
   warnings?: string[];
   allowedActions?: {
@@ -237,4 +239,16 @@ export interface HubException {
   failReasonName?: string;
   note?: string;
   timestamp: Date;
+}
+
+export interface RespOptimizeRoute {
+  optimizedOrder: number[];
+  polylineCoords: string;
+}
+
+export interface DelayAlert {
+  courierId: number;
+  shipmentId: number;
+  message: string;
+  timestamp: string | Date;
 }

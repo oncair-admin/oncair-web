@@ -25,6 +25,7 @@ export class DeliveryQueueComponent implements OnInit, AfterViewInit, OnDestroy 
   private markers = L.markerClusterGroup();
   private shipmentMarkers = new Map<number, L.Marker>();
   private courierMarkers = new Map<number, L.Marker>();
+  public routePolyline?: L.Polyline;
 
   deliveries: DeliveryQueueItem[] = [];
   filteredDeliveries: DeliveryQueueItem[] = [];
@@ -89,6 +90,13 @@ export class DeliveryQueueComponent implements OnInit, AfterViewInit, OnDestroy 
       this.courierLocations = locations;
       this.updateCourierMarkers();
     });
+
+    this.signalRService.delayAlerts$.subscribe(alert => {
+      if (alert) {
+        this.actionError = `Delay Alert: Courier #${alert.courierId} reporting: ${alert.message}`;
+        this.loadData(); // Refresh to get updated delay status
+      }
+    });
   }
 
   ngAfterViewInit(): void {
@@ -98,6 +106,55 @@ export class DeliveryQueueComponent implements OnInit, AfterViewInit, OnDestroy 
   ngOnDestroy(): void {
     if (this.map) {
       this.map.remove();
+    }
+  }
+
+  isDelayed(delivery: DeliveryQueueItem): boolean {
+    return !!delivery.isDelayed;
+  }
+
+  optimizeRoute(): void {
+    const shipmentIds = this.filteredDeliveries.map(d => d.id);
+    if (!this.map || shipmentIds.length < 2) {
+      this.actionError = 'Need at least 2 shipments to optimize a route.';
+      return;
+    }
+
+    this.clearRoute();
+    this.loading = true;
+
+    this.operationsService.optimizeRoute(shipmentIds).subscribe({
+      next: (result) => {
+        if (result.polylineCoords) {
+          const coords = result.polylineCoords.split('|').map(pair => {
+            const [lat, lng] = pair.split(',').map(Number);
+            return L.latLng(lat, lng);
+          });
+
+          this.routePolyline = L.polyline(coords, {
+            color: '#3498db',
+            weight: 4,
+            opacity: 0.8,
+            dashArray: '10, 10',
+            lineJoin: 'round'
+          }).addTo(this.map!);
+
+          this.map!.fitBounds(this.routePolyline.getBounds(), { padding: [50, 50] });
+          this.actionMessage = 'Mathematically optimized route generated.';
+        }
+        this.loading = false;
+      },
+      error: (err) => {
+        this.actionError = err?.message || 'Failed to optimize route';
+        this.loading = false;
+      }
+    });
+  }
+
+  clearRoute(): void {
+    if (this.routePolyline && this.map) {
+      this.map.removeLayer(this.routePolyline);
+      this.routePolyline = undefined;
     }
   }
 

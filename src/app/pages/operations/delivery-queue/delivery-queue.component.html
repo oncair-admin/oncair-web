@@ -162,7 +162,15 @@
                     <div class="text-muted small">{{ delivery.city }}</div>
                   </td>
                   <td>
-                    <div>{{ (delivery.etaAt || delivery.scheduledDate) | date:'short' }}</div>
+                    <div [class.text-danger]="isDelayed(delivery)" class="fw-medium">
+                      {{ (delivery.etaAt || delivery.scheduledDate) | date:'short' }}
+                    </div>
+                    @if (isDelayed(delivery)) {
+                      <div class="small text-danger d-flex align-items-center gap-1" [matTooltip]="delivery.trafficCondition || 'Heavy traffic/Delay'">
+                        <i class="ti ti-alert-triangle"></i> 
+                        {{ delivery.trafficCondition || 'Delayed / Traffic' }}
+                      </div>
+                    }
                     @if (delivery.rescheduledAt) {
                     <small class="text-muted">Rescheduled {{ delivery.rescheduledAt | date:'shortDate' }}</small>
                     }
@@ -291,8 +299,20 @@
     <div class="col-xl-4">
       <div class="map-panel">
         <div class="map-header">
-          <h5 class="mb-0">Live Map</h5>
-          <span>{{ courierLocations.length }} live couriers</span>
+          <div>
+            <h5 class="mb-0">Live Map</h5>
+            <span class="text-muted small">{{ courierLocations.length }} live couriers</span>
+          </div>
+          <div class="d-flex gap-2">
+            @if (routePolyline) {
+              <button class="btn btn-xs btn-outline-danger" (click)="clearRoute()" matTooltip="Clear route">
+                <i class="ti ti-trash"></i>
+              </button>
+            }
+            <button class="btn btn-xs btn-primary d-flex align-items-center gap-1" (click)="optimizeRoute()" [disabled]="filteredDeliveries.length < 2">
+              <i class="ti ti-route-2"></i> Optimize
+            </button>
+          </div>
         </div>
         <div class="map-container" #mapElement style="height: 500px;"></div>
         <div class="suggestion-panel">

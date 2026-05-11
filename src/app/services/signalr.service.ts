@@ -38,7 +38,13 @@ export interface ChatMessage {
   isRead: boolean;
 }
 
-// Backend message payloads
+export interface GroupMessagePayload {
+  from: string;
+  groupId: string;
+  message: string;
+  at: Date;
+}
+
 export interface DirectMessagePayload {
   from: string;
   to: string;
@@ -46,11 +52,11 @@ export interface DirectMessagePayload {
   at: Date;
 }
 
-export interface GroupMessagePayload {
-  from: string;
-  groupId: string;
+export interface DelayAlert {
+  courierId: number;
+  shipmentId: number;
   message: string;
-  at: Date;
+  timestamp: string | Date;
 }
 
 @Injectable({
@@ -63,6 +69,7 @@ export class SignalRService {
   private dashboardUpdatesSubject = new BehaviorSubject<DashboardUpdate | null>(null);
   private chatMessagesSubject = new BehaviorSubject<ChatMessage[]>([]);
   private notificationMessagesSubject = new BehaviorSubject<ChatMessage[]>([]);
+  private delayAlertsSubject = new BehaviorSubject<DelayAlert | null>(null);
   private currentUserId: string | null = null;
   private currentChatUserId: string | null = null;
   private currentChatId: number | null = null;
@@ -71,6 +78,7 @@ export class SignalRService {
   public dashboardUpdates$ = this.dashboardUpdatesSubject.asObservable();
   public chatMessages$ = this.chatMessagesSubject.asObservable();
   public notificationMessages$ = this.notificationMessagesSubject.asObservable();
+  public delayAlerts$ = this.delayAlertsSubject.asObservable();
 
   constructor() {
     console.log('🚀 Initializing SignalR Service...');
@@ -175,6 +183,11 @@ export class SignalRService {
     this.hubConnection.on('Typing', (payload: { fromUserId: string }) => {
       // Handle typing indicator
       console.log('User typing:', payload.fromUserId);
+    });
+
+    this.hubConnection.on('ReceiveDelayAlert', (data: any) => {
+      console.log('⚠️ Delay Alert received:', data);
+      this.delayAlertsSubject.next(data);
     });
   }
 
