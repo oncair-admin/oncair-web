@@ -34,6 +34,7 @@ export class LiveTrackingComponent implements OnInit, OnDestroy, AfterViewInit {
   ngOnInit(): void {
     this.subscribeToCourierLocations();
     this.loadHubs();
+    this.loadInitialCouriers();
   }
 
   ngAfterViewInit(): void {
@@ -52,6 +53,38 @@ export class LiveTrackingComponent implements OnInit, OnDestroy, AfterViewInit {
       this.hubs = hubs;
       this.updateHubMarkers();
     });
+  }
+
+  private loadInitialCouriers(): void {
+    this.operationsService.getCouriers().subscribe(couriers => {
+      if (!couriers) return;
+      
+      couriers
+        .filter(c => c.currentLocation && c.currentLocation.latitude && c.currentLocation.longitude)
+        .forEach(c => {
+          const location: CourierLocation = {
+            id: c.id.toString(),
+            name: c.name,
+            latitude: c.currentLocation!.latitude,
+            longitude: c.currentLocation!.longitude,
+            timestamp: new Date(),
+            status: this.mapCourierStatus(c.status),
+            speed: 0
+          };
+          this.signalRService.updateCourierLocation(location);
+        });
+    });
+  }
+
+  private mapCourierStatus(status: string): 'online' | 'offline' | 'delivering' {
+    switch (status) {
+      case 'Busy': return 'delivering';
+      case 'Available': return 'online';
+      case 'On Break':
+      case 'Offline':
+        return 'offline';
+      default: return 'online';
+    }
   }
 
   private subscribeToCourierLocations(): void {

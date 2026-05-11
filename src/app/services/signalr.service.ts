@@ -178,7 +178,7 @@ export class SignalRService {
     });
   }
 
-  private updateCourierLocation(location: CourierLocation): void {
+  public updateCourierLocation(location: CourierLocation): void {
     const currentLocations = this.courierLocationsSubject.value;
     const existingIndex = currentLocations.findIndex(c => c.id === location.id);
     
