@@ -105,15 +105,7 @@ export const navItems: NavItem[] = [
     bgcolor: 'primary',
     route: '/dashboard/corporates',
   },
-  {
-    displayName: 'Corporate Users',
-    ItemId: 1005,
-    audience: 'corporate',
-    permissionCode: 'AS',
-    iconName: 'users',
-    bgcolor: 'primary',
-    route: '/dashboard/corporates/:id/users',
-  },
+
   // {
   //   displayName: 'اضافة قاعدة بيانات',
   //   ItemId:3,
