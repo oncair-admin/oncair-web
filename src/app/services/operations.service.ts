@@ -10,18 +10,27 @@ import {
   HubPackage,
   DeliveryQueueItem,
   PickupRequest,
-  Hub
+  Hub,
+  HubMonitoringStats,
+  HubTransfer,
+  HubException
 } from '../models/operations.models';
 
 interface BranchLookup {
   id?: number;
   Id?: number;
+  branchId?: number;
+  BranchId?: number;
   brancheNameEn?: string;
   BrancheNameEn?: string;
   code?: string;
   Code?: string;
   addresseEn?: string;
   AddresseEn?: string;
+  lat?: number;
+  Lat?: number;
+  lon?: number;
+  Lon?: number;
 }
 
 interface OperationsShipmentDto {
@@ -187,21 +196,70 @@ export class OperationsService {
     }, 'api/Hub/TransferPackage');
   }
 
+  getHubMonitoringStats(hubId: number): Observable<HubMonitoringStats> {
+    return this.handleApiResponse<HubMonitoringStats>(
+      this.api.getApi(`api/Hub/GetHubStats?hubId=${hubId}`)
+    );
+  }
+
+  getPendingTransfers(hubId?: number): Observable<HubTransfer[]> {
+    const url = hubId ? `api/Hub/GetPendingTransfers?hubId=${hubId}` : 'api/Hub/GetPendingTransfers';
+    return this.handleApiResponse<any[]>(this.api.getApi(url)).pipe(
+      map(transfers => transfers.map(t => ({
+        id: t.id,
+        packageId: t.shipmentId,
+        trackingNumber: t.shipmentBarcode,
+        fromHubId: t.fromHubId,
+        fromHubName: t.fromHubName,
+        toHubId: t.toHubId,
+        toHubName: t.toHubName,
+        transferDate: new Date(t.createdAt),
+        transferredBy: '',
+        status: this.mapTransferStatus(t.status),
+        notes: ''
+      })))
+    );
+  }
+
+  getHubExceptions(hubId: number): Observable<HubException[]> {
+    return this.handleApiResponse<HubException[]>(
+      this.api.getApi(`api/Hub/GetHubExceptions?hubId=${hubId}`)
+    );
+  }
+
+  updateTransferStatus(transferId: number, status: number): Observable<{succeeded: boolean, message: string}> {
+    return this.handleApiResponse<{succeeded: boolean, message: string}>(
+      this.api.PostLiteApi(`api/Hub/UpdateTransferStatus?transferId=${transferId}&status=${status}`)
+    );
+  }
+
+  private mapTransferStatus(status: number): HubTransfer['status'] {
+    switch (status) {
+      case 1: return 'Pending';
+      case 2: return 'In Transit';
+      case 3: return 'Received';
+      case 4: return 'Cancelled';
+      default: return 'Pending';
+    }
+  }
+
   getHubs(): Observable<Hub[]> {
     return this.handleApiResponse<BranchLookup[]>(
       this.api.getApi('api/Lookup/GetBranch')
     ).pipe(
       map((branches) => branches.map(branch => ({
-        id: branch.id || branch.Id || 0,
+        id: branch.branchId || branch.BranchId || branch.id || branch.Id || 0,
         name: branch.brancheNameEn || branch.BrancheNameEn || '',
-        code: branch.code || branch.Code || String(branch.id),
+        code: branch.code || branch.Code || String(branch.branchId || branch.id),
         address: branch.addresseEn || branch.AddresseEn || '',
         city: branch.addresseEn || branch.AddresseEn || '',
         phone: '',
         managerName: '',
-        capacity: 0,
+        capacity: 100, // Default capacity
         currentLoad: 0,
-        isActive: true
+        isActive: true,
+        latitude: branch.lat || branch.Lat,
+        longitude: branch.lon || branch.Lon
       })))
     );
   }

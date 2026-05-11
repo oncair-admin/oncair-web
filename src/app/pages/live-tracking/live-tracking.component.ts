@@ -1,26 +1,39 @@
-import { Component, OnInit, OnDestroy, AfterViewInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SignalRService, CourierLocation } from '../../services/signalr.service';
+import { OperationsService } from '../../services/operations.service';
+import { Hub } from '../../models/operations.models';
 import { Subscription } from 'rxjs';
-import * as L from 'leaflet';
+import { GoogleMapsModule } from '@angular/google-maps';
 
 @Component({
   selector: 'app-live-tracking',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, GoogleMapsModule],
   templateUrl: './live-tracking.component.html',
   styleUrls: ['./live-tracking.component.scss']
 })
 export class LiveTrackingComponent implements OnInit, OnDestroy, AfterViewInit {
-  private map: L.Map | undefined;
-  private courierMarkers = new Map<string, L.Marker>();
+  @ViewChild('mapContainer', { static: false }) mapElement: ElementRef;
+  
+  private googleMap: google.maps.Map | undefined;
+  private courierMarkers = new Map<string, any>();
+  private hubMarkers: any[] = [];
+  private courierRoutes = new Map<string, google.maps.DirectionsRenderer>();
+  private trafficLayer: google.maps.TrafficLayer | undefined;
+  
   private courierLocationsSubscription: Subscription | undefined;
   public courierLocations: CourierLocation[] = [];
+  public hubs: Hub[] = [];
 
-  constructor(private signalRService: SignalRService) {}
+  constructor(
+    private signalRService: SignalRService,
+    private operationsService: OperationsService
+  ) {}
 
   ngOnInit(): void {
     this.subscribeToCourierLocations();
+    this.loadHubs();
   }
 
   ngAfterViewInit(): void {
@@ -31,146 +44,210 @@ export class LiveTrackingComponent implements OnInit, OnDestroy, AfterViewInit {
     if (this.courierLocationsSubscription) {
       this.courierLocationsSubscription.unsubscribe();
     }
-    if (this.map) {
-      this.map.remove();
-    }
+    this.clearMarkers();
+  }
+
+  private loadHubs(): void {
+    this.operationsService.getHubs().subscribe(hubs => {
+      this.hubs = hubs;
+      this.updateHubMarkers();
+    });
   }
 
   private subscribeToCourierLocations(): void {
     this.courierLocationsSubscription = this.signalRService.courierLocations$.subscribe(
       locations => {
         this.courierLocations = locations;
-        this.updateMapMarkers();
+        this.updateCourierMarkers();
       }
     );
   }
 
   private initializeMap(): void {
-    // Default center (Cairo, Egypt)
-    const defaultCenter: L.LatLngExpression = [30.0444, 31.2357];
+    const defaultCenter = { lat: 30.0444, lng: 31.2357 }; // Cairo
     
-    this.map = L.map('map').setView(defaultCenter, 13);
+    const mapOptions: google.maps.MapOptions = {
+      center: defaultCenter,
+      zoom: 12,
+      mapId: 'DEMO_MAP_ID', // Required for AdvancedMarkerElement
+      mapTypeId: google.maps.MapTypeId.ROADMAP,
+      styles: [
+        {
+          featureType: "poi",
+          elementType: "labels",
+          stylers: [{ visibility: "off" }]
+        }
+      ]
+    };
 
-    // Add OpenStreetMap tiles
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors',
-      maxZoom: 19
-    }).addTo(this.map);
+    this.googleMap = new google.maps.Map(this.mapElement.nativeElement, mapOptions);
 
-    // Add initial markers if couriers are already loaded
-    this.updateMapMarkers();
+    // Initialize Traffic Layer
+    this.trafficLayer = new google.maps.TrafficLayer();
+    this.trafficLayer.setMap(this.googleMap);
+
+    this.updateHubMarkers();
+    this.updateCourierMarkers();
   }
 
-  private updateMapMarkers(): void {
-    if (!this.map) return;
+  private updateHubMarkers(): void {
+    if (!this.googleMap) return;
 
-    // Remove existing markers
-    this.courierMarkers.forEach(marker => {
-      this.map!.removeLayer(marker);
+    // Clear old hub markers
+    this.hubMarkers.forEach(m => m.map = null);
+    this.hubMarkers = [];
+
+    this.hubs.forEach(hub => {
+      if (hub.latitude && hub.longitude) {
+        const pin = new google.maps.marker.PinElement({
+          background: '#FF0000',
+          borderColor: '#FFFFFF',
+          glyphColor: '#FFFFFF',
+          scale: 1
+        });
+
+        const marker = new google.maps.marker.AdvancedMarkerElement({
+          position: { lat: hub.latitude, lng: hub.longitude },
+          map: this.googleMap,
+          title: hub.name,
+          content: pin.element
+        });
+        
+        this.hubMarkers.push(marker);
+      }
     });
-    this.courierMarkers.clear();
+  }
 
-    // Add new markers
+  private updateCourierMarkers(): void {
+    if (!this.googleMap) return;
+
     this.courierLocations.forEach(courier => {
-      const marker = this.createCourierMarker(courier);
-      this.courierMarkers.set(courier.id, marker);
+      let marker = this.courierMarkers.get(courier.id);
+      const position = { lat: courier.latitude, lng: courier.longitude };
+
+      if (marker) {
+        marker.position = position;
+      } else {
+        const pin = new google.maps.marker.PinElement({
+          background: this.getCourierColor(courier.status),
+          borderColor: '#FFFFFF',
+          glyphColor: '#FFFFFF',
+        });
+
+        marker = new google.maps.marker.AdvancedMarkerElement({
+          position: position,
+          map: this.googleMap,
+          title: courier.name,
+          content: pin.element
+        });
+        
+        const infoWindow = new google.maps.InfoWindow({
+          content: this.createCourierPopup(courier)
+        });
+
+        marker.addListener('click', () => {
+          infoWindow.open(this.googleMap, marker);
+        });
+
+        this.courierMarkers.set(courier.id, marker);
+      }
+
+      // Update Active Route if destination exists
+      if (courier.activeDestinationLat && courier.activeDestinationLon) {
+        this.drawCourierRoute(courier);
+      } else {
+        this.clearCourierRoute(courier.id);
+      }
     });
   }
 
-  private createCourierMarker(courier: CourierLocation): L.Marker {
-    const icon = this.getCourierIcon(courier.status);
-    
-    const marker = L.marker([courier.latitude, courier.longitude], { icon })
-      .addTo(this.map!)
-      .bindPopup(this.createCourierPopup(courier));
-
-    return marker;
+  private getCourierColor(status: string): string {
+    if (status === 'delivering') return '#FF9800';
+    if (status === 'offline') return '#F44336';
+    return '#4CAF50';
   }
 
-  private getCourierIcon(status: string): L.DivIcon {
-    const iconColor = this.getStatusColor(status);
-    
-    return L.divIcon({
-      className: 'custom-div-icon',
-      html: `
-        <div style="
-          background-color: ${iconColor};
-          width: 20px;
-          height: 20px;
-          border-radius: 50%;
-          border: 2px solid white;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-          font-size: 10px;
-          font-weight: bold;
-        ">
-          🚚
-        </div>
-      `,
-      iconSize: [20, 20],
-      iconAnchor: [10, 10]
-    });
+  private drawCourierRoute(courier: CourierLocation): void {
+    if (!this.googleMap) return;
+
+    let renderer = this.courierRoutes.get(courier.id);
+    if (!renderer) {
+      renderer = new google.maps.DirectionsRenderer({
+        map: this.googleMap,
+        preserveViewport: true,
+        suppressMarkers: true,
+        polylineOptions: {
+          strokeColor: '#1976D2',
+          strokeWeight: 4,
+          strokeOpacity: 0.6
+        }
+      });
+      this.courierRoutes.set(courier.id, renderer);
+    }
+
+    const directionsService = new google.maps.DirectionsService();
+    directionsService.route(
+      {
+        origin: { lat: courier.latitude, lng: courier.longitude },
+        destination: { lat: courier.activeDestinationLat!, lng: courier.activeDestinationLon! },
+        travelMode: google.maps.TravelMode.DRIVING,
+        provideRouteAlternatives: false
+      },
+      (result, status) => {
+        if (status === google.maps.DirectionsStatus.OK && result) {
+          renderer!.setDirections(result);
+          // Optional: Update ETA in courier object or popup
+          const eta = result.routes[0].legs[0].duration?.text;
+          console.log(`ETA for ${courier.name}: ${eta}`);
+        }
+      }
+    );
   }
 
-  private getStatusColor(status: string): string {
-    switch (status) {
-      case 'online': return '#4CAF50';
-      case 'delivering': return '#FF9800';
-      case 'offline': return '#F44336';
-      default: return '#9E9E9E';
+  private clearCourierRoute(courierId: string): void {
+    const renderer = this.courierRoutes.get(courierId);
+    if (renderer) {
+      renderer.setMap(null);
+      this.courierRoutes.delete(courierId);
     }
   }
 
+  private clearMarkers(): void {
+    this.courierMarkers.forEach(m => m.map = null);
+    this.courierMarkers.clear();
+    this.hubMarkers.forEach(m => m.map = null);
+    this.hubMarkers = [];
+    this.courierRoutes.forEach(r => r.setMap(null));
+    this.courierRoutes.clear();
+  }
+
   private createCourierPopup(courier: CourierLocation): string {
-    const statusText = this.getStatusText(courier.status);
-    const lastUpdate = courier.timestamp.toLocaleTimeString();
-    
     return `
-      <div style="min-width: 200px;">
-        <h4 style="margin: 0 0 8px 0; color: #333;">${courier.name}</h4>
-        <p style="margin: 4px 0; color: #666;">
-          <strong>Status:</strong> <span style="color: ${this.getStatusColor(courier.status)}">${statusText}</span>
-        </p>
-        <p style="margin: 4px 0; color: #666;">
-          <strong>Speed:</strong> ${courier.speed || 0} km/h
-        </p>
-        <p style="margin: 4px 0; color: #666;">
-          <strong>Last Update:</strong> ${lastUpdate}
-        </p>
-        <p style="margin: 4px 0; color: #666;">
-          <strong>Location:</strong> ${courier.latitude.toFixed(4)}, ${courier.longitude.toFixed(4)}
-        </p>
+      <div style="min-width: 150px; padding: 5px;">
+        <h4 style="margin: 0 0 5px 0;">${courier.name}</h4>
+        <p style="margin: 2px 0;"><strong>Status:</strong> ${courier.status}</p>
+        <p style="margin: 2px 0;"><strong>Last Sync:</strong> ${new Date(courier.timestamp).toLocaleTimeString()}</p>
       </div>
     `;
   }
 
-
   public centerOnCourier(courierId: string): void {
     const courier = this.courierLocations.find(c => c.id === courierId);
-    if (courier && this.map) {
-      this.map.setView([courier.latitude, courier.longitude], 15);
+    if (courier && this.googleMap) {
+      this.googleMap.setCenter({ lat: courier.latitude, lng: courier.longitude });
+      this.googleMap.setZoom(16);
     }
   }
 
   public centerOnAllCouriers(): void {
-    if (this.courierLocations.length > 0 && this.map) {
-      const group = L.featureGroup();
-      this.courierLocations.forEach(courier => {
-        group.addLayer(L.marker([courier.latitude, courier.longitude]));
-      });
-      this.map.fitBounds(group.getBounds().pad(0.1));
+    if (this.courierLocations.length > 0 && this.googleMap) {
+      const bounds = new google.maps.LatLngBounds();
+      this.courierLocations.forEach(c => bounds.extend({ lat: c.latitude, lng: c.longitude }));
+      this.googleMap.fitBounds(bounds);
     }
   }
 
   public getStatusText(status: string): string {
-    switch (status) {
-      case 'online': return 'Online';
-      case 'delivering': return 'Delivering';
-      case 'offline': return 'Offline';
-      default: return 'Unknown';
-    }
+    return status.charAt(0).toUpperCase() + status.slice(1);
   }
 }

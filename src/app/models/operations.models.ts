@@ -167,4 +167,25 @@ export interface Hub {
   capacity: number;
   currentLoad: number;
   isActive: boolean;
+  latitude?: number;
+  longitude?: number;
+}
+
+export interface HubMonitoringStats {
+  hubId: number;
+  hubName: string;
+  totalInbound: number;
+  totalOutbound: number;
+  currentCapacity: number;
+  maxCapacity: number;
+  capacityPercentage: number;
+}
+
+export interface HubException {
+  shipmentId: number;
+  shipmentBarcode: string;
+  conditionName?: string;
+  failReasonName?: string;
+  note?: string;
+  timestamp: Date;
 }

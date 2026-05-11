@@ -3,6 +3,7 @@ import { OperationsDashboardComponent } from './dashboard/dashboard.component';
 import { DispatchCenterComponent } from './dispatch-center/dispatch-center.component';
 import { DeliveryQueueComponent } from './delivery-queue/delivery-queue.component';
 import { PickupRequestsComponent } from './pickup-requests/pickup-requests.component';
+import { HubMonitoringComponent } from './hub-monitoring/hub-monitoring.component';
 import { LiveTrackingComponent } from '../live-tracking/live-tracking.component';
 
 export const OperationsRoutes: Routes = [
@@ -20,6 +21,18 @@ export const OperationsRoutes: Routes = [
         { title: 'Dashboard', url: '/dashboard' },
         { title: 'Operations', url: '/dashboard/operations' },
         { title: 'Dashboard' }
+      ]
+    }
+  },
+  {
+    path: 'hub-monitoring',
+    component: HubMonitoringComponent,
+    data: {
+      title: 'Hub & Transfer Monitoring',
+      urls: [
+        { title: 'Dashboard', url: '/dashboard' },
+        { title: 'Operations', url: '/dashboard/operations' },
+        { title: 'Hub Monitoring' }
       ]
     }
   },

@@ -1,0 +1,122 @@
+<div class="p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Hub & Transfer Monitoring</h2>
+        <mat-form-field appearance="outline">
+            <mat-label>Select Hub</mat-label>
+            <mat-select [(ngModel)]="selectedHubId" (selectionChange)="onHubChange()">
+                <mat-option *ngFor="let hub of hubs" [value]="hub.id">
+                    {{hub.name}}
+                </mat-option>
+            </mat-select>
+        </mat-form-field>
+    </div>
+
+    <div *ngIf="loading" class="text-center p-5">
+        <mat-spinner diameter="40" class="mx-auto"></mat-spinner>
+    </div>
+
+    <div *ngIf="!loading && stats" class="row mb-4">
+        <div class="col-md-3">
+            <mat-card class="stats-card">
+                <mat-card-content>
+                    <div class="text-muted small">Current Load</div>
+                    <div class="h3 mb-0">{{stats.currentCapacity}}</div>
+                    <div class="small">of {{stats.maxCapacity}} max</div>
+                </mat-card-content>
+            </mat-card>
+        </div>
+        <div class="col-md-3">
+            <mat-card class="stats-card">
+                <mat-card-content>
+                    <div class="text-muted small">Capacity Usage</div>
+                    <div class="h3 mb-0">{{stats.capacityPercentage | number:'1.0-1'}}%</div>
+                    <mat-progress-bar mode="determinate" [value]="stats.capacityPercentage"></mat-progress-bar>
+                </mat-card-content>
+            </mat-card>
+        </div>
+        <div class="col-md-3">
+            <mat-card class="stats-card">
+                <mat-card-content>
+                    <div class="text-muted small">Inbound Shipments</div>
+                    <div class="h3 mb-0 text-primary">{{stats.totalInbound}}</div>
+                    <div class="small">Transfers arriving</div>
+                </mat-card-content>
+            </mat-card>
+        </div>
+        <div class="col-md-3">
+            <mat-card class="stats-card">
+                <mat-card-content>
+                    <div class="text-muted small">Outbound Shipments</div>
+                    <div class="h3 mb-0 text-success">{{stats.totalOutbound}}</div>
+                    <div class="small">Transfers leaving</div>
+                </mat-card-content>
+            </mat-card>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <mat-card>
+                <mat-card-header>
+                    <mat-card-title>Transfer Requests</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                    <table class="table table-hover mt-3">
+                        <thead>
+                            <tr>
+                                <th>Barcode</th>
+                                <th>From</th>
+                                <th>To</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let t of transfers">
+                                <td>{{t.trackingNumber || t.packageId}}</td>
+                                <td>{{t.fromHubName}}</td>
+                                <td>{{t.toHubName}}</td>
+                                <td><span class="badge" [ngClass]="getStatusClass(t.status)">{{t.status}}</span></td>
+                                <td>{{t.transferDate | date:'short'}}</td>
+                                <td>
+                                    <button mat-icon-button color="primary" *ngIf="t.status === 'Pending'" (click)="updateTransferStatus(t.id, 2)" matTooltip="Dispatch">
+                                        <mat-icon>local_shipping</mat-icon>
+                                    </button>
+                                    <button mat-icon-button color="success" *ngIf="t.status === 'In Transit' && t.toHubId === selectedHubId" (click)="updateTransferStatus(t.id, 3)" matTooltip="Receive">
+                                        <mat-icon>check_circle</mat-icon>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr *ngIf="transfers.length === 0">
+                                <td colspan="6" class="text-center py-4 text-muted">No pending transfers for this hub</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </mat-card-content>
+            </mat-card>
+        </div>
+        <div class="col-md-4">
+            <mat-card>
+                <mat-card-header>
+                    <mat-card-title>Hub Exceptions</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                    <div class="list-group list-group-flush mt-2">
+                        <div class="list-group-item px-0" *ngFor="let e of exceptions">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <strong>{{e.shipmentBarcode || e.shipmentId}}</strong>
+                                <span class="badge bg-danger">{{e.conditionName || e.failReasonName}}</span>
+                            </div>
+                            <div class="small text-muted">{{e.note}}</div>
+                            <div class="text-end extra-small">{{e.timestamp | date:'short'}}</div>
+                        </div>
+                        <div *ngIf="exceptions.length === 0" class="text-center py-4 text-muted small">
+                            No exceptions reported
+                        </div>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+        </div>
+    </div>
+</div>

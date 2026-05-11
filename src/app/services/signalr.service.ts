@@ -12,6 +12,8 @@ export interface CourierLocation {
   status: 'online' | 'offline' | 'delivering';
   speed?: number;
   heading?: number;
+  activeDestinationLat?: number;
+  activeDestinationLon?: number;
 }
 
 export interface DashboardUpdate {
@@ -101,7 +103,23 @@ export class SignalRService {
 
   private setupEventHandlers(): void {
     // Courier tracking events
-    this.hubConnection.on('LocationUpdate', (location: CourierLocation) => {
+    this.hubConnection.on('LocationUpdate', (data: any) => {
+      if (!data) return;
+
+      // Map backend broadcast properties to CourierLocation interface
+      // Handles both camelCase and PascalCase from different backend services
+      const location: CourierLocation = {
+        id: (data.id || data.userId || data.UserId || '').toString(),
+        name: data.name || `Courier ${data.userId || data.UserId || data.id}`,
+        latitude: data.latitude ?? data.lat ?? data.Lat,
+        longitude: data.longitude ?? data.lon ?? data.Lon,
+        timestamp: data.timestamp || data.Timestamp ? new Date(data.timestamp || data.Timestamp) : new Date(),
+        status: data.status || 'online',
+        heading: data.heading || data.Heading,
+        speed: data.speed || data.Speed,
+        activeDestinationLat: data.activeDestinationLat,
+        activeDestinationLon: data.activeDestinationLon
+      };
       this.updateCourierLocation(location);
     });
 
