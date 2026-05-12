@@ -326,12 +326,13 @@ export class OperationsService {
   }
 
   getHubPackages(hubId: number): Observable<HubPackage[]> {
-    return this.handleApiResponse<HubPackage[]>(
+    return this.handleApiResponse<PagedResult<HubPackage>>(
       this.api.getApi(`api/Hub/GetHubPackages?HubId=${hubId}`)
     ).pipe(
-      map(packages => {
-        this.hubPackagesSubject.next(packages);
-        return packages;
+      map(result => {
+        const items = result.items || [];
+        this.hubPackagesSubject.next(items);
+        return items;
       })
     );
   }
