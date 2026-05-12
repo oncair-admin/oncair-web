@@ -1,8 +1,23 @@
 <div class="container-fluid dispatch-center">
-  <div class="row mb-4">
-    <div class="col-12">
+  <div class="row mb-4 align-items-center">
+    <div class="col-md-8">
       <h2 class="mb-1">Dispatch Center</h2>
       <p class="text-muted mb-0">Operational control for shipment requests, courier load, hub movement, and alerts</p>
+    </div>
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body py-2">
+          <div class="d-flex align-items-center gap-2">
+            <i class="ti ti-building-community text-primary fs-5"></i>
+            <select class="form-select border-0 shadow-none fw-bold" [(ngModel)]="selectedBranchId" (change)="onBranchChange()">
+              <option [ngValue]="null">All Branches (Global View)</option>
+              @for (hub of hubs; track hub.id) {
+                <option [ngValue]="hub.id">{{ hub.name }}</option>
+              }
+            </select>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -206,7 +221,7 @@
 
   @if (selectedView === 'fleet') {
   <div class="row g-3">
-    @for (courier of couriers; track courier.id) {
+    @for (courier of filteredCouriers; track courier.id) {
     <div class="col-md-6 col-xl-4">
       <div class="card border-0 shadow-sm h-100 fleet-card">
         <div class="card-body">
@@ -250,11 +265,6 @@
     <div class="card-header bg-white border-0 d-flex flex-wrap gap-2 justify-content-between align-items-center">
       <h5 class="mb-0"><i class="ti ti-package me-2"></i>Hub Packages</h5>
       <div class="d-flex gap-2 align-items-center">
-        <select class="form-select form-select-sm" [(ngModel)]="selectedHubId" (change)="loadHubPackages()">
-          @for (hub of hubs; track hub.id) {
-          <option [ngValue]="hub.id">{{ hub.name }}</option>
-          }
-        </select>
         <button class="btn btn-primary" (click)="openReceivingForm()"><i class="ti ti-plus me-1"></i>Receive</button>
       </div>
     </div>

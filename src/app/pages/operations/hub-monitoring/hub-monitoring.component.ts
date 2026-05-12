@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MaterialModule } from 'src/app/material.module';
 import { OperationsService } from 'src/app/services/operations.service';
-import { Hub, HubMonitoringStats, HubTransfer, HubException } from 'src/app/models/operations.models';
+import { Hub, HubMonitoringStats, HubTransfer, HubException, HubPackage } from 'src/app/models/operations.models';
 import { FormsModule } from '@angular/forms';
 
 @Component({
@@ -18,6 +18,7 @@ export class HubMonitoringComponent implements OnInit {
   stats: HubMonitoringStats | null = null;
   transfers: HubTransfer[] = [];
   exceptions: HubException[] = [];
+  hubPackages: HubPackage[] = [];
   loading = false;
 
   constructor(private operationsService: OperationsService) {}
@@ -63,6 +64,11 @@ export class HubMonitoringComponent implements OnInit {
       next: (exceptions) => this.exceptions = exceptions,
       error: (err) => console.error(err)
     });
+
+    this.operationsService.getHubPackages(this.selectedHubId).subscribe({
+      next: (packages) => this.hubPackages = packages,
+      error: (err) => console.error(err)
+    });
   }
 
   getStatusClass(status: string): string {
@@ -72,6 +78,16 @@ export class HubMonitoringComponent implements OnInit {
       case 'Received': return 'status-received';
       case 'Cancelled': return 'status-cancelled';
       default: return '';
+    }
+  }
+
+  getPackageConditionClass(condition: string): string {
+    switch (condition) {
+      case 'Excellent': return 'bg-success';
+      case 'Good': return 'bg-info text-dark';
+      case 'Fair': return 'bg-warning text-dark';
+      case 'Damaged': return 'bg-danger';
+      default: return 'bg-secondary';
     }
   }
 

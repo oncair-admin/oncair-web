@@ -35,7 +35,7 @@ export class DispatchCenterComponent implements OnInit {
   requests: DeliveryQueueItem[] = [];
   hubPackages: HubPackage[] = [];
   hubs: Hub[] = [];
-  selectedHubId: number | null = null;
+  selectedBranchId: number | null = null;
   selectedHubStats?: HubMonitoringStats;
   alerts: DispatchAlert[] = [];
   searchTerm = '';
@@ -59,7 +59,16 @@ export class DispatchCenterComponent implements OnInit {
   transferNote = '';
 
   ngOnInit(): void {
-    this.loadData();
+    this.operationsService.getHubs().subscribe({
+      next: (hubs) => {
+        this.hubs = hubs;
+        if (!this.selectedBranchId && hubs.length > 0) {
+          this.selectedBranchId = hubs[0].id;
+        }
+        this.loadData();
+      },
+      error: (error) => this.setError(error)
+    });
   }
 
   loadData(): void {
@@ -74,7 +83,17 @@ export class DispatchCenterComponent implements OnInit {
       error: (error) => this.setError(error)
     });
 
-    this.operationsService.getDeliveryQueue({ pageNumber: 1, pageSize: 25, search: this.searchTerm }).subscribe({
+    this.searchRequests();
+    this.loadHubPackages();
+  }
+
+  searchRequests(): void {
+    const filters: any = { pageNumber: 1, pageSize: 25, search: this.searchTerm };
+    if (this.selectedBranchId) {
+      filters.branchId = this.selectedBranchId;
+    }
+
+    this.operationsService.getDeliveryQueue(filters).subscribe({
       next: (result) => {
         this.requests = result.items;
         this.rebuildAlerts();
@@ -85,44 +104,28 @@ export class DispatchCenterComponent implements OnInit {
         this.setError(error);
       }
     });
-
-    this.operationsService.getHubs().subscribe({
-      next: (hubs) => {
-        this.hubs = hubs;
-        if (!this.selectedHubId && hubs.length > 0) {
-          this.selectedHubId = hubs[0].id;
-        }
-        this.loadHubPackages();
-      },
-      error: (error) => this.setError(error)
-    });
   }
 
-  searchRequests(): void {
-    this.operationsService.getDeliveryQueue({ pageNumber: 1, pageSize: 25, search: this.searchTerm }).subscribe({
-      next: (result) => {
-        this.requests = result.items;
-        this.rebuildAlerts();
-      },
-      error: (error) => this.setError(error)
-    });
+  onBranchChange(): void {
+    this.searchRequests();
+    this.loadHubPackages();
   }
 
   loadHubPackages(): void {
-    if (!this.selectedHubId) {
+    if (!this.selectedBranchId) {
       this.hubPackages = [];
       this.selectedHubStats = undefined;
       return;
     }
 
-    this.operationsService.getHubPackages(this.selectedHubId).subscribe({
+    this.operationsService.getHubPackages(this.selectedBranchId).subscribe({
       next: (packages) => {
         this.hubPackages = packages;
       },
       error: (error) => this.setError(error)
     });
 
-    this.operationsService.getHubMonitoringStats(this.selectedHubId).subscribe({
+    this.operationsService.getHubMonitoringStats(this.selectedBranchId).subscribe({
       next: (stats) => {
         this.selectedHubStats = stats;
         this.rebuildAlerts();
@@ -133,16 +136,23 @@ export class DispatchCenterComponent implements OnInit {
     });
   }
 
+  get filteredCouriers(): Courier[] {
+    if (!this.selectedBranchId) {
+      return this.couriers;
+    }
+    return this.couriers.filter(courier => courier.branchId === this.selectedBranchId);
+  }
+
   get availableCouriers(): Courier[] {
-    return this.couriers.filter(courier => courier.status === 'Available' && courier.currentOrders < courier.maxCapacity);
+    return this.filteredCouriers.filter(courier => courier.status === 'Available' && courier.currentOrders < courier.maxCapacity);
   }
 
   get busyCouriers(): Courier[] {
-    return this.couriers.filter(courier => courier.status === 'Busy');
+    return this.filteredCouriers.filter(courier => courier.status === 'Busy');
   }
 
   get offlineCouriers(): Courier[] {
-    return this.couriers.filter(courier => courier.status === 'Offline');
+    return this.filteredCouriers.filter(courier => courier.status === 'Offline');
   }
 
   get overdueRequests(): DeliveryQueueItem[] {
@@ -154,12 +164,12 @@ export class DispatchCenterComponent implements OnInit {
   }
 
   get courierLoadPercentage(): number {
-    if (!this.couriers.length) {
+    if (!this.filteredCouriers.length) {
       return 0;
     }
 
-    const current = this.couriers.reduce((sum, courier) => sum + courier.currentOrders, 0);
-    const max = this.couriers.reduce((sum, courier) => sum + courier.maxCapacity, 0);
+    const current = this.filteredCouriers.reduce((sum, courier) => sum + courier.currentOrders, 0);
+    const max = this.filteredCouriers.reduce((sum, courier) => sum + courier.maxCapacity, 0);
     return max ? Math.round((current / max) * 100) : 0;
   }
 
@@ -299,7 +309,7 @@ export class DispatchCenterComponent implements OnInit {
     this.receivingPackage = {
       packageCondition: 'Good',
       status: 'Received',
-      currentHubId: this.selectedHubId || undefined
+      currentHubId: this.selectedBranchId || undefined
     };
   }
 
@@ -323,7 +333,7 @@ export class DispatchCenterComponent implements OnInit {
         if (response.succeeded) {
           this.actionMessage = 'Package received successfully.';
           this.closeReceivingForm();
-          this.selectedHubId = this.receivingPackage.currentHubId || this.selectedHubId;
+          this.selectedBranchId = this.receivingPackage.currentHubId || this.selectedBranchId;
           this.loadHubPackages();
         }
       },

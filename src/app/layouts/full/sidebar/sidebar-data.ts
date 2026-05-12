@@ -188,6 +188,11 @@ export const navItems: NavItem[] = [
         iconName: 'package',
         route: '/dashboard/operations/pickup-requests',
       },
+      {
+        displayName: 'Hub Monitoring',
+        iconName: 'building-warehouse',
+        route: '/dashboard/operations/hub-monitoring',
+      },
     ],
   },
   {

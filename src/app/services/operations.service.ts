@@ -326,15 +326,40 @@ export class OperationsService {
   }
 
   getHubPackages(hubId: number): Observable<HubPackage[]> {
-    return this.handleApiResponse<PagedResult<HubPackage>>(
+    return this.handleApiResponse<PagedResult<any>>(
       this.api.getApi(`api/Hub/GetHubPackages?HubId=${hubId}`)
     ).pipe(
       map(result => {
-        const items = result.items || [];
+        const items = (result.items || []).map(pkg => this.mapHubPackage(pkg));
         this.hubPackagesSubject.next(items);
         return items;
       })
     );
+  }
+
+  private mapHubPackage(pkg: any): HubPackage {
+    return {
+      id: pkg.id || pkg.Id || pkg.shipmentId || pkg.ShipmentId || 0,
+      trackingNumber: pkg.trackingNumber || pkg.TrackingNumber || pkg.shipmentBarcode || pkg.ShipmentBarcode || '',
+      orderNumber: pkg.orderNumber || pkg.OrderNumber || '',
+      senderName: pkg.senderName || pkg.SenderName || '',
+      recipientName: pkg.recipientName || pkg.RecipientName || '',
+      recipientAddress: pkg.recipientAddress || pkg.RecipientAddress || pkg.shipmentsToEn || pkg.ShipmentsToEn || '',
+      packageType: pkg.packageType || pkg.PackageType || 'Shipment',
+      weight: pkg.weight || pkg.Weight || 0,
+      dimensions: pkg.dimensions || pkg.Dimensions,
+      currentHubId: pkg.currentHubId || pkg.CurrentHubId || 0,
+      currentHubName: pkg.currentHubName || pkg.CurrentHubName || '',
+      destinationHubId: pkg.destinationHubId || pkg.DestinationHubId,
+      destinationHubName: pkg.destinationHubName || pkg.DestinationHubName,
+      receivedDate: this.toDate(pkg.receivedDate || pkg.ReceivedDate || pkg.createdAt || pkg.CreatedAt),
+      receivedBy: pkg.receivedBy || pkg.ReceivedBy || '',
+      packageCondition: pkg.packageCondition || pkg.PackageCondition || 'Good',
+      conditionRemarks: pkg.conditionRemarks || pkg.ConditionRemarks,
+      status: pkg.status || pkg.Status || 'Received',
+      transferDate: this.toOptionalDate(pkg.transferDate || pkg.TransferDate),
+      transferredBy: pkg.transferredBy || pkg.TransferredBy
+    };
   }
 
   receivePackageAtHub(packageData: Partial<HubPackage>): Observable<{succeeded: boolean, message: string, data?: HubPackage}> {
