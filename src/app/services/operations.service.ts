@@ -16,7 +16,8 @@ import {
   HubTransfer,
   HubException,
   RespOptimizeRoute,
-  CustomerServiceMetrics
+  CustomerServiceMetrics,
+  CourierAssignmentOtp
 } from '../models/operations.models';
 
 interface BranchLookup {
@@ -242,7 +243,19 @@ export class OperationsService {
 
   assignCourierToDelivery(deliveryId: number, courierId: number): Observable<{succeeded: boolean, message: string}> {
     return this.handleApiResponse<{succeeded: boolean, message: string}>(
-      this.api.PostApi({ shipmentId: deliveryId, courierId: courierId }, 'api/Shipment/AssignCourier')
+      this.api.PostApi({ shipmentId: deliveryId, courierId: courierId }, 'api/Shipment/AssignCourierToShipment')
+    );
+  }
+
+  prepareCourierAssignment(deliveryId: number, courierId: number): Observable<CourierAssignmentOtp> {
+    return this.handleApiResponse<CourierAssignmentOtp>(
+      this.api.PostApi({ shipmentId: deliveryId, courierId }, 'api/Shipment/PrepareCourierAssignment')
+    );
+  }
+
+  confirmCourierAssignment(deliveryId: number, courierId: number, otpCode: string): Observable<{succeeded: boolean, message: string}> {
+    return this.handleApiResponse<{succeeded: boolean, message: string}>(
+      this.api.PostApi({ shipmentId: deliveryId, courierId, otpCode }, 'api/Shipment/ConfirmCourierAssignment')
     );
   }
 

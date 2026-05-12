@@ -1,0 +1,87 @@
+.dispatch-center {
+  .dispatch-tabs {
+    flex-wrap: wrap;
+
+    .btn {
+      min-width: 140px;
+    }
+  }
+
+  .stat-card {
+    .card-body {
+      display: grid;
+      gap: 4px;
+      min-height: 118px;
+    }
+
+    strong {
+      font-size: 2rem;
+      line-height: 1.1;
+    }
+
+    small {
+      color: #6c757d;
+    }
+  }
+
+  .alert-list {
+    display: grid;
+    gap: 10px;
+  }
+
+  .alert-item {
+    border-left: 4px solid;
+    border-radius: 6px;
+    background: #f8f9fa;
+    display: grid;
+    gap: 4px;
+    padding: 12px 14px;
+  }
+
+  .hub-flow {
+    display: grid;
+    gap: 12px;
+
+    div {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #eef0f2;
+      padding-bottom: 10px;
+    }
+
+    div:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+  }
+
+  .request-search {
+    display: flex;
+    gap: 8px;
+    min-width: min(420px, 100%);
+
+    input {
+      min-width: 220px;
+    }
+  }
+
+  .address-cell {
+    min-width: 260px;
+    max-width: 380px;
+  }
+
+  .fleet-card {
+    .progress {
+      height: 8px;
+    }
+  }
+
+  .fleet-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 14px;
+    color: #6c757d;
+    font-size: 0.875rem;
+  }
+}

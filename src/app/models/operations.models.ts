@@ -61,6 +61,23 @@ export interface Courier {
   rating?: number;
 }
 
+export interface CourierAssignmentOtp {
+  shipmentId: number;
+  courierId: number;
+  expiresAtUtc: string;
+  maskedCourierPhone: string;
+  maskedShipmentBarcode?: string;
+  validationMessages: string[];
+  otpCode?: string;
+}
+
+export interface DispatchAlert {
+  id: string;
+  severity: 'info' | 'warning' | 'danger';
+  title: string;
+  detail: string;
+}
+
 export interface DeliveryAssignment {
   orderId: number;
   orderNumber: string;
@@ -176,7 +193,7 @@ export interface DeliveryQueueItem {
     canUpdateStatus?: boolean;
     canNotify?: boolean;
   };
-  availableStatuses?: Array<{ id: number; statusNameEn: string; statusNameAr: string }>;
+  availableStatuses?: { id: number; statusNameEn: string; statusNameAr: string }[];
 }
 
 export interface PickupRequest {

@@ -210,6 +210,32 @@ describe('OperationsService', () => {
     expect(api.PostApi).toHaveBeenCalledWith({ shipmentId: 3003, messageType: 'eta_update' }, 'api/Shipment/SendCustomerDeliveryNotification');
   });
 
+  it('prepares and confirms courier assignment with OTP endpoint payloads', async () => {
+    api.PostApi.and.returnValues(
+      of({
+        succeeded: true,
+        message: 'ok',
+        errors: [],
+        data: {
+          shipmentId: 3003,
+          courierId: 501,
+          expiresAtUtc: '2026-05-12T10:05:00Z',
+          maskedCourierPhone: '010****1111',
+          validationMessages: []
+        }
+      }),
+      of({ succeeded: true, message: 'ok', errors: [], data: { succeeded: true, message: 'ok' } })
+    );
+
+    const prepared = await firstValueFrom(service.prepareCourierAssignment(3003, 501));
+    await firstValueFrom(service.confirmCourierAssignment(3003, 501, '12345'));
+
+    expect(api.PostApi).toHaveBeenCalledWith({ shipmentId: 3003, courierId: 501 }, 'api/Shipment/PrepareCourierAssignment');
+    expect(api.PostApi).toHaveBeenCalledWith({ shipmentId: 3003, courierId: 501, otpCode: '12345' }, 'api/Shipment/ConfirmCourierAssignment');
+    expect(prepared.expiresAtUtc).toBe('2026-05-12T10:05:00Z');
+    expect(prepared.maskedCourierPhone).toBe('010****1111');
+  });
+
   it('maps top-level courier coordinates to the current location used by live tracking', async () => {
     api.getApi.and.returnValue(of({
       succeeded: true,

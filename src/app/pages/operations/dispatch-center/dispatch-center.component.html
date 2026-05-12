@@ -1,230 +1,374 @@
-<div class="container-fluid">
+<div class="container-fluid dispatch-center">
   <div class="row mb-4">
     <div class="col-12">
       <h2 class="mb-1">Dispatch Center</h2>
-      <p class="text-muted mb-0">Manual assignment, package receiving, and hub transfers</p>
+      <p class="text-muted mb-0">Operational control for shipment requests, courier load, hub movement, and alerts</p>
     </div>
   </div>
 
-  <!-- View Selector -->
+  @if (actionMessage) {
+  <div class="alert alert-success alert-dismissible">
+    {{ actionMessage }}
+    <button type="button" class="btn-close" aria-label="Close" (click)="actionMessage = ''"></button>
+  </div>
+  }
+
+  @if (actionError) {
+  <div class="alert alert-danger alert-dismissible">
+    {{ actionError }}
+    <button type="button" class="btn-close" aria-label="Close" (click)="actionError = ''"></button>
+  </div>
+  }
+
   <div class="card border-0 shadow-sm mb-4">
     <div class="card-body">
-      <div class="btn-group w-100" role="group">
-        <button
-          class="btn"
-          [class.btn-primary]="selectedView === 'courier'"
-          [class.btn-outline-primary]="selectedView !== 'courier'"
-          (click)="selectedView = 'courier'"
-        >
-          <i class="ti ti-user me-2"></i>
-          Courier Assignment
+      <div class="btn-group w-100 dispatch-tabs" role="group" aria-label="Dispatch center sections">
+        <button class="btn" [class.btn-primary]="selectedView === 'overview'" [class.btn-outline-primary]="selectedView !== 'overview'" (click)="selectedView = 'overview'">
+          <i class="ti ti-dashboard me-2"></i>Overview
         </button>
-        <button
-          class="btn"
-          [class.btn-primary]="selectedView === 'hub'"
-          [class.btn-outline-primary]="selectedView !== 'hub'"
-          (click)="selectedView = 'hub'"
-        >
-          <i class="ti ti-building me-2"></i>
-          Hub Management
+        <button class="btn" [class.btn-primary]="selectedView === 'requests'" [class.btn-outline-primary]="selectedView !== 'requests'" (click)="selectedView = 'requests'">
+          <i class="ti ti-package-import me-2"></i>Requests
+        </button>
+        <button class="btn" [class.btn-primary]="selectedView === 'fleet'" [class.btn-outline-primary]="selectedView !== 'fleet'" (click)="selectedView = 'fleet'">
+          <i class="ti ti-motorbike me-2"></i>Fleet
+        </button>
+        <button class="btn" [class.btn-primary]="selectedView === 'hub'" [class.btn-outline-primary]="selectedView !== 'hub'" (click)="selectedView = 'hub'">
+          <i class="ti ti-building-warehouse me-2"></i>Hub Management
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Courier Assignment View -->
-  @if (selectedView === 'courier') {
-  <div class="card border-0 shadow-sm">
-    <div class="card-header bg-white border-0">
-      <h5 class="mb-0">
-        <i class="ti ti-user-check me-2"></i>
-        Courier Availability & Assignment
-      </h5>
-    </div>
-    <div class="card-body">
-      @if (loading) {
-      <div class="text-center py-5">
-        <div class="spinner-border text-primary"></div>
-      </div>
-      } @else {
-      <div class="row g-3">
-        @for (courier of couriers; track courier.id) {
-        <div class="col-md-6 col-lg-4">
-          <div class="card border h-100">
-            <div class="card-body">
-              <div class="d-flex justify-content-between align-items-start mb-3">
-                <div>
-                  <h6 class="mb-1">{{ courier.name }}</h6>
-                  <small class="text-muted">{{ courier.vehicleType }}</small>
-                </div>
-                <span class="badge {{ getCourierStatusClass(courier.status) }}">
-                  {{ courier.status }}
-                </span>
-              </div>
-              
-              <div class="mb-3">
-                <small class="text-muted d-block mb-1">Capacity</small>
-                <div class="progress" style="height: 8px;">
-                  <div
-                    class="progress-bar"
-                    [class.bg-success]="courier.currentOrders <= courier.maxCapacity * 0.5"
-                    [class.bg-warning]="courier.currentOrders > courier.maxCapacity * 0.5 && courier.currentOrders < courier.maxCapacity"
-                    [class.bg-danger]="courier.currentOrders >= courier.maxCapacity"
-                    [style.width.%]="(courier.currentOrders / courier.maxCapacity) * 100"
-                  ></div>
-                </div>
-                <small class="text-muted">{{ courier.currentOrders }}/{{ courier.maxCapacity }} orders</small>
-              </div>
-
-              <div class="d-flex justify-content-between text-muted small mb-3">
-                <div>
-                  <i class="ti ti-package me-1"></i>
-                  {{ courier.todayDeliveries }} today
-                </div>
-                <div>
-                  <i class="ti ti-star me-1"></i>
-                  {{ courier.rating || 'N/A' }}
-                </div>
-              </div>
-
-              <div class="mb-3">
-                <label class="form-label small" [attr.for]="'courier-status-' + courier.id">Update Status</label>
-                <select
-                  [id]="'courier-status-' + courier.id"
-                  class="form-select form-select-sm"
-                  [value]="courier.status"
-                  (change)="updateCourierStatus(courier.id, $event)"
-                >
-                  <option value="Available">Available</option>
-                  <option value="Busy">Busy</option>
-                  <option value="On Break">On Break</option>
-                  <option value="Offline">Offline</option>
-                </select>
-              </div>
-
-              <div class="d-grid gap-2">
-                <button
-                  class="btn btn-sm btn-primary"
-                  [disabled]="courier.status !== 'Available'"
-                >
-                  <i class="ti ti-plus me-1"></i>
-                  Assign Order
-                </button>
-              </div>
-            </div>
-          </div>
+  @if (selectedView === 'overview') {
+  <div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+      <div class="card border-0 shadow-sm stat-card">
+        <div class="card-body">
+          <span class="text-muted small">Available Couriers</span>
+          <strong>{{ availableCouriers.length }}</strong>
+          <small>{{ couriers.length }} total</small>
         </div>
-        }
       </div>
-      }
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <div class="card border-0 shadow-sm stat-card">
+        <div class="card-body">
+          <span class="text-muted small">Active Routes</span>
+          <strong>{{ activeRoutes }}</strong>
+          <small>{{ busyCouriers.length }} busy couriers</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <div class="card border-0 shadow-sm stat-card">
+        <div class="card-body">
+          <span class="text-muted small">Fleet Load</span>
+          <strong>{{ courierLoadPercentage }}%</strong>
+          <small>current assigned capacity</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <div class="card border-0 shadow-sm stat-card">
+        <div class="card-body">
+          <span class="text-muted small">Hub Utilization</span>
+          <strong>{{ selectedHubStats?.capacityPercentage || 0 }}%</strong>
+          <small>{{ selectedHubStats?.hubName || 'No hub selected' }}</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-7">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white border-0">
+          <h5 class="mb-0"><i class="ti ti-alert-triangle me-2"></i>Operational Alerts</h5>
+        </div>
+        <div class="card-body">
+          @if (alerts.length) {
+          <div class="alert-list">
+            @for (alert of alerts; track alert.id) {
+            <div class="alert-item" [class]="getAlertClass(alert.severity)">
+              <strong>{{ alert.title }}</strong>
+              <span>{{ alert.detail }}</span>
+            </div>
+            }
+          </div>
+          } @else {
+          <p class="text-muted mb-0">No active dispatch alerts from the current queue and hub data.</p>
+          }
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-5">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white border-0">
+          <h5 class="mb-0"><i class="ti ti-building-warehouse me-2"></i>Hub Flow</h5>
+        </div>
+        <div class="card-body hub-flow">
+          <div><span>Inbound</span><strong>{{ selectedHubStats?.totalInbound || 0 }}</strong></div>
+          <div><span>Outbound</span><strong>{{ selectedHubStats?.totalOutbound || 0 }}</strong></div>
+          <div><span>Current Load</span><strong>{{ selectedHubStats?.currentCapacity || hubPackages.length }}</strong></div>
+        </div>
+      </div>
     </div>
   </div>
   }
 
-  <!-- Hub Management View -->
-  @if (selectedView === 'hub') {
-  <div class="row g-4">
-    <div class="col-12">
-      <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
-          <h5 class="mb-0">
-            <i class="ti ti-package me-2"></i>
-            Hub Packages
-          </h5>
-          <div class="d-flex gap-2 align-items-center">
-            <select class="form-select form-select-sm" [(ngModel)]="selectedHubId" (change)="loadHubPackages()">
-              @for (hub of hubs; track hub.id) {
-              <option [ngValue]="hub.id">{{ hub.name }}</option>
-              }
-            </select>
-            <button class="btn btn-primary" (click)="openReceivingForm()">
-              <i class="ti ti-plus me-1"></i>
-              Receive Package
-            </button>
-          </div>
+  @if (selectedView === 'requests') {
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-white border-0">
+      <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="ti ti-list-search me-2"></i>Shipment Requests</h5>
+        <div class="request-search">
+          <input class="form-control" type="search" placeholder="Shipment ID or barcode" [(ngModel)]="searchTerm" (keyup.enter)="searchRequests()" />
+          <button class="btn btn-primary" (click)="searchRequests()"><i class="ti ti-search"></i></button>
         </div>
-        <div class="card-body p-0">
-          <div class="table-responsive">
-            <table class="table table-hover mb-0">
-              <thead class="table-light">
-                <tr>
-                  <th>Tracking #</th>
-                  <th>Order #</th>
-                  <th>Sender</th>
-                  <th>Recipient</th>
-                  <th>Current Hub</th>
-                  <th>Condition</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (pkg of hubPackages; track pkg.id) {
-                <tr>
-                  <td><strong>{{ pkg.trackingNumber }}</strong></td>
-                  <td>{{ pkg.orderNumber }}</td>
-                  <td>{{ pkg.senderName }}</td>
-                  <td>
-                    <div>{{ pkg.recipientName }}</div>
-                    <small class="text-muted">{{ pkg.recipientAddress }}</small>
-                  </td>
-                  <td>{{ pkg.currentHubName }}</td>
-                  <td>
-                    <span class="badge {{ getPackageConditionClass(pkg.packageCondition) }}">
-                      {{ pkg.packageCondition }}
-                    </span>
-                    @if (pkg.conditionRemarks) {
-                    <br><small class="text-muted">{{ pkg.conditionRemarks }}</small>
-                    }
-                  </td>
-                  <td>
-                    <span class="badge bg-light text-dark">{{ pkg.status }}</span>
-                  </td>
-                  <td>
-                    <button
-                      class="btn btn-sm btn-outline-primary"
-                      (click)="openTransferForm(pkg.id)"
-                      [disabled]="pkg.status === 'In Transit'"
-                    >
-                      <i class="ti ti-arrow-right"></i>
-                      Transfer
-                    </button>
-                  </td>
-                </tr>
+      </div>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Shipment</th>
+              <th>Customer / Contact</th>
+              <th>Pickup / Drop-off</th>
+              <th>Package</th>
+              <th>Status</th>
+              <th>Validation</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (request of requests; track request.id) {
+            <tr>
+              <td>
+                <strong>{{ request.trackingNumber || request.orderNumber }}</strong>
+                <small class="d-block text-muted">#{{ request.id }}</small>
+              </td>
+              <td>
+                <div>{{ request.customerName || 'Customer unavailable' }}</div>
+                <small class="text-muted">{{ request.customerPhone || request.consigneePhone || 'No phone' }}</small>
+              </td>
+              <td class="address-cell">
+                <small class="d-block"><i class="ti ti-arrow-up-right me-1"></i>{{ request.pickupAddress || 'Pickup unavailable' }}</small>
+                <small class="d-block"><i class="ti ti-map-pin me-1"></i>{{ request.deliveryAddress }}</small>
+              </td>
+              <td>
+                <div>{{ request.packageDescription }}</div>
+                <small class="text-muted">
+                  {{ request.weight || 0 }} kg
+                  @if (request.quantity) { / {{ request.quantity }} pcs }
+                  @if (request.codAmount) { / COD {{ request.codAmount | number:'1.0-2' }} }
+                </small>
+              </td>
+              <td>
+                <span class="badge bg-light text-dark">{{ request.status }}</span>
+                @if (request.courierName) {
+                <small class="d-block text-muted">{{ request.courierName }}</small>
                 }
-              </tbody>
-            </table>
+              </td>
+              <td>
+                @if (request.validationMessages?.length || request.warnings?.length) {
+                @for (message of (request.validationMessages || request.warnings || []); track message) {
+                <small class="d-block text-warning">{{ message }}</small>
+                }
+                } @else {
+                <small class="text-muted">Clear</small>
+                }
+              </td>
+              <td>
+                <div class="btn-group btn-group-sm">
+                  <button class="btn btn-outline-primary" title="Assign or reassign" (click)="openAssignment(request)">
+                    <i class="ti ti-user-check"></i>
+                  </button>
+                  <button class="btn btn-outline-secondary" title="Unassign" [disabled]="!request.courierId" (click)="unassign(request)">
+                    <i class="ti ti-user-x"></i>
+                  </button>
+                  <button class="btn btn-outline-secondary" title="Suggest route" (click)="suggestRoute(request)">
+                    <i class="ti ti-route"></i>
+                  </button>
+                  <button class="btn btn-outline-secondary" title="Notify customer" (click)="notifyCustomer(request)">
+                    <i class="ti ti-bell"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  }
+
+  @if (selectedView === 'fleet') {
+  <div class="row g-3">
+    @for (courier of couriers; track courier.id) {
+    <div class="col-md-6 col-xl-4">
+      <div class="card border-0 shadow-sm h-100 fleet-card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div>
+              <h6 class="mb-1">{{ courier.name }}</h6>
+              <small class="text-muted">{{ courier.vehicleType }} / {{ courier.branchName }}</small>
+            </div>
+            <span class="badge {{ getCourierStatusClass(courier.status) }}">{{ courier.status }}</span>
+          </div>
+          <div class="mb-3">
+            <div class="d-flex justify-content-between small mb-1">
+              <span>Load</span>
+              <span>{{ courier.currentOrders }}/{{ courier.maxCapacity }}</span>
+            </div>
+            <div class="progress">
+              <div class="progress-bar" [style.width.%]="courier.maxCapacity ? (courier.currentOrders / courier.maxCapacity) * 100 : 0"></div>
+            </div>
+          </div>
+          <div class="fleet-meta">
+            <span><i class="ti ti-package me-1"></i>{{ courier.todayDeliveries }} today</span>
+            <span><i class="ti ti-map-pin me-1"></i>{{ courier.currentLocation ? 'Live location' : 'No location' }}</span>
+          </div>
+          <div class="d-flex gap-2 mt-3">
+            <button class="btn btn-sm btn-outline-primary" title="Call courier" [disabled]="!courier.phone" (click)="callCourier(courier)">
+              <i class="ti ti-phone"></i>
+            </button>
+            <a class="btn btn-sm btn-outline-primary" title="Chat with courier" [routerLink]="['/chat']">
+              <i class="ti ti-message"></i>
+            </a>
           </div>
         </div>
+      </div>
+    </div>
+    }
+  </div>
+  }
+
+  @if (selectedView === 'hub') {
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-white border-0 d-flex flex-wrap gap-2 justify-content-between align-items-center">
+      <h5 class="mb-0"><i class="ti ti-package me-2"></i>Hub Packages</h5>
+      <div class="d-flex gap-2 align-items-center">
+        <select class="form-select form-select-sm" [(ngModel)]="selectedHubId" (change)="loadHubPackages()">
+          @for (hub of hubs; track hub.id) {
+          <option [ngValue]="hub.id">{{ hub.name }}</option>
+          }
+        </select>
+        <button class="btn btn-primary" (click)="openReceivingForm()"><i class="ti ti-plus me-1"></i>Receive</button>
+      </div>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Tracking #</th>
+              <th>Order #</th>
+              <th>Sender</th>
+              <th>Recipient</th>
+              <th>Current Hub</th>
+              <th>Condition</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (pkg of hubPackages; track pkg.id) {
+            <tr>
+              <td><strong>{{ pkg.trackingNumber }}</strong></td>
+              <td>{{ pkg.orderNumber }}</td>
+              <td>{{ pkg.senderName }}</td>
+              <td>
+                <div>{{ pkg.recipientName }}</div>
+                <small class="text-muted">{{ pkg.recipientAddress }}</small>
+              </td>
+              <td>{{ pkg.currentHubName }}</td>
+              <td>
+                <span class="badge {{ getPackageConditionClass(pkg.packageCondition) }}">{{ pkg.packageCondition }}</span>
+                @if (pkg.conditionRemarks) {
+                <br><small class="text-muted">{{ pkg.conditionRemarks }}</small>
+                }
+              </td>
+              <td><span class="badge bg-light text-dark">{{ pkg.status }}</span></td>
+              <td>
+                <button class="btn btn-sm btn-outline-primary" (click)="openTransferForm(pkg.id)" [disabled]="pkg.status === 'In Transit'">
+                  <i class="ti ti-arrow-right"></i> Transfer
+                </button>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
   }
 </div>
 
-<!-- Receiving Form Modal -->
+@if (showAssignmentModal) {
+<div class="modal fade show d-block" style="background-color: rgba(0,0,0,0.5)">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">OTP Courier Assignment</h5>
+        <button type="button" class="btn-close" aria-label="Close" (click)="closeAssignment()"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label" for="assignmentCourier">Courier</label>
+          <select id="assignmentCourier" class="form-select" [(ngModel)]="selectedCourierId" [disabled]="!!preparedAssignment">
+            @for (courier of availableCouriers; track courier.id) {
+            <option [ngValue]="courier.id">{{ courier.name }} / {{ courier.currentOrders }}/{{ courier.maxCapacity }} / {{ courier.branchName }}</option>
+            }
+          </select>
+        </div>
+        @if (!preparedAssignment) {
+        <button class="btn btn-primary" [disabled]="assignmentLoading || !selectedCourierId" (click)="prepareAssignment()">
+          Prepare OTP
+        </button>
+        } @else {
+        <div class="alert alert-info">
+          OTP expires at {{ preparedAssignment.expiresAtUtc | date:'shortTime' }} for {{ preparedAssignment.maskedCourierPhone }}.
+          @if (preparedAssignment.otpCode) {
+          <span class="d-block">Temporary dispatch OTP: <strong>{{ preparedAssignment.otpCode }}</strong></span>
+          }
+        </div>
+        <label class="form-label" for="assignmentOtp">OTP Code</label>
+        <input id="assignmentOtp" class="form-control" maxlength="5" [(ngModel)]="otpCode" />
+        }
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeAssignment()">Cancel</button>
+        <button class="btn btn-primary" [disabled]="!preparedAssignment || assignmentLoading || !otpCode.trim()" (click)="confirmAssignment()">
+          Confirm Assignment
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+}
+
 @if (showReceivingForm) {
 <div class="modal fade show d-block" style="background-color: rgba(0,0,0,0.5)">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">Receive Package at Hub</h5>
-        <button type="button" class="btn-close" aria-label="Close" (click)="closeReceivingForm()">
-          <span class="visually-hidden">Close</span>
-        </button>
+        <button type="button" class="btn-close" aria-label="Close" (click)="closeReceivingForm()"></button>
       </div>
       <div class="modal-body">
         <div class="row g-3">
           <div class="col-md-6">
             <label class="form-label" for="receiveTrackingNumber">Tracking Number</label>
-            <input id="receiveTrackingNumber" type="text" class="form-control" [(ngModel)]="receivingPackage.trackingNumber" required />
+            <input id="receiveTrackingNumber" type="text" class="form-control" [(ngModel)]="receivingPackage.trackingNumber" />
           </div>
           <div class="col-md-6">
             <label class="form-label" for="receiveOrderNumber">Order Number</label>
-            <input id="receiveOrderNumber" type="text" class="form-control" [(ngModel)]="receivingPackage.orderNumber" required />
+            <input id="receiveOrderNumber" type="text" class="form-control" [(ngModel)]="receivingPackage.orderNumber" />
           </div>
           <div class="col-md-6">
-            <label class="form-label" for="receivePackageCondition">Package Condition *</label>
+            <label class="form-label" for="receivePackageCondition">Package Condition</label>
             <select id="receivePackageCondition" class="form-select" [(ngModel)]="receivingPackage.packageCondition">
               <option value="Excellent">Excellent</option>
               <option value="Good">Good</option>
@@ -233,7 +377,7 @@
             </select>
           </div>
           <div class="col-md-6">
-            <label class="form-label" for="receiveCurrentHub">Current Hub *</label>
+            <label class="form-label" for="receiveCurrentHub">Current Hub</label>
             <select id="receiveCurrentHub" class="form-select" [(ngModel)]="receivingPackage.currentHubId">
               @for (hub of hubs; track hub.id) {
               <option [ngValue]="hub.id">{{ hub.name }}</option>
@@ -255,22 +399,19 @@
 </div>
 }
 
-<!-- Transfer Form Modal -->
 @if (showTransferForm) {
 <div class="modal fade show d-block" style="background-color: rgba(0,0,0,0.5)">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">Transfer Package to Hub</h5>
-        <button type="button" class="btn-close" aria-label="Close" (click)="closeTransferForm()">
-          <span class="visually-hidden">Close</span>
-        </button>
+        <button type="button" class="btn-close" aria-label="Close" (click)="closeTransferForm()"></button>
       </div>
       <div class="modal-body">
         <div class="mb-3">
-          <label class="form-label" for="transferToHub">Select Destination Hub *</label>
+          <label class="form-label" for="transferToHub">Destination Hub</label>
           <select id="transferToHub" class="form-select" [(ngModel)]="transferToHubId">
-            <option [ngValue]="null">-- Select Hub --</option>
+            <option [ngValue]="null">Select hub</option>
             @for (hub of hubs; track hub.id) {
             <option [ngValue]="hub.id">{{ hub.name }} - {{ hub.city }}</option>
             }
@@ -280,16 +421,10 @@
           <label class="form-label" for="transferNote">Transfer Note</label>
           <textarea id="transferNote" class="form-control" [(ngModel)]="transferNote" rows="2"></textarea>
         </div>
-        <div class="alert alert-info">
-          <i class="ti ti-info-circle me-2"></i>
-          The package will be marked as "In Transit" and assigned to the selected hub.
-        </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" (click)="closeTransferForm()">Cancel</button>
-        <button class="btn btn-primary" (click)="submitTransfer()" [disabled]="!transferToHubId">
-          Initiate Transfer
-        </button>
+        <button class="btn btn-primary" (click)="submitTransfer()" [disabled]="!transferToHubId">Initiate Transfer</button>
       </div>
     </div>
   </div>
