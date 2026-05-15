@@ -73,11 +73,11 @@ export class AppSideLoginComponent {
           );
           sessionStorage.setItem(
             'expiryDate',
-            this.loginResp.expiryDate.toLocaleString()
+            new Date(this.loginResp.expiryDate).toISOString()
           );
           sessionStorage.setItem(
             'refreshExpiryDate',
-            this.loginResp.refreshExpiryDate.toLocaleString()
+            new Date(this.loginResp.refreshExpiryDate).toISOString()
           );
           sessionStorage.setItem(
             'respPermissionList',

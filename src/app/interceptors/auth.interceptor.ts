@@ -65,20 +65,22 @@ export class AuthInterceptor implements HttpInterceptor {
 
     return this.callRefreshEndpoint(token!, refreshToken!).pipe(
       switchMap((resp: any) => {
-        const newToken = resp?.data?.token || resp?.token;
+        // Extract token with support for different case conventions and data wrappers
+        const newToken = resp?.data?.token || resp?.token || resp?.data?.Token || resp?.Token;
         const newExpiry = resp?.data?.expiryDate || resp?.expiryDate;
         const newRefresh = resp?.data?.refreshTokenDate || resp?.refreshTokenDate;
         const newRefreshExpiry = resp?.data?.refreshExpiryDate || resp?.refreshExpiryDate;
 
         if (!newToken) {
+          console.error('Token refresh response did not contain a valid token:', resp);
           this.logout();
           return throwError(() => new Error('Failed to refresh token'));
         }
 
         sessionStorage.setItem('token', newToken);
-        if (newExpiry) sessionStorage.setItem('expiryDate', new Date(newExpiry).toString());
+        if (newExpiry) sessionStorage.setItem('expiryDate', new Date(newExpiry).toISOString());
         if (newRefresh) sessionStorage.setItem('refreshTokenDate', newRefresh);
-        if (newRefreshExpiry) sessionStorage.setItem('refreshExpiryDate', new Date(newRefreshExpiry).toString());
+        if (newRefreshExpiry) sessionStorage.setItem('refreshExpiryDate', new Date(newRefreshExpiry).toISOString());
 
         this.refreshTokenSubject.next(newToken);
         const retryReq = req.clone({ setHeaders: { Authorization: `Bearer ${newToken}` } });
@@ -86,6 +88,7 @@ export class AuthInterceptor implements HttpInterceptor {
         return next.handle(retryReq);
       }),
       catchError(err => {
+        console.error('Refresh token attempt failed:', err);
         this.isRefreshing = false;
         this.logout();
         return throwError(() => err);
