@@ -30,7 +30,7 @@ jobs:
         # IMPORTANT: Verify the destination path on your server!
         run: |
           $source = ".\dist\Spike\*"
-          $destination = "C:\Data\wwwroot\CairOnFront"
+          $destination = "C:\Data\CairOnFront"
           
           if (!(Test-Path -Path $destination)) {
               New-Item -ItemType Directory -Path $destination
