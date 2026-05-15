@@ -227,7 +227,7 @@ export class OperationsService {
       this.api.getApi(this.withQuery('api/Home/GetDeliveryQueue', filters))
     ).pipe(
       map(pagedResult => {
-        const items = pagedResult.items.map(shipment => this.mapDeliveryQueueItem(shipment));
+        const items = (pagedResult?.items || []).map(shipment => this.mapDeliveryQueueItem(shipment));
         const result: PagedResult<DeliveryQueueItem> = {
           items,
           totalCount: pagedResult.totalCount,

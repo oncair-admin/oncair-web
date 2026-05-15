@@ -88,35 +88,41 @@ describe('OperationsService', () => {
       succeeded: true,
       message: 'ok',
       errors: [],
-      data: [{
-        shipmentId: 2002,
-        shipmentBarcode: 'SHP2002',
-        customerId: 77,
-        codAmount: 125.5,
-        totalEgp: 150,
-        customerName: 'Acme Stores',
-        statusId: 3,
-        statusName: 'Picked Up',
-        shipmentsFromEn: 'Giza',
-        shipmentsFromAr: '',
-        shipmentsToEn: '22 Abbas El Akkad, Nasr City, Cairo',
-        shipmentsToAr: '',
-        quantity: 1,
-        createdat: '2026-05-02T08:15:00'
-      }]
+      data: {
+        items: [{
+          shipmentId: 2002,
+          shipmentBarcode: 'SHP2002',
+          customerId: 77,
+          codAmount: 125.5,
+          totalEgp: 150,
+          customerName: 'Acme Stores',
+          statusId: 3,
+          statusName: 'Picked Up',
+          shipmentsFromEn: 'Giza',
+          shipmentsFromAr: '',
+          shipmentsToEn: '22 Abbas El Akkad, Nasr City, Cairo',
+          shipmentsToAr: '',
+          quantity: 1,
+          createdat: '2026-05-02T08:15:00'
+        }],
+        totalCount: 1,
+        pageNumber: 1,
+        pageSize: 10,
+        totalPages: 1
+      }
     }));
 
-    const rows = await firstValueFrom(service.getDeliveryQueue());
+    const result = await firstValueFrom(service.getDeliveryQueue());
 
     expect(api.getApi).toHaveBeenCalledWith('api/Home/GetDeliveryQueue');
-    expect(rows[0].id).toBe(2002);
-    expect(rows[0].orderNumber).toBe('SHP2002');
-    expect(rows[0].customerName).toBe('Acme Stores');
-    expect(rows[0].deliveryAddress).toBe('22 Abbas El Akkad, Nasr City, Cairo');
-    expect(rows[0].city).toBe('Cairo');
-    expect(rows[0].codAmount).toBe(125.5);
-    expect(rows[0].status).toBe('In Progress');
-    expect(rows[0].scheduledDate).toEqual(new Date('2026-05-02T08:15:00'));
+    expect(result.items[0].id).toBe(2002);
+    expect(result.items[0].orderNumber).toBe('SHP2002');
+    expect(result.items[0].customerName).toBe('Acme Stores');
+    expect(result.items[0].deliveryAddress).toBe('22 Abbas El Akkad, Nasr City, Cairo');
+    expect(result.items[0].city).toBe('Cairo');
+    expect(result.items[0].codAmount).toBe(125.5);
+    expect(result.items[0].status).toBe('In Progress');
+    expect(result.items[0].scheduledDate).toEqual(new Date('2026-05-02T08:15:00'));
   });
 
   it('maps operational delivery queue metadata from shipment DTOs', async () => {
@@ -124,39 +130,45 @@ describe('OperationsService', () => {
       succeeded: true,
       message: 'ok',
       errors: [],
-      data: [{
-        shipmentId: 3003,
-        shipmentBarcode: 'SHP3003',
-        customerId: 88,
-        customerName: 'North Market',
-        customerPhone: '01012345678',
-        consignee: 'Mona Ali',
-        consigneePhone: '01111111111',
-        statusId: 2,
-        statusName: 'Assigned',
-        branchId: 12,
-        branchName: 'Nasr City Branch',
-        courierId: 501,
-        courierName: 'Courier One',
-        shipmentsFromEn: 'Warehouse A, Cairo',
-        shipmentsToEn: 'Customer Street, Cairo',
-        weight: 4.5,
-        quantity: 3,
-        fromLatitude: 30.01,
-        fromLongitude: 31.20,
-        toLatitude: 30.05,
-        toLongitude: 31.25,
-        rescheduledAt: '2026-05-04T12:00:00',
-        etaAt: '2026-05-04T14:30:00',
-        deliveryPriority: 'High',
-        queueOrder: 7,
-        vehicleType: 'Bike',
-        validationMessages: ['Capacity data unavailable'],
-        warnings: ['ETA is estimated']
-      }]
+      data: {
+        items: [{
+          shipmentId: 3003,
+          shipmentBarcode: 'SHP3003',
+          customerId: 88,
+          customerName: 'North Market',
+          customerPhone: '01012345678',
+          consignee: 'Mona Ali',
+          consigneePhone: '01111111111',
+          statusId: 2,
+          statusName: 'Assigned',
+          branchId: 12,
+          branchName: 'Nasr City Branch',
+          courierId: 501,
+          courierName: 'Courier One',
+          shipmentsFromEn: 'Warehouse A, Cairo',
+          shipmentsToEn: 'Customer Street, Cairo',
+          weight: 4.5,
+          quantity: 3,
+          fromLatitude: 30.01,
+          fromLongitude: 31.20,
+          toLatitude: 30.05,
+          toLongitude: 31.25,
+          rescheduledAt: '2026-05-04T12:00:00',
+          etaAt: '2026-05-04T14:30:00',
+          deliveryPriority: 'High',
+          queueOrder: 7,
+          vehicleType: 'Bike',
+          validationMessages: ['Capacity data unavailable'],
+          warnings: ['ETA is estimated']
+        }],
+        totalCount: 1,
+        pageNumber: 1,
+        pageSize: 10,
+        totalPages: 1
+      }
     }));
 
-    const rows = await firstValueFrom(service.getDeliveryQueue({
+    const result = await firstValueFrom(service.getDeliveryQueue({
       branchId: 12,
       courierId: 501,
       vehicleType: 'Bike',
@@ -166,7 +178,7 @@ describe('OperationsService', () => {
     }));
 
     expect(api.getApi).toHaveBeenCalledWith('api/Home/GetDeliveryQueue?branchId=12&courierId=501&vehicleType=Bike&status=Assigned&priority=High&search=SHP3003');
-    expect(rows[0]).toEqual(jasmine.objectContaining({
+    expect(result.items[0]).toEqual(jasmine.objectContaining({
       id: 3003,
       orderNumber: 'SHP3003',
       trackingNumber: 'SHP3003',
@@ -188,10 +200,10 @@ describe('OperationsService', () => {
       validationMessages: ['Capacity data unavailable'],
       warnings: ['ETA is estimated']
     }));
-    expect(rows[0].pickupCoordinates).toEqual({ latitude: 30.01, longitude: 31.20 });
-    expect(rows[0].dropoffCoordinates).toEqual({ latitude: 30.05, longitude: 31.25 });
-    expect(rows[0].rescheduledAt).toEqual(new Date('2026-05-04T12:00:00'));
-    expect(rows[0].etaAt).toEqual(new Date('2026-05-04T14:30:00'));
+    expect(result.items[0].pickupCoordinates).toEqual({ latitude: 30.01, longitude: 31.20 });
+    expect(result.items[0].dropoffCoordinates).toEqual({ latitude: 30.05, longitude: 31.25 });
+    expect(result.items[0].rescheduledAt).toEqual(new Date('2026-05-04T12:00:00'));
+    expect(result.items[0].etaAt).toEqual(new Date('2026-05-04T14:30:00'));
   });
 
   it('calls delivery queue operation endpoints with explicit command payloads', async () => {

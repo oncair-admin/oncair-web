@@ -1,0 +1,41 @@
+name: Deploy Angular to IIS
+
+on:
+  push:
+    branches:
+      - main # CHANGE THIS if your main branch has a different name
+
+jobs:
+  build-and-deploy:
+    # This tells GitHub to run this job on your Windows Server runner
+    runs-on: self-hosted 
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build Application
+        run: npm run build --configuration=production
+
+      - name: Deploy to IIS
+        # This uses PowerShell to copy the built files to your IIS directory
+        # IMPORTANT: Verify the destination path on your server!
+        run: |
+          $source = ".\dist\Spike\*"
+          $destination = "C:\Data\wwwroot\CairOnFront"
+          
+          if (!(Test-Path -Path $destination)) {
+              New-Item -ItemType Directory -Path $destination
+          }
+
+          Copy-Item -Path $source -Destination $destination -Recurse -Force
+          
+          Write-Host "Deployment completed successfully to $destination"

@@ -1,8 +1,8 @@
 export const environment = {
-  production: false,
-  apiUrl: 'https://localhost:7067/',
+  production: true,
+  apiUrl: 'http://173.208.167.153:4443/',
   signalR: {
-    hubUrl: 'https://localhost:7095/chathub', // Backend SignalR hub URL
-    notificationHubUrl: 'https://localhost:7095/chathub', // Notification hub URL
+    hubUrl: 'https://mob.quicker-delivery.com/chathub',
+    notificationHubUrl: 'https://mob.quicker-delivery.com/chathub',
   },
 };
